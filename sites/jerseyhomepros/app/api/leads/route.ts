@@ -17,10 +17,13 @@ export async function POST(req: Request) {
     if (!/^[0-9]{5}$/.test(String(body.zip))) {
       return NextResponse.json({ error: "Enter a valid 5-digit ZIP code." }, { status: 400 });
     }
-    if (!isTradeSlug(body.trade)) {
+    // body is `any` from req.json(), and TypeScript cannot narrow a property of
+    // an `any` through a type guard, so the slug is bound to a typed local first.
+    const tradeSlug: unknown = body.trade;
+    if (!isTradeSlug(tradeSlug)) {
       return NextResponse.json({ error: "Please choose what kind of help you need." }, { status: 400 });
     }
-    const trade = TRADES[body.trade];
+    const trade = TRADES[tradeSlug];
 
     // Sharing consent is required: it IS the service. Phone/text consent is separate
     // and optional, because TCPA forbids making it a condition of the service.

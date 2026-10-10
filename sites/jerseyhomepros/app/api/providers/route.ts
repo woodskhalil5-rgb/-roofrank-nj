@@ -19,10 +19,11 @@ export async function POST(req: Request) {
       }
     }
 
-    if (!isTradeSlug(body.trade)) {
+    const tradeSlug: unknown = body.trade;
+    if (!isTradeSlug(tradeSlug)) {
       return NextResponse.json({ error: "Please choose your trade." }, { status: 400 });
     }
-    const trade = TRADES[body.trade];
+    const trade = TRADES[tradeSlug];
 
     const email = String(body.email).trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
