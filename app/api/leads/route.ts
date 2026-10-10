@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminDb, notifyRoofer, type LeadForEmail } from "../../../lib/server";
+import { CONSENT_VERSION, SHARING_CONSENT_TEXT, PHONE_CONSENT_TEXT, TERMS_ACK } from "../../../lib/consent";
 
 export async function POST(req: Request) {
   try {
@@ -14,9 +15,16 @@ export async function POST(req: Request) {
     if (!/^[0-9]{5}$/.test(String(body.zip))) {
       return NextResponse.json({ error: "Enter a valid 5-digit ZIP code." }, { status: 400 });
     }
+
+    // Sharing consent is required: it IS the service. Phone/text consent is separate
+    // and optional, because TCPA forbids making it a condition of the service.
     if (body.consent !== "yes") {
-      return NextResponse.json({ error: "Consent is required to submit." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Please agree to have your request shared with roofing companies." },
+        { status: 400 }
+      );
     }
+    const phoneConsent = body.phone_consent === "yes";
 
     const db = adminDb();
     if (!db) {
@@ -26,20 +34,45 @@ export async function POST(req: Request) {
       );
     }
 
+    // Only serve New Jersey. Keeps the service honest about its name, and keeps
+    // out-of-state privacy regimes out of scope.
+    const zip = String(body.zip);
+    const { data: zipRow } = await db.from("nj_zips").select("zip").eq("zip", zip).maybeSingle();
+    if (!zipRow) {
+      return NextResponse.json(
+        { error: "RoofRank NJ currently serves New Jersey only. That ZIP code isn't in our service area." },
+        { status: 400 }
+      );
+    }
+
     const lead: LeadForEmail = {
       name: String(body.name).trim(),
       phone: String(body.phone).trim(),
       email: String(body.email).trim(),
-      zip: String(body.zip),
+      zip,
       property_type: String(body.property_type),
       service: String(body.service),
       timing: String(body.timing),
       details: String(body.details ?? "").trim(),
     };
 
+    const forwarded = req.headers.get("x-forwarded-for") ?? "";
+    const shown = `${SHARING_CONSENT_TEXT} ${TERMS_ACK}`;
+    const consentText = phoneConsent ? `${shown}\n\n${PHONE_CONSENT_TEXT}` : shown;
+
     const { data: inserted, error } = await db
       .from("leads")
-      .insert({ ...lead, consent: true, status: "new" })
+      .insert({
+        ...lead,
+        consent: true,
+        phone_consent: phoneConsent,
+        consent_text: consentText,
+        consent_version: CONSENT_VERSION,
+        consent_ip: forwarded.split(",")[0].trim().slice(0, 120),
+        consent_user_agent: (req.headers.get("user-agent") ?? "").slice(0, 400),
+        consent_at: new Date().toISOString(),
+        status: "new",
+      })
       .select("id")
       .single();
 
@@ -65,7 +98,7 @@ export async function POST(req: Request) {
           const roofer = (row as unknown as { roofers: { company: string; email: string } | null }).roofers;
           if (!roofer?.email) continue;
           const dist = row.distance_miles === null ? null : Number(row.distance_miles);
-          const sent = await notifyRoofer(roofer.email, roofer.company, lead, dist);
+          const sent = await notifyRoofer(roofer.email, roofer.company, lead, dist, phoneConsent);
           await db
             .from("lead_matches")
             .update(

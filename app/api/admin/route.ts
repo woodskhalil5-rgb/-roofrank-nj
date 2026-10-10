@@ -92,11 +92,17 @@ export async function POST(req: Request) {
         id: string;
         distance_miles: number | null;
         roofers: { company: string; email: string } | null;
-        leads: LeadForEmail | null;
+        leads: (LeadForEmail & { phone_consent?: boolean }) | null;
       };
       if (!r.roofers?.email || !r.leads) continue;
       const dist = r.distance_miles === null ? null : Number(r.distance_miles);
-      const out = await notifyRoofer(r.roofers.email, r.roofers.company, r.leads, dist);
+      const out = await notifyRoofer(
+        r.roofers.email,
+        r.roofers.company,
+        r.leads,
+        dist,
+        r.leads.phone_consent === true
+      );
       await db
         .from("lead_matches")
         .update(

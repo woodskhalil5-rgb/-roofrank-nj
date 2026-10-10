@@ -60,17 +60,36 @@ export async function notifyRoofer(
   to: string,
   company: string,
   lead: LeadForEmail,
-  distanceMiles: number | null
+  distanceMiles: number | null,
+  phoneConsent: boolean
 ): Promise<{ ok: boolean; error?: string }> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.LEAD_FROM_EMAIL;
   if (!key || !from) return { ok: false, error: "email_not_configured" };
+
+  // The contractor, not RoofRank NJ, places the call. They must be told in the
+  // notification itself whether calling or texting this homeowner is permitted.
+  const contactRule = phoneConsent
+    ? [
+        `CONTACT PERMISSION: This homeowner consented to calls and texts,`,
+        `including automated or prerecorded calls, at ${lead.phone}.`,
+        `Call only between 8am and 8pm local time, no more than 3 attempts`,
+        `in 24 hours, and stop immediately on any opt-out request.`,
+      ]
+    : [
+        `CONTACT PERMISSION: *** EMAIL ONLY — DO NOT CALL OR TEXT ***`,
+        `This homeowner did NOT consent to phone or text contact.`,
+        `Respond by email at ${lead.email}. Calling or texting this number`,
+        `may expose you to TCPA liability and breaches your network agreement.`,
+      ];
 
   const lines = [
     `${company},`,
     ``,
     `A homeowner in ZIP ${lead.zip} has requested roofing help.`,
     distanceMiles !== null ? `Approximately ${distanceMiles} miles from your service area.` : ``,
+    ``,
+    ...contactRule,
     ``,
     `Service needed: ${lead.service}`,
     `Property type:  ${lead.property_type}`,

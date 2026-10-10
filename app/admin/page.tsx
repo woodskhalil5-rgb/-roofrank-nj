@@ -10,6 +10,7 @@ type Roofer = {
 type Lead = {
   id: string; created_at: string; name: string; phone: string; email: string; zip: string;
   property_type: string; service: string; timing: string; details: string; status: string;
+  phone_consent?: boolean;
 };
 type Match = {
   id: string; lead_id: string; roofer_id: string; distance_miles: number | null;
@@ -175,6 +176,11 @@ export default function Admin() {
                     <p><b>{l.service}</b> — {l.timing}</p>
                     {l.details && <p className="admindetails">{l.details}</p>}
                     <p className="adminmeta">{l.phone} · {l.email}</p>
+                    <p className={l.phone_consent ? 'consentok' : 'consentno'}>
+                      {l.phone_consent
+                        ? '✓ Consented to calls and texts'
+                        : '✕ Email only — no call/text consent'}
+                    </p>
                     <div className="adminmatches">
                       {mine.length === 0
                         ? <span className="nomatch">No roofer covers this ZIP yet</span>
