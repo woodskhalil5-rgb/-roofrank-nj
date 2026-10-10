@@ -11,18 +11,10 @@ export default function Terms() {
         <h1>Terms of Use</h1>
         <p className="legaldate">Last updated: 10 October 2026</p>
 
-        <div className="legalflag">
-          <b>Operator details to be completed, and legal review required.</b> Replace the bracketed
-          items with the registered entity name and address. A New Jersey attorney should review
-          these terms before the site is advertised — in particular the limitation of liability,
-          which New Jersey&rsquo;s Truth-in-Consumer Contract, Warranty and Notice Act constrains
-          more tightly than most states, and any arbitration clause, which must be separately and
-          clearly agreed to be enforceable here.
-        </div>
-
         <h2>We are a referral service, not a contractor</h2>
         <p>
-          RoofRank NJ connects homeowners with independent roofing companies. <b>We do not perform,
+          RoofRank NJ, operated by <b>Destiny Marketing Group LLC</b>, connects homeowners with
+          independent roofing companies. <b>We do not perform,
           sell, supervise or guarantee any roofing or home improvement work. We do not provide
           estimates or quote prices, and we are not a party to any agreement between you and a
           roofing company.</b> Those companies are independent businesses — not our employees,
@@ -73,9 +65,8 @@ export default function Terms() {
 
         <h2>Contact</h2>
         <p>
-          [LEGAL ENTITY NAME]<br />
-          [MAILING ADDRESS]<br />
-          Email: leads@roofranknj.com
+          Destiny Marketing Group LLC<br />
+          Email: <a href="mailto:contact@destinymarketinggroup.com">contact@destinymarketinggroup.com</a>
         </p>
       </article>
     </main>

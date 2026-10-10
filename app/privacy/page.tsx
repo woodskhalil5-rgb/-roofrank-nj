@@ -11,16 +11,11 @@ export default function Privacy() {
         <h1>Privacy Notice</h1>
         <p className="legaldate">Last updated: 10 October 2026</p>
 
-        <div className="legalflag">
-          <b>Operator details to be completed.</b> The bracketed items below must be replaced with
-          the registered legal entity name, mailing address and contact details before this site is
-          advertised. This notice should also be reviewed by a New Jersey attorney.
-        </div>
-
         <h2>Who we are</h2>
         <p>
-          RoofRank NJ is an online service that connects New Jersey homeowners with independent
-          roofing companies. We are <b>not</b> a roofing contractor. We do not perform, sell,
+          RoofRank NJ is a service operated by <b>Destiny Marketing Group LLC</b>, which connects
+          New Jersey homeowners with independent roofing companies. We are <b>not</b> a roofing
+          contractor. We do not perform, sell,
           supervise or guarantee roofing work. This notice explains what we collect and, most
           importantly, who we give it to.
         </p>
@@ -99,9 +94,8 @@ export default function Privacy() {
 
         <h2>Contact</h2>
         <p>
-          [LEGAL ENTITY NAME]<br />
-          [MAILING ADDRESS]<br />
-          Email: leads@roofranknj.com
+          Destiny Marketing Group LLC<br />
+          Email: <a href="mailto:contact@destinymarketinggroup.com">contact@destinymarketinggroup.com</a>
         </p>
       </article>
     </main>
