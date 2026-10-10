@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { adminDb, sendEmail } from "../../../../lib/server";
+import { SITE } from "../../../../lib/site";
 
 export const maxDuration = 60;
 
-const SITE = "https://roofranknj.com";
+
 const DAYS = 14;
 
 /**
@@ -50,7 +51,7 @@ export async function GET(req: Request) {
       .not("notified_at", "is", null);
 
     const link = (a: string, r?: string) =>
-      `${SITE}/api/feedback?t=${lead.feedback_token}&a=${a}${r ? `&r=${r}` : ""}`;
+      `${SITE.url}/api/feedback?t=${lead.feedback_token}&a=${a}${r ? `&r=${r}` : ""}`;
 
     const hiredLines = (matches ?? []).map((m) => {
       const row = m as unknown as { roofer_id: string; roofers: { company: string } | null };
@@ -60,7 +61,7 @@ export async function GET(req: Request) {
     const body = [
       `Hi ${lead.name.split(" ")[0] || "there"},`,
       ``,
-      `About two weeks ago you asked RoofRank NJ for help with ${lead.service.toLowerCase()} in ${lead.zip}.`,
+      `About two weeks ago you asked ${SITE.brand} for help with ${lead.service.toLowerCase()} in ${lead.zip}.`,
       ``,
       `One question, and one click answers it — did you end up hiring anyone?`,
       ``,
@@ -72,18 +73,18 @@ export async function GET(req: Request) {
       `it up with the companies involved.`,
       ``,
       `Thanks,`,
-      `RoofRank NJ`,
+      `${SITE.brand}`,
       ``,
       `—`,
-      `RoofRank NJ is a referral service operated by Destiny Marketing Group LLC.`,
-      `We are not a roofing contractor.`,
+      `${SITE.brand} is a referral service operated by ${SITE.operator}.`,
+      `We are not a ${SITE.company}.`,
       ...(postal ? [postal] : []),
-      `Don't want this follow-up? Unsubscribe: ${SITE}/api/feedback?t=${lead.feedback_token}&unsub=1`,
+      `Don't want this follow-up? Unsubscribe: ${SITE.url}/api/feedback?t=${lead.feedback_token}&unsub=1`,
     ].join("\n");
 
     const out = await sendEmail(
       lead.email,
-      `Did you find a roofer, ${lead.name.split(" ")[0] || "there"}?`,
+      `Did you find someone, ${lead.name.split(" ")[0] || "there"}?`,
       body
     );
 
