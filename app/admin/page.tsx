@@ -11,6 +11,14 @@ type Lead = {
   id: string; created_at: string; name: string; phone: string; email: string; zip: string;
   property_type: string; service: string; timing: string; details: string; status: string;
   phone_consent?: boolean;
+  feedback?: string | null;
+  followup_sent_at?: string | null;
+};
+
+type Perf = {
+  roofer_id: string; company: string; status: string;
+  leads_received: number; feedback_received: number; jobs_won: number;
+  no_contact_reports: number; unsent_notifications: number;
 };
 type Match = {
   id: string; lead_id: string; roofer_id: string; distance_miles: number | null;
@@ -38,10 +46,11 @@ export default function Admin() {
   const [token, setToken] = useState<string | null>(null);
   const [email, setEmail] = useState('');
   const [note, setNote] = useState('');
-  const [tab, setTab] = useState<'leads' | 'roofers'>('leads');
+  const [tab, setTab] = useState<'leads' | 'roofers' | 'performance'>('leads');
   const [roofers, setRoofers] = useState<Roofer[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
+  const [perf, setPerf] = useState<Perf[]>([]);
   const [loading, setLoading] = useState(false);
   const [denied, setDenied] = useState(false);
 
@@ -63,6 +72,7 @@ export default function Admin() {
       setRoofers(j.roofers ?? []);
       setLeads(j.leads ?? []);
       setMatches(j.matches ?? []);
+      setPerf(j.performance ?? []);
     } finally {
       setLoading(false);
     }
@@ -152,6 +162,7 @@ export default function Admin() {
         <div className="admintabs">
           <button className={tab === 'leads' ? 'on' : ''} onClick={() => setTab('leads')}>Leads</button>
           <button className={tab === 'roofers' ? 'on' : ''} onClick={() => setTab('roofers')}>Roofers</button>
+          <button className={tab === 'performance' ? 'on' : ''} onClick={() => setTab('performance')}>Performance</button>
           {unsent > 0 && (
             <button className="retrybtn" onClick={() => act({ action: 'retry_notifications' })}>
               Retry {unsent} unsent {unsent === 1 ? 'notice' : 'notices'}
@@ -181,6 +192,16 @@ export default function Admin() {
                         ? '✓ Consented to calls and texts'
                         : '✕ Email only — no call/text consent'}
                     </p>
+                    {l.feedback && (
+                      <p className={l.feedback === 'no_contact' ? 'fbbad' : 'fbok'}>
+                        {l.feedback === 'hired' ? '✓ Homeowner hired a matched roofer'
+                          : l.feedback === 'deciding' ? '· Homeowner still deciding'
+                          : '⚠ Homeowner says NOBODY contacted them'}
+                      </p>
+                    )}
+                    {!l.feedback && l.followup_sent_at && (
+                      <p className="fbwait">Follow-up sent — awaiting reply</p>
+                    )}
                     <div className="adminmatches">
                       {mine.length === 0
                         ? <span className="nomatch">No roofer covers this ZIP yet</span>
@@ -203,6 +224,38 @@ export default function Admin() {
                   </article>
                 );
               })}
+            </div>
+          )
+        )}
+
+        {tab === 'performance' && (
+          perf.length === 0 ? <p className="adminnote">No roofers yet.</p> : (
+            <div className="admingrid">
+              {perf.map((p) => (
+                <article key={p.roofer_id} className="admincard">
+                  <header>
+                    <b>{p.company}</b>
+                    <span className={`pill pill-${p.status}`}>{p.status}</span>
+                  </header>
+                  <div className="perfrow"><span>Leads received</span><b>{p.leads_received}</b></div>
+                  <div className="perfrow"><span>Jobs won</span><b>{p.jobs_won}</b></div>
+                  <div className="perfrow"><span>Feedback received</span><b>{p.feedback_received}</b></div>
+                  <div className={p.no_contact_reports > 0 ? 'perfrow perfbad' : 'perfrow'}>
+                    <span>&ldquo;Nobody contacted me&rdquo;</span><b>{p.no_contact_reports}</b>
+                  </div>
+                  {p.unsent_notifications > 0 && (
+                    <div className="perfrow perfbad"><span>Unsent notices</span><b>{p.unsent_notifications}</b></div>
+                  )}
+                  {p.leads_received > 0 && (
+                    <p className="adminmeta">
+                      Win rate {Math.round((p.jobs_won / p.leads_received) * 100)}% of leads received
+                    </p>
+                  )}
+                  {p.no_contact_reports > 0 && (
+                    <p className="admindetails">Homeowners report no contact. Follow up before sending more leads.</p>
+                  )}
+                </article>
+              ))}
             </div>
           )
         )}

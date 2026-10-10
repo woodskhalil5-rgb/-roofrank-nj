@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   const db = adminDb();
   if (!db) return NextResponse.json({ error: "Database not connected." }, { status: 503 });
 
-  const [roofers, leads, matches] = await Promise.all([
+  const [roofers, leads, matches, performance] = await Promise.all([
     db.from("roofers").select("*").order("created_at", { ascending: false }),
     db.from("leads").select("*").order("created_at", { ascending: false }).limit(200),
     db
@@ -20,6 +20,7 @@ export async function GET(req: Request) {
       .select("id, lead_id, roofer_id, distance_miles, notified_at, notify_error, roofers(company)")
       .order("created_at", { ascending: false })
       .limit(1000),
+    db.from("roofer_performance").select("*").order("leads_received", { ascending: false }),
   ]);
 
   return NextResponse.json({
@@ -27,6 +28,7 @@ export async function GET(req: Request) {
     roofers: roofers.data ?? [],
     leads: leads.data ?? [],
     matches: matches.data ?? [],
+    performance: performance.data ?? [],
   });
 }
 

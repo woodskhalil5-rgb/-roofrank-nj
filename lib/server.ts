@@ -53,6 +53,31 @@ export type LeadForEmail = {
 };
 
 /**
+ * Low-level sender. Never throws — callers decide what a failure means.
+ */
+export async function sendEmail(
+  to: string,
+  subject: string,
+  text: string
+): Promise<{ ok: boolean; error?: string }> {
+  const key = process.env.RESEND_API_KEY;
+  const from = process.env.LEAD_FROM_EMAIL;
+  if (!key || !from) return { ok: false, error: "email_not_configured" };
+
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: [to], subject, text }),
+    });
+    if (!res.ok) return { ok: false, error: `resend_http_${res.status}` };
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "send_failed" };
+  }
+}
+
+/**
  * Emails a matched roofer about a new lead.
  * Never throws: a failed send must not fail the homeowner's submission.
  */
@@ -63,10 +88,6 @@ export async function notifyRoofer(
   distanceMiles: number | null,
   phoneConsent: boolean
 ): Promise<{ ok: boolean; error?: string }> {
-  const key = process.env.RESEND_API_KEY;
-  const from = process.env.LEAD_FROM_EMAIL;
-  if (!key || !from) return { ok: false, error: "email_not_configured" };
-
   // The contractor, not RoofRank NJ, places the call. They must be told in the
   // notification itself whether calling or texting this homeowner is permitted.
   const contactRule = phoneConsent
@@ -107,20 +128,5 @@ export async function notifyRoofer(
     `— RoofRank NJ`,
   ].filter((l) => l !== ``);
 
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from,
-        to: [to],
-        subject: `New roofing lead in ${lead.zip} — ${lead.service}`,
-        text: lines.join("\n"),
-      }),
-    });
-    if (!res.ok) return { ok: false, error: `resend_http_${res.status}` };
-    return { ok: true };
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "send_failed" };
-  }
+  return sendEmail(to, `New roofing lead in ${lead.zip} — ${lead.service}`, lines.join("\n"));
 }

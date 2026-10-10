@@ -44,3 +44,11 @@
 .legalpage a{text-decoration:underline}
 .admincard .consentok{font-size:11px!important;font-weight:700;color:#2f5330;background:#dde9dd;padding:6px 9px;margin:8px 0!important}
 .admincard .consentno{font-size:11px!important;font-weight:700;color:#6d2626;background:#efdcdc;padding:6px 9px;margin:8px 0!important}
+.admincard .fbok{font-size:11px!important;font-weight:700;color:#2f5330;background:#dde9dd;padding:6px 9px;margin:8px 0!important}
+.admincard .fbbad{font-size:11px!important;font-weight:700;color:#6d2626;background:#efdcdc;padding:6px 9px;margin:8px 0!important}
+.admincard .fbwait{font-size:11px!important;color:#6d5118;background:#f3e3bf;padding:6px 9px;margin:8px 0!important}
+.perfrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid #f0ece2;font-size:12px}
+.perfrow span{color:#73746e}
+.perfrow b{font:400 19px Georgia,serif}
+.perfrow.perfbad b{color:#6d2626}
+.perfrow.perfbad span{color:#6d2626;font-weight:700}
