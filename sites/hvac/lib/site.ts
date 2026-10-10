@@ -18,7 +18,7 @@ export const SITE = {
     ogDescription: "A smarter way to find heating and cooling help in New Jersey.",
   },
   hero: {
-    eyebrow: "NEW JERSEY HEATING &amp; COOLING, MADE SIMPLE",
+    eyebrow: "NEW JERSEY HEATING & COOLING, MADE SIMPLE",
     line1: "Your comfort.",
     lineEm: "Your choice.",
     line2: "Start with confidence.",
@@ -29,8 +29,8 @@ export const SITE = {
   estimate: { h2a: "Let\u2019s get your home", h2em: "comfortable again.", p: "Share a few details. We\u2019ll use them to help connect your request with participating HVAC companies that serve your area." },
   cards: [
     { icon: "\u2668", title: "No Heat / No Cool", body: "Emergency calls when the system stops working entirely." },
-    { icon: "\u2744", title: "AC Repair &amp; Install", body: "Cooling that struggles, leaks, or needs replacing." },
-    { icon: "\u25ce", title: "Furnace &amp; Boiler", body: "Heating repair, servicing, and full replacement." },
+    { icon: "\u2744", title: "AC Repair & Install", body: "Cooling that struggles, leaks, or needs replacing." },
+    { icon: "\u25ce", title: "Furnace & Boiler", body: "Heating repair, servicing, and full replacement." },
     { icon: "\u25c8", title: "Maintenance", body: "Seasonal tune-ups before the weather turns." }
   ],
   services: ["No heat — urgent", "No cooling — urgent", "Furnace repair", "Furnace replacement", "AC repair", "AC replacement", "Boiler service", "Heat pump", "Ductwork", "Seasonal maintenance", "Not sure yet"],
