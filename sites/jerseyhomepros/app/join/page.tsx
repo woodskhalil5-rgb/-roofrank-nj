@@ -75,7 +75,9 @@ export default function Join() {
               </select>
             </label>
             <label>Services offered
-              <select required name="services" defaultValue="">
+              {/* key remounts the select when the trade changes, so a service
+                  picked under the previous trade cannot be submitted with it. */}
+              <select required name="services" defaultValue="" key={tradeSlug}>
                 <option value="" disabled>Select primary service</option>
                 {trade.providerServices.map((s) => <option key={s}>{s}</option>)}
               </select>
