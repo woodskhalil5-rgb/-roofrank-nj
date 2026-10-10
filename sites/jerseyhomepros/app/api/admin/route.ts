@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { adminDb, requireAdmin, notifyProvider, type LeadForEmail } from "../../../lib/server";
+import {
+  adminDb,
+  requireAdmin,
+  notifyProvider,
+  notifyProviderApproved,
+  type LeadForEmail,
+} from "../../../lib/server";
 import { tradeOr } from "../../../lib/trades";
 
 // A Response body can only be consumed once, so this must build a fresh
@@ -55,9 +61,22 @@ export async function POST(req: Request) {
     if (!id || !["pending", "approved", "rejected"].includes(status)) {
       return NextResponse.json({ error: "Invalid status." }, { status: 400 });
     }
-    const { error } = await db.from("roofers").update({ status }).eq("id", id);
+    const { data: row, error } = await db
+      .from("roofers")
+      .update({ status })
+      .eq("id", id)
+      .select("company, email, trade")
+      .maybeSingle();
     if (error) return NextResponse.json({ error: "Update failed." }, { status: 500 });
-    return NextResponse.json({ ok: true });
+
+    // Best-effort welcome. A failed send must not make the approval look failed:
+    // the provider is already approved and will still be matched.
+    let welcomed = false;
+    if (status === "approved" && row?.email) {
+      const out = await notifyProviderApproved(row.email, row.company, tradeOr(row.trade));
+      welcomed = out.ok;
+    }
+    return NextResponse.json({ ok: true, welcomed });
   }
 
   if (action === "set_lead_status") {

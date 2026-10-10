@@ -137,3 +137,46 @@ export async function notifyProvider(
     lines.join("\n")
   );
 }
+
+/**
+ * Sent once, when an admin approves a provider. This is the moment they are
+ * most engaged, and it is the only place the contact rules are stated to them
+ * in writing before the first lead arrives.
+ *
+ * Transactional, not marketing: it is the direct result of their own
+ * application, so it carries no unsubscribe. Never reuse it for promotion.
+ */
+export async function notifyProviderApproved(
+  to: string,
+  company: string,
+  trade: Trade
+): Promise<{ ok: boolean; error?: string }> {
+  const lines = [
+    `${company},`,
+    ``,
+    `You're approved. ${SITE.brand} will now send you homeowner ${trade.label.toLowerCase()} requests`,
+    `in the ZIP codes you gave us, by email, as they come in.`,
+    ``,
+    `Two things to know before the first one lands.`,
+    ``,
+    `1. Every request goes to more than one company. Responding fast is`,
+    `   most of the job. The homeowner usually hires whoever calls first.`,
+    ``,
+    `2. Read the CONTACT PERMISSION line at the top of each email.`,
+    `   If it says EMAIL ONLY, that homeowner did not consent to calls or`,
+    `   texts. Calling them anyway can expose you to TCPA penalties of`,
+    `   $500 to $1,500 per call, and it ends your place in the network.`,
+    `   Where calling is permitted, keep it between 8am and 8pm.`,
+    ``,
+    `We are a referral service. We do not perform, supervise or guarantee`,
+    `any work, and we are not a party to anything you agree with a homeowner.`,
+    ``,
+    `To change your service area, pause requests, or leave the network, just`,
+    `reply to this email.`,
+    ``,
+    `— ${SITE.brand}`,
+    `${SITE.operator}`,
+  ].join("\n");
+
+  return sendEmail(to, `You're approved — ${SITE.brand}`, lines);
+}
