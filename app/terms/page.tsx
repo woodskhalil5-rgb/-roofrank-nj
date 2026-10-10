@@ -66,6 +66,7 @@ export default function Terms() {
         <h2>Contact</h2>
         <p>
           Destiny Marketing Group LLC<br />
+          511 N Boardwalk, Rehoboth Beach, DE 19971<br />
           Email: <a href="mailto:contact@destinymarketinggroup.com">contact@destinymarketinggroup.com</a>
         </p>
       </article>
