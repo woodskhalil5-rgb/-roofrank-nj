@@ -47,9 +47,13 @@ function when(iso: string) {
 export default function Admin() {
   const [token, setToken] = useState<string | null>(null);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [mode, setMode] = useState<'password' | 'link'>('password');
   const [note, setNote] = useState('');
   const [tab, setTab] = useState<'leads' | 'providers' | 'performance'>('leads');
   const [tradeFilter, setTradeFilter] = useState<TradeSlug | 'all'>('all');
+  // Rejected providers and spam leads stay out of the way until asked for.
+  const [showArchived, setShowArchived] = useState(false);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
@@ -84,28 +88,61 @@ export default function Admin() {
   useEffect(() => { if (token) load(token); }, [token, load]);
 
   const shownLeads = useMemo(
-    () => leads.filter((l) => tradeFilter === 'all' || l.trade === tradeFilter),
-    [leads, tradeFilter]
+    () => leads.filter((l) =>
+      (tradeFilter === 'all' || l.trade === tradeFilter) &&
+      (showArchived || l.status !== 'spam')
+    ),
+    [leads, tradeFilter, showArchived]
   );
   const shownProviders = useMemo(
-    () => providers.filter((p) => tradeFilter === 'all' || p.trade === tradeFilter),
-    [providers, tradeFilter]
+    () => providers.filter((p) =>
+      (tradeFilter === 'all' || p.trade === tradeFilter) &&
+      (showArchived || p.status !== 'rejected')
+    ),
+    [providers, tradeFilter, showArchived]
   );
   const shownPerf = useMemo(
     () => perf.filter((p) => tradeFilter === 'all' || p.trade === tradeFilter),
     [perf, tradeFilter]
   );
 
-  async function sendLink(e: React.FormEvent<HTMLFormElement>) {
+  async function signIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const c = sb();
     if (!c) return;
+
+    if (mode === 'password') {
+      setNote('Signing in…');
+      const { error } = await c.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      setNote(error ? error.message : '');
+      setPassword('');
+      return;
+    }
+
     setNote('Sending…');
     const { error } = await c.auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/admin` : undefined },
     });
-    setNote(error ? error.message : 'Check your inbox for a sign-in link.');
+    setNote(
+      error
+        ? error.message
+        : 'Check your inbox. The link works once — open it in this browser, not your mail app’s built-in one.'
+    );
+  }
+
+  /** Lets an already signed-in admin set a password, so email is never required again. */
+  async function setOwnPassword() {
+    const c = sb();
+    if (!c) return;
+    const pw = window.prompt('New password (at least 8 characters):');
+    if (pw === null) return;
+    if (pw.length < 8) { setNote('That password is too short.'); return; }
+    const { error } = await c.auth.updateUser({ password: pw });
+    setNote(error ? error.message : 'Password set. You can sign in with it from any device.');
   }
 
   async function act(payload: Record<string, unknown>) {
@@ -131,14 +168,38 @@ export default function Admin() {
         <div className="simplecard">
           <div className="eyebrow dark">ADMIN</div>
           <h1>Sign in.</h1>
-          <p>Enter your admin email and we&rsquo;ll send a one-time sign-in link.</p>
-          <form onSubmit={sendLink}>
+          <p>
+            {mode === 'password'
+              ? 'Enter your admin email and password.'
+              : 'We’ll email you a one-time sign-in link.'}
+          </p>
+          <form onSubmit={signIn}>
             <label>
               Email address
-              <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@yourdomain.com" />
+              <input id="admin-email" required type="email" autoComplete="username"
+                     value={email} onChange={(e) => setEmail(e.target.value)}
+                     placeholder="you@yourdomain.com" />
             </label>
-            <button className="button gold submit">Send sign-in link &rarr;</button>
+            {mode === 'password' && (
+              <label>
+                Password
+                <input id="admin-password" required type="password" autoComplete="current-password"
+                       value={password} onChange={(e) => setPassword(e.target.value)}
+                       placeholder="Your password" />
+              </label>
+            )}
+            <button className="button gold submit">
+              {mode === 'password' ? 'Sign in →' : 'Send sign-in link →'}
+            </button>
           </form>
+          <p>
+            <button className="textlink" type="button"
+                    onClick={() => { setMode(mode === 'password' ? 'link' : 'password'); setNote(''); }}>
+              {mode === 'password'
+                ? 'No password yet? Email me a link instead'
+                : 'Sign in with a password instead'}
+            </button>
+          </p>
           <p role="status">{note}</p>
         </div>
       </main>
@@ -168,8 +229,13 @@ export default function Admin() {
           <span className="brandmark">{SITE.mark}</span>
           <span>{SITE.wordmark} <b>{SITE.wordmarkBold}</b><small>ADMIN</small></span>
         </a>
-        <button className="textlink adminsignout" onClick={signOut}>Sign out</button>
+        <span className="adminsignout">
+          <button className="textlink" onClick={setOwnPassword}>Set password</button>
+          {' · '}
+          <button className="textlink" onClick={signOut}>Sign out</button>
+        </span>
       </div>
+      {note && <p className="wrap adminnote" role="status">{note}</p>}
 
       <div className="wrap">
         <div className="admintabs tradefilter">
@@ -179,6 +245,9 @@ export default function Admin() {
               {TRADES[s].label}
             </button>
           ))}
+          <button className={showArchived ? 'on' : ''} onClick={() => setShowArchived(!showArchived)}>
+            {showArchived ? 'Hiding nothing' : 'Show archived'}
+          </button>
         </div>
 
         <div className="adminstats">
