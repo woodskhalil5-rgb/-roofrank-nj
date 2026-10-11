@@ -1,4 +1,5 @@
 import { SITE } from "../lib/site";
+import { TRADES, TRADE_SLUGS } from "../lib/trades";
 
 /** Shared wordmark used in the nav and the footer. */
 export function Brand({ href = "/" }: { href?: string }) {
@@ -18,10 +19,11 @@ export function SiteFooter() {
     <footer>
       <div className="wrap footinner">
         <Brand />
+        {/* Driven off the trade list so a new trade is never orphaned here. */}
         <div className="footlinks">
-          <a href="/roofing">Roofing</a>
-          <a href="/hvac">Heating &amp; Cooling</a>
-          <a href="/pest">Pest Control</a>
+          {TRADE_SLUGS.map((s) => (
+            <a key={s} href={`/${s}`}>{TRADES[s].label}</a>
+          ))}
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
           <a href="/join">For Pros</a>
