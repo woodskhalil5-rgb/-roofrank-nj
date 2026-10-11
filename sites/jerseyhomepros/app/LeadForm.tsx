@@ -74,7 +74,11 @@ export default function LeadForm({ trade }: { trade: Trade }) {
             </select>
           </label>
           <label>Project details <span className="optional">(optional)</span>
-            <textarea name="details" rows={3} placeholder="Tell us what&rsquo;s going on&hellip;" />
+            <textarea
+              name="details"
+              rows={3}
+              placeholder={trade.detailsHint ?? "Tell us what’s going on…"}
+            />
           </label>
 
           <label className="consent">
