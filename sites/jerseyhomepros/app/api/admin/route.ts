@@ -112,19 +112,29 @@ export async function POST(req: Request) {
     for (const row of rows ?? []) {
       const r = row as unknown as {
         id: string;
+        lead_id: string;
         distance_miles: number | null;
         roofers: { company: string; email: string } | null;
         leads: (LeadForEmail & { phone_consent?: boolean; trade?: string }) | null;
       };
       if (!r.roofers?.email || !r.leads) continue;
       const dist = r.distance_miles === null ? null : Number(r.distance_miles);
+
+      // How many companies this lead went to in total, so the email can state
+      // the real number rather than assume this retry is the only recipient.
+      const { count } = await db
+        .from("lead_matches")
+        .select("id", { count: "exact", head: true })
+        .eq("lead_id", r.lead_id);
+
       const out = await notifyProvider(
         r.roofers.email,
         r.roofers.company,
         r.leads,
         tradeOr(r.leads.trade),
         dist,
-        r.leads.phone_consent === true
+        r.leads.phone_consent === true,
+        Math.max(0, (count ?? 1) - 1)
       );
       await db
         .from("lead_matches")

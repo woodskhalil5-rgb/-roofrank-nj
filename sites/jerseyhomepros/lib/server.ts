@@ -89,7 +89,8 @@ export async function notifyProvider(
   lead: LeadForEmail,
   trade: Trade,
   distanceMiles: number | null,
-  phoneConsent: boolean
+  phoneConsent: boolean,
+  otherRecipients: number
 ): Promise<{ ok: boolean; error?: string }> {
   // The contractor, not the operator, places the call. They must be told in the
   // notification itself whether calling or texting this homeowner is permitted.
@@ -107,29 +108,50 @@ export async function notifyProvider(
         `may expose you to TCPA liability and breaches your network agreement.`,
       ];
 
+  // Computed from the real match count, never assumed. The exclusivity claim the
+  // network is sold on is only ever made here when it is actually true, and the
+  // number is stated either way so a contractor can hold us to it.
+  const exclusivity =
+    otherRecipients <= 0
+      ? [
+          `This request went to you alone. No other company in the network`,
+          `received it, so there is no bidding war to win. Please respond today`,
+          `— if we don't hear from you we may offer it to someone else.`,
+        ]
+      : [
+          `This request also went to ${otherRecipients} other ${
+            otherRecipients === 1 ? `company` : `companies`
+          } serving this area.`,
+          `Responding quickly materially improves your chance of winning the job.`,
+        ];
+
+  // Optional lines are spread in rather than emitted as "" and filtered out:
+  // a blanket filter would also strip the deliberate blank lines that separate
+  // paragraphs, collapsing the whole notice into one unreadable block.
   const lines = [
     `${company},`,
     ``,
     `A homeowner in ZIP ${lead.zip} has requested ${trade.work}.`,
-    distanceMiles !== null ? `Approximately ${distanceMiles} miles from your service area.` : ``,
+    ...(distanceMiles !== null
+      ? [`Approximately ${distanceMiles} miles from your service area.`]
+      : []),
     ``,
     ...contactRule,
     ``,
     `Service needed: ${lead.service}`,
     `Property type:  ${lead.property_type}`,
     `Timing:         ${lead.timing}`,
-    lead.details ? `Details:        ${lead.details}` : ``,
+    ...(lead.details ? [`Details:        ${lead.details}`] : []),
     ``,
     `Contact`,
     `Name:  ${lead.name}`,
     `Phone: ${lead.phone}`,
     `Email: ${lead.email}`,
     ``,
-    `This homeowner was also shared with other participating companies in their area.`,
-    `Responding quickly materially improves your chance of winning the job.`,
+    ...exclusivity,
     ``,
     `— ${SITE.brand}`,
-  ].filter((l) => l !== ``);
+  ];
 
   return sendEmail(
     to,
@@ -159,8 +181,11 @@ export async function notifyProviderApproved(
     ``,
     `Two things to know before the first one lands.`,
     ``,
-    `1. Every request goes to more than one company. Responding fast is`,
-    `   most of the job. The homeowner usually hires whoever calls first.`,
+    `1. We match each request to the companies that actually fit it — the`,
+    `   right trade, close enough to show up — not to a bidding pool. Every`,
+    `   lead email states near the bottom exactly how many other companies`,
+    `   received it, often none, so you are never quietly entered into an`,
+    `   auction. Respond the same day regardless: homeowners hire fast.`,
     ``,
     `2. Read the CONTACT PERMISSION line at the top of each email.`,
     `   If it says EMAIL ONLY, that homeowner did not consent to calls or`,

@@ -108,7 +108,16 @@ export async function POST(req: Request) {
           const provider = (row as unknown as { roofers: { company: string; email: string } | null }).roofers;
           if (!provider?.email) continue;
           const dist = row.distance_miles === null ? null : Number(row.distance_miles);
-          const sent = await notifyProvider(provider.email, provider.company, lead, trade, dist, phoneConsent);
+          // `matched` counts every company this lead went to, including this one.
+          const sent = await notifyProvider(
+            provider.email,
+            provider.company,
+            lead,
+            trade,
+            dist,
+            phoneConsent,
+            Math.max(0, matched - 1)
+          );
           await db
             .from("lead_matches")
             .update(
