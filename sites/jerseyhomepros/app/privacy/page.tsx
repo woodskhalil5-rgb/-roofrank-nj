@@ -17,8 +17,8 @@ export default function Privacy() {
         <h2>Who we are</h2>
         <p>
           {SITE.brand} is a service operated by <b>{SITE.operator}</b>, which connects New Jersey
-          homeowners with independent contractors in roofing, heating and cooling, and pest
-          control. We are <b>not</b> a contractor. We do not perform, sell, supervise or guarantee
+          homeowners with independent contractors in roofing, heating and cooling, pest
+          control, moving and cleaning. We are <b>not</b> a contractor. We do not perform, sell, supervise or guarantee
           any work. This notice explains what we collect and, most importantly, who we give it to.
         </p>
 

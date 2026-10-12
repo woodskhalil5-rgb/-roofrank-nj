@@ -24,6 +24,7 @@ export function SiteFooter() {
           {TRADE_SLUGS.map((s) => (
             <a key={s} href={`/${s}`}>{TRADES[s].label}</a>
           ))}
+          <a href="/guides">Guides</a>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
           <a href="/join">For Pros</a>
