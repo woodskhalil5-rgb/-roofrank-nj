@@ -18,8 +18,24 @@ export type GuideSection = {
   h2: string;
   body: ReadonlyArray<string>;
   list?: ReadonlyArray<string>;
+  table?: {
+    head: ReadonlyArray<string>;
+    rows: ReadonlyArray<ReadonlyArray<string>>;
+  };
   /** Safety callout, rendered prominently. Use only where harm is possible. */
   warn?: string;
+};
+
+/**
+ * A page that quotes money must say where the money came from. Every figure on
+ * a cost page traces to one of these, each of which was actually opened and
+ * read rather than taken from a search snippet.
+ */
+export type GuideSource = {
+  title: string;
+  url: string;
+  /** Scope and date, so the reader can judge how much weight it carries. */
+  note: string;
 };
 
 export type Guide = {
@@ -30,6 +46,7 @@ export type Guide = {
   lede: string;
   updated: string;
   sections: ReadonlyArray<GuideSection>;
+  sources?: ReadonlyArray<GuideSource>;
   meta: { title: string; description: string };
 };
 
@@ -310,6 +327,349 @@ export const GUIDES: ReadonlyArray<Guide> = [
       title: "Move-Out Cleaning Checklist: What Gets Inspected | Jersey Home Pros",
       description:
         "What landlords and buyers actually check at move-out, when to schedule the clean around the movers, and how to document an empty place to protect your deposit.",
+    },
+  },
+  {
+    slug: "roof-replacement-cost-nj",
+    trade: "roofing",
+    h1: "What a roof replacement costs in New Jersey.",
+    lede:
+      "Published figures put a New Jersey roof replacement between roughly $8,500 and $17,000, with asphalt shingles at $3 to $7 a square foot installed. Here is what moves a quote inside that range.",
+    updated: "2026-10-12",
+    sections: [
+      {
+        h2: "New Jersey cost per square foot, by material",
+        body: [
+          "These are New Jersey figures rather than national ones, installed. Measure your roof's footprint, not your floor space — a steep roof covers considerably more area than the house beneath it.",
+        ],
+        table: {
+          head: ["Material", "Installed, per sq ft in NJ"],
+          rows: [
+            ["Asphalt shingles (3-tab)", "$3 – $7"],
+            ["Architectural shingles", "$7 – $15"],
+            ["Rubber (EPDM)", "$3 – $7"],
+            ["PVC / vinyl", "$3 – $5"],
+            ["Cedar shake", "$4 – $13"],
+            ["Concrete tile", "$7 – $10"],
+            ["Metal", "$9 – $17"],
+            ["Clay tile", "$9 – $15"],
+            ["Slate", "$10 – $20"],
+          ],
+        },
+      },
+      {
+        h2: "What pushes a quote up",
+        body: [
+          "Two houses the same size can quote thousands apart, and it is usually one of these rather than the contractor being greedy.",
+        ],
+        list: [
+          "Layers coming off — tearing off two or three old layers costs more in labour and dumpster fees than one",
+          "Rotten decking found after tear-off, which nobody can price until the old roof is off",
+          "Steep pitch, which slows everything down and changes the safety equipment needed",
+          "Complexity — valleys, dormers, skylights and chimneys all need flashing, and flashing is where leaks start",
+          "Permits and disposal, which vary by municipality across Camden, Gloucester and Burlington counties",
+        ],
+      },
+      {
+        h2: "Why estimates should be in writing, itemised",
+        body: [
+          "A roof quote that is one number on one line is impossible to compare against another one. Ask for the tear-off, the decking allowance, the underlayment, the flashing, the disposal and the warranty broken out separately.",
+          "The decking allowance matters most. A quote that says nothing about rotten decking is a quote that will change after the roof is open, and by then you are not in a position to negotiate.",
+        ],
+      },
+      {
+        h2: "An honest note on these numbers",
+        body: [
+          "These are published ranges, not a quote, and they are a starting point for judging whether what you have been handed is reasonable. The only number that matters for your house comes from someone who has stood on it.",
+          "We do not yet have verified South Jersey figures of our own. When contractors in our network give us real local numbers, this page gets them.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        title: "Fixr — Roof Replacement Cost in New Jersey",
+        url: "https://fixr.com/costs/roof-replacement-new-jersey",
+        note: "New Jersey-specific, updated March 2026",
+      },
+    ],
+    meta: {
+      title: "Roof Replacement Cost in New Jersey (2026) | Jersey Home Pros",
+      description:
+        "New Jersey roof replacement costs by material, what pushes a quote up, and how to read an itemised estimate. Published figures, sourced and dated.",
+    },
+  },
+
+  {
+    slug: "furnace-replacement-cost",
+    trade: "hvac",
+    h1: "What a new furnace costs, installed.",
+    lede:
+      "Published figures put a standard-efficiency furnace at roughly $3,500 to $7,500 installed, and a high-efficiency unit as high as $11,500. Home size drives it more than anything else.",
+    updated: "2026-10-12",
+    sections: [
+      {
+        h2: "By home size",
+        body: ["Standard installations, equipment and labour together."],
+        table: {
+          head: ["Home size", "Installed cost"],
+          rows: [
+            ["1,000 – 1,500 sq ft", "$2,000 – $4,500"],
+            ["1,500 – 2,500 sq ft", "$3,000 – $6,500"],
+            ["2,500 – 3,500 sq ft", "$4,000 – $9,500"],
+            ["3,500+ sq ft", "$5,500 – $10,000+"],
+          ],
+        },
+      },
+      {
+        h2: "By fuel and efficiency",
+        body: [
+          "High-efficiency units cost more up front and less to run. Whether that trade works out depends on how long you plan to stay and what you pay for fuel.",
+        ],
+        table: {
+          head: ["Type", "Installed cost"],
+          rows: [
+            ["Electric", "$2,500 – $7,000+"],
+            ["Gas", "$3,000 – $10,000+"],
+            ["Oil", "$4,000 – $10,000+"],
+            ["Standard efficiency (80–89% AFUE)", "$3,500 – $7,500+"],
+            ["High efficiency (90–98% AFUE)", "$3,800 – $11,500+"],
+          ],
+        },
+      },
+      {
+        h2: "Repair or replace",
+        body: [
+          "A furnace past about fifteen years, facing a repair worth a large share of a new unit, is usually worth replacing rather than patching. A newer furnace with one failed part almost never is.",
+          "The exception that overrides the arithmetic is a cracked heat exchanger. That is a carbon monoxide risk, not a comfort problem, and it ends the conversation about repair.",
+        ],
+      },
+      {
+        h2: "Where quotes go wrong",
+        body: [
+          "The commonest problem is not price, it is sizing. An oversized furnace short-cycles, wears out early and heats unevenly, and it is a frequent shortcut. A contractor should be measuring your house and doing a load calculation, not sizing the new unit off the label on the old one.",
+          "Ask what else is included: removing the old unit, any ducting or venting changes, the thermostat, the permit and inspection. Those are the lines that differ between two quotes that look the same.",
+        ],
+      },
+      {
+        h2: "An honest note on these numbers",
+        body: [
+          "These are national published figures, not New Jersey-specific, and not a quote. Treat them as a sanity check on what you have been handed rather than a target.",
+          "When contractors in our network give us real South Jersey numbers, they will replace these.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        title: "HomeGuide — New Furnace Replacement Cost",
+        url: "https://homeguide.com/costs/new-furnace-replacement-cost",
+        note: "National figures, written December 2025, labelled 2026 pricing",
+      },
+    ],
+    meta: {
+      title: "New Furnace Cost, Installed (2026) | Jersey Home Pros",
+      description:
+        "What a furnace replacement costs by home size, fuel and efficiency, when repair beats replacement, and the sizing shortcut that causes most bad installs.",
+    },
+  },
+
+  {
+    slug: "mice-exterminator-cost",
+    trade: "pest",
+    h1: "What it costs to get mice out — and keep them out.",
+    lede:
+      "Published figures put most mouse jobs between $150 and $550, averaging around $350. The number that actually decides your bill is how much sealing the house needs.",
+    updated: "2026-10-12",
+    sections: [
+      {
+        h2: "Typical costs",
+        body: ["National published ranges for residential work."],
+        table: {
+          head: ["Service", "Cost"],
+          rows: [
+            ["Inspection", "$75 – $125 (sometimes free locally)"],
+            ["Typical job, overall range", "$150 – $550"],
+            ["Lethal trap service", "$150 – $475"],
+            ["Bait stations with monitoring", "$300 – $550"],
+            ["Emergency or after-hours visit", "Add $100 – $200"],
+          ],
+        },
+      },
+      {
+        h2: "Sealing is what the price really tracks",
+        body: [
+          "Trapping removes the mice already inside. Exclusion — sealing how they get in — is what stops the next ones, and it is the line item that varies most.",
+        ],
+        table: {
+          head: ["Scope", "Cost"],
+          rows: [
+            ["Small — one entry point sealed", "$100 – $500"],
+            ["Medium — minor sealing work", "$500 – $1,000"],
+            ["Large — sealing plus repairs", "$1,000 – $7,000+"],
+          ],
+        },
+      },
+      {
+        h2: "Treat a cheap quote with no exclusion as a subscription",
+        body: [
+          "A low price to set traps and come back is not the same service as finding and closing the entry points. The first one ends when you stop paying. The second one ends.",
+          "When you compare quotes, compare what each says about exclusion. If one does not mention it at all, that is the difference, not the price.",
+        ],
+      },
+      {
+        h2: "An honest note on these numbers",
+        body: [
+          "These are national published figures, not New Jersey-specific, and not a quote. Real pricing depends on the size of the house, how long it has been going on, and how accessible the entry points are.",
+          "We will replace these with South Jersey figures once contractors in our network supply them.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        title: "HomeGuide — Mice Exterminator Cost",
+        url: "https://homeguide.com/costs/mice-exterminator-cost",
+        note: "National figures, written September 2025",
+      },
+    ],
+    meta: {
+      title: "Mice Exterminator Cost (2026) | Jersey Home Pros",
+      description:
+        "What mouse removal costs — inspection, trapping, bait stations and the exclusion work that actually stops them coming back. Sourced published figures.",
+    },
+  },
+
+  {
+    slug: "local-moving-cost",
+    trade: "moving",
+    h1: "What a local move costs.",
+    lede:
+      "Local movers generally charge $50 to $100 per mover per hour with a three to five hour minimum, which puts a two or three bedroom move somewhere between $900 and $2,800.",
+    updated: "2026-10-12",
+    sections: [
+      {
+        h2: "By home size",
+        body: ["Local meaning under about 50 miles, which covers most moves inside South Jersey."],
+        table: {
+          head: ["Home size", "Crew and time", "Typical cost"],
+          rows: [
+            ["Studio or 1 bedroom", "2 movers, 2 – 4 hrs", "$300 – $800"],
+            ["2 – 3 bedrooms", "3 – 4 movers, 6 – 7 hrs", "$900 – $2,800"],
+            ["4 – 5 bedrooms", "4 – 5 movers, 9 – 12 hrs", "$1,800 – $6,000"],
+          ],
+        },
+      },
+      {
+        h2: "What gets added",
+        body: [
+          "Packing is the big one and it is usually quoted separately — budget $600 to $2,500 for a company to pack and disassemble furniture.",
+        ],
+        list: [
+          "Stairs and long carries from the truck to the door",
+          "Elevator buildings, especially where the elevator has to be booked",
+          "Pianos, safes, gun safes and oversized appliances",
+          "Packing materials, if you did not buy your own boxes",
+          "Storage between move-out and move-in",
+        ],
+      },
+      {
+        h2: "Hourly billing rewards being ready",
+        body: [
+          "You are paying by the hour, so everything boxed, labelled and stacked by the door before the crew arrives comes straight off the bill. Beds broken down, drawers emptied, path cleared.",
+          "The reverse is also true. A crew that spends the first ninety minutes waiting for you to finish packing the kitchen is ninety minutes you are paying for.",
+        ],
+      },
+      {
+        h2: "Check the licence before you book",
+        body: [
+          "Movers operating within New Jersey are regulated by the State, and anything crossing state lines needs federal authority. Ask for the licence number and proof of insurance, and check it.",
+          "The classic scam is a low phone estimate, then a truck loaded and a much higher price demanded before anything comes off. A legitimate mover will do a walkthrough or video survey and give you a written estimate.",
+        ],
+      },
+      {
+        h2: "An honest note on these numbers",
+        body: [
+          "These are national published figures, not New Jersey-specific, and not a quote. Rates in the Philadelphia metro may differ.",
+          "We will put real South Jersey numbers here once movers in our network supply them.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        title: "HomeGuide — Moving Company Costs",
+        url: "https://homeguide.com/costs/moving-company-costs",
+        note: "National figures, written November 2025",
+      },
+    ],
+    meta: {
+      title: "Local Moving Cost (2026) | Jersey Home Pros",
+      description:
+        "What local movers charge per hour and by home size, what gets added to the bill, and how to check a New Jersey mover's licence before you book.",
+    },
+  },
+
+  {
+    slug: "house-cleaning-cost",
+    trade: "cleaning",
+    h1: "What house cleaning costs.",
+    lede:
+      "Published figures put a standard visit around $120 to $280, at roughly $25 to $75 per cleaner per hour. Recurring service costs less per visit than a one-off.",
+    updated: "2026-10-12",
+    sections: [
+      {
+        h2: "Standard cleaning, by home size",
+        body: ["Per visit, for routine rather than deep cleaning."],
+        table: {
+          head: ["Home", "Per visit"],
+          rows: [
+            ["Studio", "about $60"],
+            ["1 bed, 1 bath", "$60 – $90"],
+            ["2 bed, 1 bath", "$90 – $120"],
+            ["2 bed, 2 bath", "$95 – $130"],
+            ["3 bed, 1 bath", "$110 – $165"],
+            ["3 bed, 2 bath", "$135 – $180"],
+            ["4 bed, 3 bath", "$140 – $200"],
+          ],
+        },
+      },
+      {
+        h2: "Deep cleans and move-outs cost more",
+        body: [
+          "These are different jobs from a routine visit — inside the oven and fridge, baseboards, grout, inside cabinets — and they are priced accordingly.",
+        ],
+        table: {
+          head: ["Service", "Cost"],
+          rows: [
+            ["Deep clean", "$230 – $600"],
+            ["Move-in or move-out clean", "$150 – $500"],
+            ["Move-out, around 2,000 sq ft", "$300 – $500"],
+          ],
+        },
+      },
+      {
+        h2: "Recurring is cheaper per visit, and not only on paper",
+        body: [
+          "Weekly or fortnightly service is priced below the equivalent one-off, partly as a discount and partly because a house cleaned regularly takes less time than one cleaned twice a year.",
+          "If you are deciding between a monthly deep clean and a fortnightly standard clean at a similar monthly total, the fortnightly one generally leaves the house in better condition.",
+        ],
+      },
+      {
+        h2: "An honest note on these numbers",
+        body: [
+          "These are national figures and they are the oldest data on any of our cost pages — the source was written in 2024, and its own tables disagree with each other in places. We are quoting the ranges rather than any single average for that reason.",
+          "Treat them as a rough sanity check only. Local quotes will be more reliable than this page, and when cleaners in our network give us South Jersey numbers we will replace these.",
+        ],
+      },
+    ],
+    sources: [
+      {
+        title: "HomeGuide — House Cleaning Prices",
+        url: "https://homeguide.com/costs/house-cleaning-prices",
+        note: "National figures, written April 2024 — the oldest source cited here, with internally inconsistent tables",
+      },
+    ],
+    meta: {
+      title: "House Cleaning Cost (2026) | Jersey Home Pros",
+      description:
+        "What house cleaning costs per visit by home size, what deep cleans and move-out cleans run, and why recurring service is cheaper per visit.",
     },
   },
 ];

@@ -78,3 +78,23 @@
   .tradegrid{grid-template-columns:1fr;gap:12px}
   .tradecard{min-height:0;padding:24px 20px}
 }
+
+/* ---- cost tables in guides ---- */
+.costtable{width:100%;border-collapse:collapse;margin:18px 0 22px;font-size:14px}
+.costtable th{text-align:left;padding:10px 12px;background:#0a0b0c;color:#fff;
+  font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+.costtable td{padding:10px 12px;border-bottom:1px solid #e4ded1;vertical-align:top}
+.costtable tr:last-child td{border-bottom:0}
+.costtable tbody tr:nth-child(even){background:#faf7f1}
+.costtable td:first-child{font-weight:600}
+/* Phones get the table as stacked rows: a 3-column price table scrolled
+   sideways is unreadable, and most of this traffic arrives on a phone. */
+@media(max-width:560px){
+  .costtable,.costtable tbody,.costtable tr,.costtable td{display:block;width:100%}
+  .costtable thead{display:none}
+  .costtable tr{border:1px solid #e4ded1;margin-bottom:10px;padding:4px 0}
+  .costtable tbody tr:nth-child(even){background:transparent}
+  .costtable td{border-bottom:0;padding:5px 12px}
+  .costtable td:first-child{font-weight:800;font-size:15px;padding-top:10px}
+  .costtable td:not(:first-child){color:#3f4038}
+}

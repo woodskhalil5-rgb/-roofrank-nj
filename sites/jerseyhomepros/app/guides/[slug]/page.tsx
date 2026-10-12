@@ -83,6 +83,26 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
                 ))}
               </ul>
             )}
+            {s.table && (
+              <table className="costtable">
+                <thead>
+                  <tr>
+                    {s.table.head.map((h) => (
+                      <th key={h}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {s.table.rows.map((row) => (
+                    <tr key={row[0]}>
+                      {row.map((cell, i) => (
+                        <td key={`${row[0]}-${i}`}>{cell}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
             {s.warn && (
               <div className="privacyNote">
                 <span>&#9888;</span>
@@ -95,6 +115,28 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
             )}
           </section>
         ))}
+
+        {guide.sources && (
+          <section>
+            <h2>Where these figures come from</h2>
+            <p>
+              Every number on this page comes from a published cost guide, listed
+              below with its scope and date. None of it is a quote, and none of it is
+              our own data &mdash; when it is, we will say so.
+            </p>
+            <ul>
+              {guide.sources.map((src) => (
+                <li key={src.url}>
+                  <a href={src.url} rel="nofollow noopener" target="_blank">
+                    {src.title}
+                  </a>
+                  <br />
+                  <small className="fieldhint">{src.note}</small>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <h2>Need someone to look at it?</h2>
         <p>
