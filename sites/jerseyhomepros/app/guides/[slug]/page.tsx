@@ -31,7 +31,13 @@ export default async function GuidePage({ params }: { params: Promise<{ slug: st
   if (!guide) notFound();
 
   const trade = TRADES[guide.trade];
-  const related = GUIDES.filter((g) => g.slug !== guide.slug).slice(0, 3);
+  // Same trade first — the mouse cost page should point at the mouse guide,
+  // not at a furnace article — then fill from the rest.
+  const others = GUIDES.filter((g) => g.slug !== guide.slug);
+  const related = [
+    ...others.filter((g) => g.trade === guide.trade),
+    ...others.filter((g) => g.trade !== guide.trade),
+  ].slice(0, 3);
 
   // Article structured data. Search engines use it to understand what the page
   // is and when it was written; it carries no claim the page does not make.
