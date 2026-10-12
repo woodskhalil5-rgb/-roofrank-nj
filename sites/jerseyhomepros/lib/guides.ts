@@ -39,7 +39,7 @@ export const GUIDES: ReadonlyArray<Guide> = [
     trade: "hvac",
     h1: "Furnace blowing cold air? Here's what to check first.",
     lede:
-      "Four of the five causes are things you can check yourself in about ten minutes, and one of them is the most common call heating companies get all winter.",
+      "Most of the causes are things you can check yourself in about ten minutes — and the first one on the list is a thermostat setting, not a broken furnace.",
     updated: "2026-10-12",
     sections: [
       {
@@ -261,7 +261,7 @@ export const GUIDES: ReadonlyArray<Guide> = [
     trade: "cleaning",
     h1: "Move-out cleaning: what actually gets checked.",
     lede:
-      "Landlords and buyers inspect a predictable list, and most deposit disputes come down to four or five of the same items every time.",
+      "Landlords and buyers inspect a fairly predictable list, and the same few items are the ones people tend to forget.",
     updated: "2026-10-12",
     sections: [
       {
@@ -273,7 +273,7 @@ export const GUIDES: ReadonlyArray<Guide> = [
       },
       {
         h2: "The things that actually get inspected",
-        body: ["In roughly the order they cost people their deposit."],
+        body: ["These are the ones that come up again and again."],
         list: [
           "Oven and stovetop, including the drip pans and the glass in the door",
             "Refrigerator — emptied, wiped, and the seals cleaned",
