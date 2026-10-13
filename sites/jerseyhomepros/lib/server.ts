@@ -14,12 +14,35 @@ export function adminDb(): SupabaseClient | null {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
-/** Allowlisted admin addresses, normalised to lowercase. */
-export function adminEmails(): string[] {
-  return (process.env.ADMIN_EMAILS ?? "")
+function splitList(value: string | undefined): string[] {
+  return (value ?? "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
+}
+
+/**
+ * Addresses permitted to sign in to /admin. This is an authorisation list,
+ * not a mailing list — see alertEmails().
+ */
+export function adminEmails(): string[] {
+  return splitList(process.env.ADMIN_EMAILS);
+}
+
+/**
+ * Where operator alerts are sent.
+ *
+ * Deliberately separate from ADMIN_EMAILS. Sharing one variable meant that
+ * adding somebody to the alert list also granted them admin access to every
+ * lead's contact details and consent record, and that the alert could only be
+ * sent to addresses that happened to be admins. They are different questions.
+ *
+ * Falls back to adminEmails() so an unset variable degrades to the old
+ * behaviour rather than to sending nowhere.
+ */
+export function alertEmails(): string[] {
+  const explicit = splitList(process.env.LEAD_ALERT_EMAILS);
+  return explicit.length > 0 ? explicit : adminEmails();
 }
 
 /**
@@ -201,8 +224,8 @@ export async function notifyOperator(
   leadId: string,
   phoneConsent: boolean
 ): Promise<{ ok: boolean; error?: string }> {
-  const to = adminEmails();
-  if (to.length === 0) return { ok: false, error: "no_admin_emails_configured" };
+  const to = alertEmails();
+  if (to.length === 0) return { ok: false, error: "no_alert_emails_configured" };
 
   // The subject line is the alert. It has to be readable on a phone lock
   // screen without opening anything, because when matched is 0 the operator
@@ -279,8 +302,8 @@ export async function notifyOperatorApplication(
   radiusMiles: number,
   services: string
 ): Promise<{ ok: boolean; error?: string }> {
-  const to = adminEmails();
-  if (to.length === 0) return { ok: false, error: "no_admin_emails_configured" };
+  const to = alertEmails();
+  if (to.length === 0) return { ok: false, error: "no_alert_emails_configured" };
 
   const lines = [
     `A ${trade.company} applied to join the network.`,
