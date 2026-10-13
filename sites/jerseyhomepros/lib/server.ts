@@ -145,11 +145,18 @@ export async function notifyProvider(
         `Call only between 8am and 8pm local time, no more than 3 attempts`,
         `in 24 hours, and stop immediately on any opt-out request.`,
       ]
-    : [
+    : lead.phone
+    ? [
         `CONTACT PERMISSION: *** EMAIL ONLY — DO NOT CALL OR TEXT ***`,
         `This homeowner did NOT consent to phone or text contact.`,
         `Respond by email at ${lead.email}. Calling or texting this number`,
         `may expose you to TCPA liability and breaches your network agreement.`,
+      ]
+    : [
+        `CONTACT PERMISSION: *** EMAIL ONLY ***`,
+        `This homeowner did NOT consent to phone or text contact and gave`,
+        `no phone number. Respond by email at ${lead.email}. Do not attempt`,
+        `to look up a number for them.`,
       ];
 
   // Computed from the real match count, never assumed. The exclusivity claim the
@@ -189,7 +196,9 @@ export async function notifyProvider(
     ``,
     `Contact`,
     `Name:  ${lead.name}`,
-    `Phone: ${lead.phone}`,
+    // Omitted entirely when blank. A homeowner who declined calls may leave no
+    // number at all, and an empty "Phone:" line reads as a broken email.
+    ...(lead.phone ? [`Phone: ${lead.phone}`] : []),
     `Email: ${lead.email}`,
     ``,
     ...exclusivity,
@@ -270,7 +279,7 @@ export async function notifyOperator(
     ...(lead.details ? [`Details:        ${lead.details}`] : []),
     ``,
     `Name:  ${lead.name}`,
-    `Phone: ${lead.phone}`,
+    ...(lead.phone ? [`Phone: ${lead.phone}`] : [`Phone: not given`]),
     `Email: ${lead.email}`,
     ``,
     contactRule,

@@ -46,7 +46,11 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const required = ["name", "phone", "email", "zip", "property_type", "service", "timing"];
+    // `phone` is deliberately absent. It is required only when the homeowner
+    // ticks the calls-and-texts box, which is checked below once the trade is
+    // known. Demanding a number we are then forbidden to dial was the single
+    // highest-friction field on the form.
+    const required = ["name", "email", "zip", "property_type", "service", "timing"];
     for (const key of required) {
       if (!String(body[key] ?? "").trim()) {
         return NextResponse.json({ error: `Missing required field: ${key}` }, { status: 400 });
@@ -69,12 +73,6 @@ export async function POST(req: Request) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 320) {
       return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
     }
-    // Enough digits to dial. Formatting is left alone so the contractor sees
-    // exactly what the homeowner typed.
-    if ((String(body.phone).match(/[0-9]/g) ?? []).length < 10) {
-      return NextResponse.json({ error: "Enter a valid phone number including area code." }, { status: 400 });
-    }
-
     // Sharing consent is required: it IS the service. Phone/text consent is separate
     // and optional, because TCPA forbids making it a condition of the service.
     if (body.consent !== "yes") {
@@ -84,6 +82,22 @@ export async function POST(req: Request) {
       );
     }
     const phoneConsent = body.phone_consent === "yes";
+
+    // Phone is optional, and only meaningful if someone is allowed to dial it.
+    // Consenting to calls without leaving a number would produce a lead the
+    // contractor is told they may ring and has no way to.
+    const phone = String(body.phone ?? "").trim();
+    if (phoneConsent && !phone) {
+      return NextResponse.json(
+        { error: "Add a phone number, or untick the calls and texts box to be contacted by email only." },
+        { status: 400 }
+      );
+    }
+    // Enough digits to dial, checked only when a number was actually given.
+    // Formatting is left alone so the contractor sees what the homeowner typed.
+    if (phone && (phone.match(/[0-9]/g) ?? []).length < 10) {
+      return NextResponse.json({ error: "Enter a valid phone number including area code." }, { status: 400 });
+    }
 
     const db = adminDb();
     if (!db) {
@@ -159,7 +173,9 @@ export async function POST(req: Request) {
 
     const lead: LeadForEmail = {
       name: String(body.name).trim().slice(0, 200),
-      phone: String(body.phone).trim().slice(0, 40),
+      // Empty string rather than null: every consumer of LeadForEmail treats
+      // phone as a string, and the email builders omit the line when it is blank.
+      phone: phone.slice(0, 40),
       email,
       zip,
       property_type: String(body.property_type).slice(0, 80),

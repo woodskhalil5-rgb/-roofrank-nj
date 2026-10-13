@@ -12,6 +12,10 @@ export default function LeadForm({ trade }: { trade: Trade }) {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  // Drives whether the phone field is required. Ticking the calls box is the
+  // only thing that makes a number necessary — otherwise email is enough, which
+  // is exactly what the contractor notification tells them to use.
+  const [wantsCalls, setWantsCalls] = useState(false);
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -34,6 +38,9 @@ export default function LeadForm({ trade }: { trade: Trade }) {
       // string here would promise something the software may not do.
       setStatus(j.message || `Request received. ${SITE.brand} will follow up soon.`);
       form.reset();
+      // form.reset() clears the DOM checkbox but not React state, which would
+      // leave the phone field required against an unticked box.
+      setWantsCalls(false);
 
       // Conversion signal. Fired only here — after a 2xx from the server with a
       // saved lead — so it can never be triggered by opening or abandoning the
@@ -68,7 +75,16 @@ export default function LeadForm({ trade }: { trade: Trade }) {
         <>
           <div className="formrow">
             <label>Full name<input name="name" required autoComplete="name" placeholder="Your name" /></label>
-            <label>Phone number<input name="phone" required type="tel" autoComplete="tel" placeholder="(555) 555-5555" /></label>
+            <label>
+              Phone number {!wantsCalls && <span className="optional">(optional)</span>}
+              <input
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                required={wantsCalls}
+                placeholder="(555) 555-5555"
+              />
+            </label>
           </div>
           <label>Email address<input name="email" required type="email" autoComplete="email" placeholder="you@example.com" /></label>
           <div className="formrow">
@@ -108,8 +124,16 @@ export default function LeadForm({ trade }: { trade: Trade }) {
             </span>
           </label>
 
+          {/* Unticked by default and worded exactly as stored. Ticking it is
+              what makes the phone field required, never the reverse. */}
           <label className="consent optionalconsent">
-            <input type="checkbox" name="phone_consent" value="yes" />
+            <input
+              type="checkbox"
+              name="phone_consent"
+              value="yes"
+              checked={wantsCalls}
+              onChange={(e) => setWantsCalls(e.target.checked)}
+            />
             <span><b>Optional &mdash; calls and texts.</b> {phoneConsentText(trade)}</span>
           </label>
 

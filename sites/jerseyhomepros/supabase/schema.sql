@@ -73,7 +73,8 @@ create table if not exists public.leads (
   id                 uuid primary key default gen_random_uuid(),
   created_at         timestamptz not null default now(),
   name               text not null,
-  phone              text not null,
+  -- Optional: required only when the homeowner consents to calls and texts.
+  phone              text not null default '',
   email              text not null,
   zip                text not null check (zip ~ '^[0-9]{5}$'),
   property_type      text not null,
