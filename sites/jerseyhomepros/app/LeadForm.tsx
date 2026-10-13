@@ -29,8 +29,27 @@ export default function LeadForm({ trade }: { trade: Trade }) {
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || "Please try again.");
       setDone(true);
-      setStatus(`Request received. ${SITE.brand} will follow up soon.`);
+      // The server decides the wording, because only the server knows whether
+      // the request actually reached a contractor. A fixed "we'll follow up"
+      // string here would promise something the software may not do.
+      setStatus(j.message || `Request received. ${SITE.brand} will follow up soon.`);
       form.reset();
+
+      // Conversion signal. Fired only here — after a 2xx from the server with a
+      // saved lead — so it can never be triggered by opening or abandoning the
+      // form. `lead_id` is the deduplication key; a suppressed duplicate
+      // submission reports itself so it is not counted twice. No name, phone,
+      // email or ZIP is ever placed in an analytics payload.
+      if (!j.duplicate) {
+        const w = window as Window & { dataLayer?: unknown[] };
+        const layer: unknown[] = w.dataLayer ?? (w.dataLayer = []);
+        layer.push({
+          event: "lead_submitted",
+          trade: trade.slug,
+          matched: j.matched ?? 0,
+          lead_id: j.lead_id ?? null,
+        });
+      }
     } catch (err) {
       setStatus(err instanceof Error ? err.message : "Could not send your request. Please try again.");
     } finally {

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminDb } from "../../../lib/server";
+import { adminDb, notifyOperatorApplication } from "../../../lib/server";
 import { TRADES, isTradeSlug } from "../../../lib/trades";
 
 /** Pulls 5-digit ZIPs out of free text, de-duplicated, order preserved. */
@@ -63,21 +63,67 @@ export async function POST(req: Request) {
     }
     const rejected = zips.filter((z) => !validZips.includes(z));
 
-    const { error } = await db.from("roofers").insert({
-      company: String(body.company).trim(),
-      contact: String(body.contact).trim(),
-      email,
-      phone: String(body.phone).trim(),
-      trade: trade.slug,
-      service_zips: validZips,
-      radius_miles: Math.round(radius),
-      services: String(body.services).trim(),
-      status: "pending",
-      notes: rejected.length ? `Unrecognised ZIPs submitted: ${rejected.join(", ")}` : "",
-    });
+    const company = String(body.company).trim();
+    const contact = String(body.contact).trim();
+    const phone = String(body.phone).trim();
+    const services = String(body.services).trim();
+    const radiusMiles = Math.round(radius);
 
-    if (error) {
+    const { data: inserted, error } = await db
+      .from("roofers")
+      .insert({
+        company,
+        contact,
+        email,
+        phone,
+        trade: trade.slug,
+        service_zips: validZips,
+        radius_miles: radiusMiles,
+        services,
+        status: "pending",
+        notes: rejected.length ? `Unrecognised ZIPs submitted: ${rejected.join(", ")}` : "",
+      })
+      .select("id")
+      .single();
+
+    if (error || !inserted) {
+      console.error(
+        `[providers] INSERT FAILED trade=${trade.slug} error=${error?.message ?? "no row returned"}`
+      );
       return NextResponse.json({ error: "We couldn't save your application. Please try again." }, { status: 500 });
+    }
+
+    // Applications used to arrive silently too. Supply is the constraint on
+    // this business, so an application nobody sees for days is expensive.
+    // Best-effort: the application is already saved.
+    try {
+      const alert = await notifyOperatorApplication(
+        company,
+        contact,
+        email,
+        phone,
+        trade,
+        validZips.length,
+        radiusMiles,
+        services
+      );
+      if (!alert.ok) {
+        console.error(`[providers] OPERATOR ALERT FAILED id=${inserted.id} error=${alert.error}`);
+      }
+      await db
+        .from("roofers")
+        .update(
+          alert.ok
+            ? { operator_notified_at: new Date().toISOString(), operator_notify_error: null }
+            : { operator_notify_error: alert.error ?? "unknown" }
+        )
+        .eq("id", inserted.id);
+    } catch (err) {
+      console.error(
+        `[providers] operator alert threw id=${inserted.id} error=${
+          err instanceof Error ? err.message : String(err)
+        }`
+      );
     }
 
     return NextResponse.json({ ok: true, accepted_zips: validZips.length, ignored_zips: rejected });

@@ -161,6 +161,133 @@ export async function notifyProvider(
 }
 
 /**
+ * Alerts the operator about a lead that has already been saved.
+ *
+ * This exists because matching is allowed to return zero. A trade with no
+ * approved contractor — which is most of them most of the time — produced a
+ * saved lead, no email to anyone, and a homeowner who had been told someone
+ * would follow up. The lead was only discoverable by opening /admin and
+ * noticing. That is the failure this closes: the operator is told about every
+ * single lead, and told loudest when nobody else was.
+ *
+ * Never throws. The homeowner's submission has already succeeded by the time
+ * this runs and must not be reported as failed.
+ */
+export async function notifyOperator(
+  lead: LeadForEmail,
+  trade: Trade,
+  matched: number,
+  leadId: string,
+  phoneConsent: boolean
+): Promise<{ ok: boolean; error?: string }> {
+  const to = adminEmails();
+  if (to.length === 0) return { ok: false, error: "no_admin_emails_configured" };
+
+  // The subject line is the alert. It has to be readable on a phone lock
+  // screen without opening anything, because when matched is 0 the operator
+  // is the only person who knows this homeowner exists.
+  const subject =
+    matched > 0
+      ? `New ${trade.label} lead — ${lead.zip} — sent to ${matched} ${matched === 1 ? "company" : "companies"}`
+      : `ACTION REQUIRED: unmatched ${trade.label} lead — ${lead.zip} — nobody was notified`;
+
+  const head =
+    matched > 0
+      ? [
+          `A ${trade.label} request came in and went out to ${matched} ${
+            matched === 1 ? "company" : "companies"
+          }.`,
+          `No action needed unless you want to follow it.`,
+        ]
+      : [
+          `*** THIS LEAD WENT TO NO ONE. ***`,
+          ``,
+          `A homeowner submitted a ${trade.label} request and there is no`,
+          `approved ${trade.company} covering ZIP ${lead.zip}. They were told`,
+          `${SITE.brand} would review it and follow up by email, so that`,
+          `follow-up is now yours to make.`,
+          ``,
+          `Either reply to this homeowner directly, or approve a ${trade.company}`,
+          `for this area in /admin and press Rematch on the lead.`,
+        ];
+
+  const contactRule = phoneConsent
+    ? `Phone and text contact: PERMITTED.`
+    : `Phone and text contact: NOT permitted — email only.`;
+
+  const lines = [
+    ...head,
+    ``,
+    `Trade:          ${trade.label}`,
+    `Service needed: ${lead.service}`,
+    `Property type:  ${lead.property_type}`,
+    `Timing:         ${lead.timing}`,
+    `ZIP:            ${lead.zip}`,
+    ...(lead.details ? [`Details:        ${lead.details}`] : []),
+    ``,
+    `Name:  ${lead.name}`,
+    `Phone: ${lead.phone}`,
+    `Email: ${lead.email}`,
+    ``,
+    contactRule,
+    ``,
+    `Lead ID: ${leadId}`,
+    `Admin:   ${SITE.url}/admin`,
+    ``,
+    `— ${SITE.brand} (automatic operator alert)`,
+  ];
+
+  return sendEmail(to.join(","), subject, lines.join("\n"));
+}
+
+/**
+ * Alerts the operator that a contractor applied. Applications had the same
+ * silent-arrival problem as leads: nothing was sent, so an application only
+ * surfaced if someone happened to open /admin. An applicant who hears nothing
+ * assumes the network is dead, and supply is the constraint on this business.
+ *
+ * Never throws: the application is already saved.
+ */
+export async function notifyOperatorApplication(
+  company: string,
+  contact: string,
+  email: string,
+  phone: string,
+  trade: Trade,
+  zipCount: number,
+  radiusMiles: number,
+  services: string
+): Promise<{ ok: boolean; error?: string }> {
+  const to = adminEmails();
+  if (to.length === 0) return { ok: false, error: "no_admin_emails_configured" };
+
+  const lines = [
+    `A ${trade.company} applied to join the network.`,
+    ``,
+    `They are pending and will receive no leads until you approve them in`,
+    `/admin. Approving sends them the welcome email with the contact rules.`,
+    ``,
+    `Company:  ${company}`,
+    `Contact:  ${contact}`,
+    `Email:    ${email}`,
+    `Phone:    ${phone}`,
+    `Trade:    ${trade.label}`,
+    `Services: ${services}`,
+    `Coverage: ${zipCount} NJ ZIP ${zipCount === 1 ? "code" : "codes"}, ${radiusMiles}-mile radius`,
+    ``,
+    `Admin: ${SITE.url}/admin`,
+    ``,
+    `— ${SITE.brand} (automatic operator alert)`,
+  ];
+
+  return sendEmail(
+    to.join(","),
+    `New ${trade.label} contractor application — ${company}`,
+    lines.join("\n")
+  );
+}
+
+/**
  * Sent once, when an admin approves a provider. This is the moment they are
  * most engaged, and it is the only place the contact rules are stated to them
  * in writing before the first lead arrives.

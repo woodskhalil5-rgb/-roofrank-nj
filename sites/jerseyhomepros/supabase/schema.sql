@@ -52,7 +52,12 @@ create table if not exists public.roofers (
   -- Adding a trade means widening this list and adding an entry to
   -- lib/trades.ts. Nothing else changes.
   trade         text not null default 'roofing'
-                  check (trade in ('roofing', 'hvac', 'pest', 'moving', 'cleaning'))
+                  check (trade in ('roofing', 'hvac', 'pest', 'moving', 'cleaning')),
+
+  -- Proof the operator was told this application exists. Applications used to
+  -- arrive with no email to anyone, so one was only found by opening /admin.
+  operator_notified_at  timestamptz,
+  operator_notify_error text
 );
 alter table public.roofers enable row level security;
 
@@ -98,7 +103,14 @@ create table if not exists public.leads (
   feedback           text check (feedback is null or feedback in ('hired', 'deciding', 'no_contact')),
   feedback_at        timestamptz,
   feedback_roofer_id uuid references public.roofers(id) on delete set null,
-  unsubscribed       boolean not null default false
+  unsubscribed       boolean not null default false,
+
+  -- Proof a human was told about this lead. match_lead is allowed to return 0,
+  -- and when it does these two columns are the only record that the request
+  -- reached anybody at all. Do not remove: an unmatched lead with no operator
+  -- alert is a lead that silently disappeared.
+  operator_notified_at  timestamptz,
+  operator_notify_error text
 );
 alter table public.leads enable row level security;
 
@@ -108,6 +120,15 @@ create index if not exists leads_phone_consent_idx on public.leads (phone_consen
 create unique index if not exists leads_feedback_token_idx on public.leads (feedback_token);
 create index if not exists leads_followup_due_idx on public.leads (created_at)
   where followup_sent_at is null;
+
+-- Serves the 15-minute duplicate-submission check in /api/leads.
+create index if not exists leads_dedupe_idx
+  on public.leads (lower(email), trade, created_at desc);
+-- Serves the per-IP hourly rate limit in /api/leads.
+create index if not exists leads_ip_rate_idx on public.leads (consent_ip, created_at desc);
+-- Finds leads the operator was never successfully alerted about.
+create index if not exists leads_unalerted_idx on public.leads (created_at desc)
+  where operator_notified_at is null;
 
 -- ------------------------------------------------------------------- matches
 -- One row per provider a lead was sent to. notified_at and notify_error make

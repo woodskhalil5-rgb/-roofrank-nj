@@ -1,8 +1,46 @@
 import { NextResponse } from "next/server";
-import { adminDb, notifyProvider, type LeadForEmail } from "../../../lib/server";
+import {
+  adminDb,
+  notifyProvider,
+  notifyOperator,
+  type LeadForEmail,
+} from "../../../lib/server";
 import { SITE } from "../../../lib/site";
-import { TRADES, isTradeSlug } from "../../../lib/trades";
+import { TRADES, isTradeSlug, type Trade } from "../../../lib/trades";
 import { CONSENT_VERSION, sharingConsentText, phoneConsentText, TERMS_ACK } from "../../../lib/consent";
+
+/**
+ * How many requests one IP may submit per hour before being turned away.
+ * Deliberately generous: a household behind one NAT address, or a homeowner
+ * who legitimately needs a roofer and a mover in the same sitting, must not
+ * be blocked. It only has to stop a script.
+ */
+const RATE_LIMIT_PER_HOUR = 6;
+
+/**
+ * A repeat of the same email and trade inside this window is treated as the
+ * same request, not a second one. Double-clicking submit, or a flaky mobile
+ * connection retrying the POST, previously produced two leads and two
+ * contractor emails for one homeowner.
+ */
+const DEDUPE_WINDOW_MINUTES = 15;
+
+/** `%` and `_` are wildcards to ILIKE, so they are escaped before matching. */
+function escapeLike(value: string): string {
+  return value.replace(/([%_\\])/g, "\\$1");
+}
+
+/** What the homeowner is told, which must match what the software will do. */
+function confirmation(matched: number, trade: Trade): string {
+  if (matched > 0) {
+    return `Request received. We've sent it to ${matched} participating ${
+      matched === 1 ? trade.company : trade.companies
+    } serving your area, who will contact you directly.`;
+  }
+  // No promise of a timeline, because nothing enforces one. The operator
+  // alert is what makes even this much true.
+  return `Request received. We don't currently have a participating ${trade.company} signed up for your ZIP code, so ${SITE.brand} will review your request and follow up by email.`;
+}
 
 export async function POST(req: Request) {
   try {
@@ -25,6 +63,18 @@ export async function POST(req: Request) {
     }
     const trade = TRADES[tradeSlug];
 
+    const email = String(body.email).trim();
+    // The form's type="email" is client-side only and a direct POST bypasses it.
+    // An unparseable address means the homeowner can never be reached.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 320) {
+      return NextResponse.json({ error: "Enter a valid email address." }, { status: 400 });
+    }
+    // Enough digits to dial. Formatting is left alone so the contractor sees
+    // exactly what the homeowner typed.
+    if ((String(body.phone).match(/[0-9]/g) ?? []).length < 10) {
+      return NextResponse.json({ error: "Enter a valid phone number including area code." }, { status: 400 });
+    }
+
     // Sharing consent is required: it IS the service. Phone/text consent is separate
     // and optional, because TCPA forbids making it a condition of the service.
     if (body.consent !== "yes") {
@@ -37,6 +87,7 @@ export async function POST(req: Request) {
 
     const db = adminDb();
     if (!db) {
+      console.error("[leads] database not connected: missing Supabase env vars");
       return NextResponse.json(
         { error: "The lead form is built, but the database is not connected yet. Please try again shortly." },
         { status: 503 }
@@ -54,18 +105,69 @@ export async function POST(req: Request) {
       );
     }
 
+    const forwarded = req.headers.get("x-forwarded-for") ?? "";
+    const ip = forwarded.split(",")[0].trim().slice(0, 120);
+
+    // Rate limit before writing anything. Skipped when the IP is unknown,
+    // since every such caller would otherwise share one bucket.
+    if (ip) {
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { count, error: rateErr } = await db
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .eq("consent_ip", ip)
+        .gte("created_at", since);
+      if (rateErr) {
+        // Fail open: a broken counter must not block a real homeowner.
+        console.error("[leads] rate-limit check failed, allowing request:", rateErr.message);
+      } else if ((count ?? 0) >= RATE_LIMIT_PER_HOUR) {
+        console.warn(`[leads] rate limited ip=${ip} count=${count}`);
+        return NextResponse.json(
+          { error: "You've sent several requests recently. Please try again later, or email us if something went wrong." },
+          { status: 429 }
+        );
+      }
+    }
+
+    // Treat an immediate repeat as the same request. Returns the original
+    // outcome so the homeowner sees a success, not a confusing error.
+    const dedupeSince = new Date(Date.now() - DEDUPE_WINDOW_MINUTES * 60 * 1000).toISOString();
+    const { data: dupe } = await db
+      .from("leads")
+      .select("id")
+      .ilike("email", escapeLike(email))
+      .eq("trade", trade.slug)
+      .gte("created_at", dedupeSince)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (dupe) {
+      const { count: matchCount } = await db
+        .from("lead_matches")
+        .select("id", { count: "exact", head: true })
+        .eq("lead_id", dupe.id);
+      const matched = matchCount ?? 0;
+      console.log(`[leads] duplicate suppressed lead_id=${dupe.id} trade=${trade.slug}`);
+      return NextResponse.json({
+        ok: true,
+        duplicate: true,
+        matched,
+        message: confirmation(matched, trade),
+      });
+    }
+
     const lead: LeadForEmail = {
-      name: String(body.name).trim(),
-      phone: String(body.phone).trim(),
-      email: String(body.email).trim(),
+      name: String(body.name).trim().slice(0, 200),
+      phone: String(body.phone).trim().slice(0, 40),
+      email,
       zip,
-      property_type: String(body.property_type),
-      service: String(body.service),
-      timing: String(body.timing),
-      details: String(body.details ?? "").trim(),
+      property_type: String(body.property_type).slice(0, 80),
+      service: String(body.service).slice(0, 120),
+      timing: String(body.timing).slice(0, 80),
+      details: String(body.details ?? "").trim().slice(0, 4000),
     };
 
-    const forwarded = req.headers.get("x-forwarded-for") ?? "";
     const shown = `${sharingConsentText(trade)} ${TERMS_ACK}`;
     const consentText = phoneConsent ? `${shown}\n\n${phoneConsentText(trade)}` : shown;
 
@@ -78,7 +180,7 @@ export async function POST(req: Request) {
         phone_consent: phoneConsent,
         consent_text: consentText,
         consent_version: CONSENT_VERSION,
-        consent_ip: forwarded.split(",")[0].trim().slice(0, 120),
+        consent_ip: ip,
         consent_user_agent: (req.headers.get("user-agent") ?? "").slice(0, 400),
         consent_at: new Date().toISOString(),
         status: "new",
@@ -87,21 +189,31 @@ export async function POST(req: Request) {
       .single();
 
     if (error || !inserted) {
+      // Logged rather than swallowed: this is the one failure the homeowner
+      // is told about, so it has to be diagnosable afterwards.
+      console.error(
+        `[leads] INSERT FAILED trade=${trade.slug} zip=${zip} error=${error?.message ?? "no row returned"}`
+      );
       return NextResponse.json({ error: "We couldn't save your request. Please try again." }, { status: 500 });
     }
+
+    const leadId = inserted.id as string;
 
     // The homeowner is already safely saved. Everything below is best-effort:
     // a matching or email failure must never surface as a submission failure.
     let matched = 0;
     try {
-      const { data: count } = await db.rpc("match_lead", { p_lead_id: inserted.id });
+      const { data: count, error: matchErr } = await db.rpc("match_lead", { p_lead_id: leadId });
+      if (matchErr) {
+        console.error(`[leads] match_lead failed lead_id=${leadId} error=${matchErr.message}`);
+      }
       matched = typeof count === "number" ? count : 0;
 
       if (matched > 0) {
         const { data: rows } = await db
           .from("lead_matches")
           .select("id, distance_miles, roofers(company, email)")
-          .eq("lead_id", inserted.id)
+          .eq("lead_id", leadId)
           .is("notified_at", null);
 
         for (const row of rows ?? []) {
@@ -118,6 +230,11 @@ export async function POST(req: Request) {
             phoneConsent,
             Math.max(0, matched - 1)
           );
+          if (!sent.ok) {
+            console.error(
+              `[leads] provider notify failed lead_id=${leadId} match_id=${row.id} error=${sent.error}`
+            );
+          }
           await db
             .from("lead_matches")
             .update(
@@ -128,13 +245,52 @@ export async function POST(req: Request) {
             .eq("id", row.id);
         }
       }
-    } catch {
-      // Swallowed deliberately: the lead is saved and visible in the admin dashboard,
-      // where unnotified matches can be retried.
+    } catch (err) {
+      console.error(
+        `[leads] matching/notification threw lead_id=${leadId} error=${
+          err instanceof Error ? err.message : String(err)
+        }`
+      );
     }
 
-    return NextResponse.json({ ok: true, matched });
-  } catch {
+    // The operator is told about every lead, matched or not. This is the step
+    // whose absence meant an unmatched lead reached nobody at all, and it runs
+    // last so a mail failure cannot cost us the saved record.
+    try {
+      const alert = await notifyOperator(lead, trade, matched, leadId, phoneConsent);
+      if (!alert.ok) {
+        console.error(`[leads] OPERATOR ALERT FAILED lead_id=${leadId} error=${alert.error}`);
+      }
+      await db
+        .from("leads")
+        .update(
+          alert.ok
+            ? { operator_notified_at: new Date().toISOString(), operator_notify_error: null }
+            : { operator_notify_error: alert.error ?? "unknown" }
+        )
+        .eq("id", leadId);
+    } catch (err) {
+      console.error(
+        `[leads] operator alert threw lead_id=${leadId} error=${
+          err instanceof Error ? err.message : String(err)
+        }`
+      );
+    }
+
+    if (matched === 0) {
+      // Worth its own line in the logs: it means supply, not the funnel, is
+      // what is losing this lead.
+      console.warn(`[leads] UNMATCHED lead_id=${leadId} trade=${trade.slug} zip=${zip}`);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      matched,
+      lead_id: leadId,
+      message: confirmation(matched, trade),
+    });
+  } catch (err) {
+    console.error(`[leads] unhandled error=${err instanceof Error ? err.message : String(err)}`);
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 }
