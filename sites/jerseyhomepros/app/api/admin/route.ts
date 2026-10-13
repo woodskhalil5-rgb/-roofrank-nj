@@ -4,6 +4,7 @@ import {
   requireAdmin,
   notifyProvider,
   notifyProviderApproved,
+  notifyOperator,
   type LeadForEmail,
 } from "../../../lib/server";
 import { tradeOr } from "../../../lib/trades";
@@ -146,7 +147,49 @@ export async function POST(req: Request) {
         .eq("id", r.id);
       if (out.ok) sent++; else failed++;
     }
-    return NextResponse.json({ ok: true, sent, failed });
+
+    // Operator alerts are retried by the same button. A lead whose alert never
+    // sent is a lead nobody knows about, which is strictly worse than a
+    // contractor notification that failed, so it must not need its own trip.
+    const { data: unalerted } = await db
+      .from("leads")
+      .select("*")
+      .is("operator_notified_at", null)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    let alertsSent = 0;
+    let alertsFailed = 0;
+    for (const row of unalerted ?? []) {
+      const l = row as LeadForEmail & {
+        id: string;
+        trade?: string;
+        phone_consent?: boolean;
+      };
+      const { count } = await db
+        .from("lead_matches")
+        .select("id", { count: "exact", head: true })
+        .eq("lead_id", l.id);
+
+      const out = await notifyOperator(
+        l,
+        tradeOr(l.trade),
+        count ?? 0,
+        l.id,
+        l.phone_consent === true
+      );
+      await db
+        .from("leads")
+        .update(
+          out.ok
+            ? { operator_notified_at: new Date().toISOString(), operator_notify_error: null }
+            : { operator_notify_error: out.error ?? "unknown" }
+        )
+        .eq("id", l.id);
+      if (out.ok) alertsSent++; else alertsFailed++;
+    }
+
+    return NextResponse.json({ ok: true, sent, failed, alertsSent, alertsFailed });
   }
 
   return NextResponse.json({ error: "Unknown action." }, { status: 400 });

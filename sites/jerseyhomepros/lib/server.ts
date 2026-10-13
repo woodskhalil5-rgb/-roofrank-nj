@@ -56,9 +56,16 @@ export type LeadForEmail = {
 
 /**
  * Low-level sender. Never throws — callers decide what a failure means.
+ *
+ * `to` takes one address or several. Several must be passed as an array:
+ * Resend validates each entry in `to` as a single address, so a comma-joined
+ * string arrives as one malformed address and the whole send fails with a 422.
+ * That is not hypothetical — it is what the operator alert did on its first
+ * deploy, and it failed silently for every lead because nothing read the
+ * result. Hence the error text in the response below.
  */
 export async function sendEmail(
-  to: string,
+  to: string | string[],
   subject: string,
   text: string
 ): Promise<{ ok: boolean; error?: string }> {
@@ -66,13 +73,27 @@ export async function sendEmail(
   const from = process.env.LEAD_FROM_EMAIL;
   if (!key || !from) return { ok: false, error: "email_not_configured" };
 
+  const recipients = (Array.isArray(to) ? to : [to])
+    .flatMap((t) => t.split(","))
+    .map((t) => t.trim())
+    .filter(Boolean);
+  if (recipients.length === 0) return { ok: false, error: "no_recipients" };
+
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to: [to], subject, text }),
+      body: JSON.stringify({ from, to: recipients, subject, text }),
     });
-    if (!res.ok) return { ok: false, error: `resend_http_${res.status}` };
+    if (!res.ok) {
+      // Resend's body says *why* a 4xx happened — which address was rejected,
+      // which domain is unverified. Without it a 422 is unactionable.
+      const detail = await res.text().catch(() => "");
+      return {
+        ok: false,
+        error: `resend_http_${res.status}${detail ? `: ${detail.slice(0, 300)}` : ""}`,
+      };
+    }
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "send_failed" };
@@ -237,7 +258,7 @@ export async function notifyOperator(
     `— ${SITE.brand} (automatic operator alert)`,
   ];
 
-  return sendEmail(to.join(","), subject, lines.join("\n"));
+  return sendEmail(to, subject, lines.join("\n"));
 }
 
 /**
@@ -281,7 +302,7 @@ export async function notifyOperatorApplication(
   ];
 
   return sendEmail(
-    to.join(","),
+    to,
     `New ${trade.label} contractor application — ${company}`,
     lines.join("\n")
   );
