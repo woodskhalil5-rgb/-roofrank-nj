@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Jersey Home Pros">
+  <!-- Matches the on-site brandmark: a gold serif J inside a thin gold rule
+       on the brand black. Drawn as a path rather than set as text so it does
+       not depend on Georgia being present on the device. -->
+  <rect width="64" height="64" fill="#0a0b0c"/>
+  <rect x="6.5" y="6.5" width="51" height="51" fill="none" stroke="#d6ad58" stroke-width="2"/>
+  <path d="M38.4 16.2v23.1c0 3.2-.9 5.7-2.7 7.4-1.8 1.7-4.3 2.6-7.5 2.6-2.8 0-5.1-.7-6.8-2-1.7-1.4-2.6-3.2-2.6-5.5h5.2c.1 1.2.5 2.1 1.2 2.7.7.6 1.7.9 2.9.9 1.4 0 2.5-.5 3.2-1.4.7-.9 1.1-2.3 1.1-4.1V20.4h-5.6v-4.2z" fill="#d6ad58"/>
+</svg>

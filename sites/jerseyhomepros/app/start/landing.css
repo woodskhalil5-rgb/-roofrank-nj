@@ -1,0 +1,415 @@
+/*
+ * Animated homeowner landing experience. Loaded only by /start, so the rest of
+ * the site pays nothing for it.
+ *
+ * Every class is prefixed `lp` to guarantee it cannot collide with the global
+ * stylesheet, which is deliberately terse and unprefixed.
+ *
+ * Three rules governed the motion here:
+ *
+ * 1. Nothing is hidden by a transform or an opacity that only an animation can
+ *    undo. Every animated element uses `both` fill with a `from` state, so if
+ *    animations never run — reduced motion, an old engine, a failed stylesheet
+ *    — the element sits at its natural, visible state. A landing page whose
+ *    copy is invisible without working CSS animation is a broken landing page.
+ * 2. The call to action is never gated on motion finishing. It enters at 0.18s,
+ *    ahead of the supporting paragraph, and the whole entrance is under half a
+ *    second.
+ * 3. Scroll-linked reveals are progressive enhancement via animation-timeline.
+ *    Engines without it show static content rather than nothing, which is why
+ *    there is no IntersectionObserver here and no JavaScript at all.
+ */
+
+.lp {
+  --lpGold: #d6ad58;
+  --lpGoldInk: #a47a2d;
+  --lpBlack: #0a0b0c;
+  --lpCream: #f4f0e7;
+}
+
+/* ----------------------------------------------------------------- hero ---- */
+.lpHero {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 76% 32%, #3a3528 0%, #1b1b18 26%, #0a0b0c 68%);
+  color: #fff;
+  min-height: 640px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Two skewed hairline planes, drifting on long offset cycles so they never
+   visibly loop together. This is the existing hero's geometry set in motion
+   rather than a new visual language. */
+.lpPlane {
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid #d6ad5830;
+  background: linear-gradient(140deg, #d6ad5814, transparent 58%);
+  will-change: transform;
+}
+.lpPlane1 {
+  right: 3%;
+  top: 6%;
+  width: 40%;
+  height: 84%;
+  transform: skewY(-14deg);
+  animation: lpDriftA 19s ease-in-out infinite;
+}
+.lpPlane2 {
+  right: 24%;
+  top: 22%;
+  width: 26%;
+  height: 56%;
+  transform: skewY(-14deg);
+  border-color: #d6ad581f;
+  background: none;
+  animation: lpDriftB 24s ease-in-out infinite;
+}
+@keyframes lpDriftA {
+  0%, 100% { transform: skewY(-14deg) translate3d(0, 0, 0); }
+  50%      { transform: skewY(-14deg) translate3d(-14px, 18px, 0); }
+}
+@keyframes lpDriftB {
+  0%, 100% { transform: skewY(-14deg) translate3d(0, 0, 0); }
+  50%      { transform: skewY(-14deg) translate3d(16px, -14px, 0); }
+}
+
+/* Hatch field, matching the existing .heroShade treatment, slowly sliding. */
+.lpHatch {
+  position: absolute;
+  right: 9%;
+  top: 15%;
+  width: 34%;
+  height: 62%;
+  pointer-events: none;
+  background: repeating-linear-gradient(155deg, transparent 0 26px, #d6ad5812 27px 28px);
+  clip-path: polygon(0 28%, 100% 0, 100% 100%, 0 72%);
+  animation: lpHatchSlide 32s linear infinite;
+}
+@keyframes lpHatchSlide {
+  from { background-position: 0 0; }
+  to   { background-position: 240px 0; }
+}
+
+/* A single gold rule that sweeps down the hero once on load, then rests.
+   It reads as the page "drawing itself" without becoming a loop that nags. */
+.lpSweep {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, #d6ad5899 38%, #d6ad58 50%, #d6ad5899 62%, transparent);
+  animation: lpSweepDown 2.3s cubic-bezier(.22, .61, .36, 1) .25s both;
+}
+@keyframes lpSweepDown {
+  from { transform: translateY(0); opacity: 0; }
+  12%  { opacity: 1; }
+  to   { transform: translateY(640px); opacity: 0; }
+}
+
+.lpHeroInner {
+  position: relative;
+  z-index: 1;
+  padding: 84px 0 76px;
+  flex: 1;
+}
+
+/* Staggered entrance. `both` fill plus a `from` state means no element is
+   dependent on the animation running to become visible. */
+.lpRise  { animation: lpRise .62s cubic-bezier(.22, .61, .36, 1) both; }
+.lpD1 { animation-delay: .02s; }
+.lpD2 { animation-delay: .10s; }
+.lpD3 { animation-delay: .18s; }  /* the CTA row — early, never last */
+.lpD4 { animation-delay: .26s; }
+.lpD5 { animation-delay: .34s; }
+@keyframes lpRise {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+.lpEyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  color: var(--lpGold);
+}
+/* The rule grows out from the text rather than just appearing. */
+.lpEyebrow i {
+  display: block;
+  width: 22px;
+  height: 1px;
+  background: var(--lpGold);
+  transform-origin: left center;
+  animation: lpGrowX .7s cubic-bezier(.22, .61, .36, 1) .1s both;
+}
+@keyframes lpGrowX {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.lpHero h1 {
+  font: 400 clamp(44px, 6.6vw, 80px)/0.99 Georgia, "Times New Roman", serif;
+  letter-spacing: -2.5px;
+  margin: 26px 0 20px;
+  max-width: 15ch;
+}
+.lpHero h1 em { color: var(--lpGold); font-style: normal; }
+
+.lpSub {
+  max-width: 460px;
+  color: #c3c3bf;
+  font-size: 15px;
+  line-height: 1.8;
+  margin: 0;
+}
+
+.lpActions {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+
+.lpBtn {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 22px;
+  padding: 17px 22px;
+  background: var(--lpGold);
+  color: #10100e;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  border: 0;
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.lpBtn span { font-size: 18px; transition: transform .2s ease; }
+.lpBtn:hover, .lpBtn:focus-visible { transform: translateY(-2px); box-shadow: 0 10px 26px #d6ad5833; }
+.lpBtn:hover span, .lpBtn:focus-visible span { transform: translateX(4px); }
+/* A light wipe across the button on hover. Decorative only. */
+.lpBtn:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, #ffffff5e 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform .5s ease;
+}
+.lpBtn:hover:before, .lpBtn:focus-visible:before { transform: translateX(100%); }
+
+.lpGhost {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ddd;
+  padding: 6px 2px;
+  border-bottom: 1px solid transparent;
+  transition: border-color .18s ease, color .18s ease;
+}
+.lpGhost span { color: var(--lpGold); margin-left: 8px; }
+.lpGhost:hover, .lpGhost:focus-visible { color: #fff; border-bottom-color: #d6ad5880; }
+
+.lpHonest {
+  margin-top: 34px;
+  color: #9d9e98;
+  font-size: 11px;
+  line-height: 1.7;
+  max-width: 470px;
+}
+.lpHonest b { color: #c8c9c2; font-weight: 700; }
+
+/* ------------------------------------------------------------- reveals ---- */
+/* Visible by default. The scroll animation below only ever adds motion. */
+.lpReveal { opacity: 1; }
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .lpReveal {
+      animation: lpRise linear both;
+      animation-timeline: view();
+      animation-range: entry 4% cover 26%;
+    }
+  }
+}
+
+/* --------------------------------------------------------------- steps ---- */
+.lpSteps { background: #121312; color: #fff; border-top: 1px solid #2a2b27; border-bottom: 1px solid #2a2b27; }
+.lpStepGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 26px;
+  padding: 34px 0;
+}
+.lpStep { display: flex; align-items: flex-start; gap: 15px; }
+.lpStep strong {
+  font: 400 24px Georgia, serif;
+  color: var(--lpGold);
+  line-height: 1;
+  padding-top: 2px;
+}
+.lpStep p { margin: 0; font-size: 12.5px; line-height: 1.6; color: #d0d0cb; }
+.lpStep p b { display: block; color: #fff; font-size: 13px; margin-bottom: 3px; }
+
+/* ------------------------------------------------------------- section ---- */
+.lpSection { padding: 88px 0 94px; }
+.lpHead { max-width: 600px; }
+.lpHead .lpEyebrow { color: var(--lpGoldInk); }
+.lpHead .lpEyebrow i { background: var(--lpGoldInk); }
+.lpHead h2 {
+  font: 400 clamp(34px, 4.6vw, 54px)/1.1 Georgia, serif;
+  letter-spacing: -1.3px;
+  margin: 18px 0;
+}
+.lpHead h2 em { color: var(--lpGoldInk); font-style: normal; }
+.lpHead > p { color: #686963; line-height: 1.75; font-size: 14px; }
+
+/* -------------------------------------------------------------- trades ---- */
+.lpTrades {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 42px;
+}
+.lpTrade {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 30px 26px;
+  min-height: 212px;
+  background: #fff;
+  border: 1px solid #e6e2d9;
+  color: inherit;
+  transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+.lpTrade:hover, .lpTrade:focus-visible {
+  border-color: var(--lpGold);
+  transform: translateY(-4px);
+  box-shadow: 0 14px 34px #0a0b0c12;
+}
+/* Gold rule that draws across the top edge on hover. */
+.lpTrade:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--lpGold);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform .32s cubic-bezier(.22, .61, .36, 1);
+}
+.lpTrade:hover:after, .lpTrade:focus-visible:after { transform: scaleX(1); }
+
+.lpIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--lpGold);
+  color: var(--lpGoldInk);
+  font-size: 22px;
+  transition: background .2s ease, color .2s ease, transform .3s ease;
+}
+.lpTrade:hover .lpIcon, .lpTrade:focus-visible .lpIcon {
+  background: var(--lpGold);
+  color: #10100e;
+  transform: rotate(-6deg);
+}
+.lpTrade h3 { font-size: 16px; margin: 20px 0 9px; }
+.lpTrade p { font-size: 12.5px; line-height: 1.7; color: #73746e; margin: 0 0 18px; }
+.lpGo { margin-top: auto; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; color: var(--lpGoldInk); }
+.lpGo span { display: inline-block; margin-left: 7px; transition: transform .2s ease; }
+.lpTrade:hover .lpGo span, .lpTrade:focus-visible .lpGo span { transform: translateX(5px); }
+
+/* ------------------------------------------------------------ disclose ---- */
+.lpDisclose {
+  display: flex;
+  gap: 15px;
+  margin-top: 46px;
+  padding: 22px;
+  background: #fffdf7;
+  border: 1px solid #e8dfc6;
+  border-left: 3px solid var(--lpGold);
+}
+.lpDisclose > span { color: var(--lpGoldInk); font-size: 19px; line-height: 1; }
+.lpDisclose p { margin: 0; font-size: 12px; line-height: 1.75; color: #6b6c64; }
+.lpDisclose b { color: #3f4039; }
+
+/* --------------------------------------------------------------- pros ----- */
+.lpPros { padding: 62px 0; background: #e9e4d9; }
+.lpProsInner { display: flex; align-items: center; justify-content: space-between; gap: 26px; }
+.lpProsInner h2 { font: 400 34px Georgia, serif; letter-spacing: -1px; margin: 12px 0; }
+.lpProsInner p { margin: 0; color: #686963; font-size: 14px; line-height: 1.7; max-width: 46ch; }
+.lpDark {
+  display: inline-flex;
+  align-items: center;
+  gap: 22px;
+  padding: 17px 22px;
+  background: #121312;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: transform .18s ease, background .18s ease;
+}
+.lpDark span { font-size: 18px; }
+.lpDark:hover, .lpDark:focus-visible { transform: translateY(-2px); background: #000; }
+
+/* -------------------------------------------------------------- focus ----- */
+.lp a:focus-visible,
+.lp button:focus-visible {
+  outline: 2px solid var(--lpGold);
+  outline-offset: 3px;
+}
+
+/* ------------------------------------------------------------ responsive -- */
+@media (max-width: 900px) {
+  .lpTrades { grid-template-columns: repeat(2, 1fr); }
+  .lpStepGrid { grid-template-columns: 1fr; gap: 15px; }
+  .lpStep { padding-bottom: 12px; border-bottom: 1px solid #292b2c; }
+  .lpStep:last-child { border-bottom: 0; padding-bottom: 0; }
+  .lpPlane1 { right: -16%; width: 68%; opacity: .62; }
+  .lpPlane2 { display: none; }
+  .lpProsInner { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 560px) {
+  .lpHero { min-height: 600px; }
+  .lpHeroInner { padding: 66px 0 70px; }
+  .lpHero h1 { font-size: 44px; letter-spacing: -1.6px; max-width: none; }
+  .lpActions { flex-direction: column; align-items: stretch; gap: 16px; }
+  .lpBtn { justify-content: space-between; }
+  .lpGhost { text-align: center; }
+  .lpTrades { grid-template-columns: 1fr; gap: 10px; }
+  .lpTrade { min-height: 0; padding: 24px 20px; }
+  .lpSection { padding: 62px 0 68px; }
+  .lpDisclose { flex-direction: column; gap: 10px; padding: 18px; }
+}
+
+/* ----------------------------------------------------- reduced motion ----- */
+/* Everything above degrades to a static, fully legible page. Transforms are
+   reset as well as animations, so no element is left mid-translate. */
+@media (prefers-reduced-motion: reduce) {
+  .lp *,
+  .lp *:before,
+  .lp *:after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .lpRise, .lpReveal { opacity: 1 !important; transform: none !important; }
+  .lpEyebrow i { transform: none !important; }
+  .lpSweep { display: none; }
+  .lpTrade:hover, .lpTrade:focus-visible,
+  .lpBtn:hover, .lpBtn:focus-visible,
+  .lpDark:hover, .lpDark:focus-visible { transform: none !important; }
+}
