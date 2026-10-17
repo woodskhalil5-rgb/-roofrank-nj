@@ -77,49 +77,123 @@ export type LeadForEmail = {
   details: string;
 };
 
-/**
- * Low-level sender. Never throws — callers decide what a failure means.
- *
- * `to` takes one address or several. Several must be passed as an array:
- * Resend validates each entry in `to` as a single address, so a comma-joined
- * string arrives as one malformed address and the whole send fails with a 422.
- * That is not hypothetical — it is what the operator alert did on its first
- * deploy, and it failed silently for every lead because nothing read the
- * result. Hence the error text in the response below.
- */
-export async function sendEmail(
-  to: string | string[],
+export type SendResult = {
+  /** True when at least one recipient was accepted by Resend. */
+  ok: boolean;
+  /** Set whenever ANY recipient failed, even if another succeeded. */
+  error?: string;
+  /** Resend message ids, for asking later whether they were delivered. */
+  ids?: string[];
+  perRecipient?: { to: string; ok: boolean; id?: string; error?: string }[];
+};
+
+/** One Resend request, one recipient. Never throws. */
+async function sendOne(
+  key: string,
+  from: string,
+  to: string,
   subject: string,
   text: string
-): Promise<{ ok: boolean; error?: string }> {
-  const key = process.env.RESEND_API_KEY;
-  const from = process.env.LEAD_FROM_EMAIL;
-  if (!key || !from) return { ok: false, error: "email_not_configured" };
-
-  const recipients = (Array.isArray(to) ? to : [to])
-    .flatMap((t) => t.split(","))
-    .map((t) => t.trim())
-    .filter(Boolean);
-  if (recipients.length === 0) return { ok: false, error: "no_recipients" };
-
+): Promise<{ to: string; ok: boolean; id?: string; error?: string }> {
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to: recipients, subject, text }),
+      body: JSON.stringify({ from, to: [to], subject, text }),
     });
     if (!res.ok) {
       // Resend's body says *why* a 4xx happened — which address was rejected,
       // which domain is unverified. Without it a 422 is unactionable.
       const detail = await res.text().catch(() => "");
       return {
+        to,
         ok: false,
         error: `resend_http_${res.status}${detail ? `: ${detail.slice(0, 300)}` : ""}`,
       };
     }
-    return { ok: true };
+    const body = (await res.json().catch(() => ({}))) as { id?: string };
+    return { to, ok: true, id: body.id };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : "send_failed" };
+    return { to, ok: false, error: err instanceof Error ? err.message : "send_failed" };
+  }
+}
+
+/**
+ * Low-level sender. Never throws — callers decide what a failure means.
+ *
+ * Each recipient gets its OWN Resend request. Batching them into one `to`
+ * array meant a single bad address failed the send for everybody on the list:
+ * Resend validates the whole request, so one unroutable address silently took
+ * down the alert to the address that worked. The operator alert list contained
+ * exactly that — an address on a domain with no mailbox behind it — so the one
+ * email that matters was the one most likely to be lost.
+ *
+ * `ok` is true if ANY recipient was accepted, because an alert that reached
+ * one of two inboxes still reached the operator. `error` is set whenever any
+ * recipient failed, so a partial failure is recorded rather than rounded up
+ * to success.
+ */
+export async function sendEmail(
+  to: string | string[],
+  subject: string,
+  text: string
+): Promise<SendResult> {
+  const key = process.env.RESEND_API_KEY;
+  const from = process.env.LEAD_FROM_EMAIL;
+  if (!key || !from) return { ok: false, error: "email_not_configured" };
+
+  const recipients = Array.from(
+    new Set(
+      (Array.isArray(to) ? to : [to])
+        .flatMap((t) => t.split(","))
+        .map((t) => t.trim())
+        .filter(Boolean)
+    )
+  );
+  if (recipients.length === 0) return { ok: false, error: "no_recipients" };
+
+  const perRecipient = await Promise.all(
+    recipients.map((r) => sendOne(key, from, r, subject, text))
+  );
+
+  const failed = perRecipient.filter((r) => !r.ok);
+  const ids = perRecipient.flatMap((r) => (r.id ? [r.id] : []));
+  return {
+    ok: perRecipient.some((r) => r.ok),
+    error:
+      failed.length > 0
+        ? failed.map((f) => `${f.to}: ${f.error ?? "unknown"}`).join(" | ").slice(0, 600)
+        : undefined,
+    ids: ids.length > 0 ? ids : undefined,
+    perRecipient,
+  };
+}
+
+/**
+ * Asks Resend what actually happened to a message.
+ *
+ * This is the only way to tell a delivered alert from an accepted one.
+ * `last_event` is Resend's own term: sent, delivered, delivery_delayed,
+ * bounced, complained. A bounce here is the signal that an alert address is
+ * dead, which is invisible from the send call alone.
+ */
+export async function emailStatus(
+  id: string
+): Promise<{ ok: boolean; lastEvent?: string; to?: string[]; error?: string }> {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return { ok: false, error: "email_not_configured" };
+  try {
+    const res = await fetch(`https://api.resend.com/emails/${encodeURIComponent(id)}`, {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "");
+      return { ok: false, error: `resend_http_${res.status}${detail ? `: ${detail.slice(0, 200)}` : ""}` };
+    }
+    const body = (await res.json()) as { last_event?: string; to?: string[] };
+    return { ok: true, lastEvent: body.last_event, to: body.to };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "status_failed" };
   }
 }
 
@@ -135,7 +209,7 @@ export async function notifyProvider(
   distanceMiles: number | null,
   phoneConsent: boolean,
   otherRecipients: number
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<SendResult> {
   // The contractor, not the operator, places the call. They must be told in the
   // notification itself whether calling or texting this homeowner is permitted.
   const contactRule = phoneConsent
@@ -232,7 +306,7 @@ export async function notifyOperator(
   matched: number,
   leadId: string,
   phoneConsent: boolean
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<SendResult> {
   const to = alertEmails();
   if (to.length === 0) return { ok: false, error: "no_alert_emails_configured" };
 
@@ -310,7 +384,7 @@ export async function notifyOperatorApplication(
   zipCount: number,
   radiusMiles: number,
   services: string
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<SendResult> {
   const to = alertEmails();
   if (to.length === 0) return { ok: false, error: "no_alert_emails_configured" };
 

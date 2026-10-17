@@ -110,13 +110,15 @@ export async function POST(req: Request) {
       if (!alert.ok) {
         console.error(`[providers] OPERATOR ALERT FAILED id=${inserted.id} error=${alert.error}`);
       }
+      // Written unconditionally, so a partial failure is recorded rather than
+      // rounded up to success. See the matching comment in /api/leads.
       await db
         .from("roofers")
-        .update(
-          alert.ok
-            ? { operator_notified_at: new Date().toISOString(), operator_notify_error: null }
-            : { operator_notify_error: alert.error ?? "unknown" }
-        )
+        .update({
+          operator_notified_at: alert.ok ? new Date().toISOString() : null,
+          operator_notify_error: alert.error ?? null,
+          operator_notify_ids: alert.ids ?? null,
+        })
         .eq("id", inserted.id);
     } catch (err) {
       console.error(

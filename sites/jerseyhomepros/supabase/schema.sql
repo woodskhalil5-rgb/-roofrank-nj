@@ -57,7 +57,11 @@ create table if not exists public.roofers (
   -- Proof the operator was told this application exists. Applications used to
   -- arrive with no email to anyone, so one was only found by opening /admin.
   operator_notified_at  timestamptz,
-  operator_notify_error text
+  operator_notify_error text,
+  -- Resend message ids, one per recipient. operator_notified_at only means
+  -- Resend accepted the message; these are what /api/health/alerts uses to
+  -- ask whether it was actually delivered or bounced afterwards.
+  operator_notify_ids   text[]
 );
 alter table public.roofers enable row level security;
 
@@ -107,11 +111,19 @@ create table if not exists public.leads (
   unsubscribed       boolean not null default false,
 
   -- Proof a human was told about this lead. match_lead is allowed to return 0,
-  -- and when it does these two columns are the only record that the request
+  -- and when it does these columns are the only record that the request
   -- reached anybody at all. Do not remove: an unmatched lead with no operator
   -- alert is a lead that silently disappeared.
+  --
+  -- operator_notified_at means "Resend accepted the message", NOT "it arrived".
+  -- Mail to a domain with no mailbox is accepted and then bounces. The ids
+  -- below are how that difference is recovered: /api/health/alerts asks Resend
+  -- for each message's delivery event. /admin shows a banner whenever a live
+  -- lead has no confirmed alert, which is the one warning about lost leads
+  -- that does not itself travel by email.
   operator_notified_at  timestamptz,
-  operator_notify_error text
+  operator_notify_error text,
+  operator_notify_ids   text[]
 );
 alter table public.leads enable row level security;
 

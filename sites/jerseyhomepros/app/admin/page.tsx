@@ -16,6 +16,10 @@ type Lead = {
   phone_consent?: boolean;
   feedback?: string | null;
   followup_sent_at?: string | null;
+  // Proof the operator was told. Null here means nobody was: see the alert
+  // banner below, which is the only warning that does not itself rely on email.
+  operator_notified_at?: string | null;
+  operator_notify_error?: string | null;
 };
 type Perf = {
   roofer_id: string; company: string; status: string; trade: string;
@@ -54,6 +58,8 @@ export default function Admin() {
   const [tradeFilter, setTradeFilter] = useState<TradeSlug | 'all'>('all');
   // Rejected providers and spam leads stay out of the way until asked for.
   const [showArchived, setShowArchived] = useState(false);
+  /** Narrows the lead list to the ones with no confirmed operator alert. */
+  const [alertOnly, setAlertOnly] = useState(false);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
@@ -87,12 +93,31 @@ export default function Admin() {
 
   useEffect(() => { if (token) load(token); }, [token, load]);
 
+  /** A lead nobody was told about. Spam is excluded: it is already triaged. */
+  const unalerted = useCallback(
+    (l: Lead) => l.status !== 'spam' && (!l.operator_notified_at || Boolean(l.operator_notify_error)),
+    []
+  );
+
+  /**
+   * Counted across ALL leads, not the filtered view. A banner that hid itself
+   * because the trade filter happened to be set to Roofing would be worse
+   * than no banner at all.
+   */
+  const alertTrouble = useMemo(() => {
+    const live = leads.filter((l) => l.status !== 'spam');
+    const never = live.filter((l) => !l.operator_notified_at).length;
+    const errored = live.filter((l) => Boolean(l.operator_notify_error)).length;
+    return { never, errored, total: live.filter(unalerted).length };
+  }, [leads, unalerted]);
+
   const shownLeads = useMemo(
     () => leads.filter((l) =>
       (tradeFilter === 'all' || l.trade === tradeFilter) &&
-      (showArchived || l.status !== 'spam')
+      (showArchived || l.status !== 'spam') &&
+      (!alertOnly || unalerted(l))
     ),
-    [leads, tradeFilter, showArchived]
+    [leads, tradeFilter, showArchived, alertOnly, unalerted]
   );
   const shownProviders = useMemo(
     () => providers.filter((p) =>
@@ -236,6 +261,28 @@ export default function Admin() {
         </span>
       </div>
       {note && <p className="wrap adminnote" role="status">{note}</p>}
+
+      {/* The alert system cannot be trusted to report its own failure by
+          email, so it reports it here instead. A lead with no operator alert
+          is a homeowner who was promised a follow-up that nobody knows to
+          make — which is worse than a lead that reached no contractor. */}
+      {alertTrouble.total > 0 && (
+        <div className="wrap">
+          <div className="alertbanner" role="alert">
+            <strong>
+              {alertTrouble.total} {alertTrouble.total === 1 ? 'lead has' : 'leads have'} no confirmed operator alert.
+            </strong>
+            <span>
+              {alertTrouble.never > 0 && `${alertTrouble.never} never produced an alert. `}
+              {alertTrouble.errored > 0 && `${alertTrouble.errored} returned a send error. `}
+              Treat these as unread requests and follow them up by hand.
+            </span>
+            <button onClick={() => { setTab('leads'); setAlertOnly(!alertOnly); }}>
+              {alertOnly ? 'Show all leads' : 'Show only these'}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="wrap">
         <div className="admintabs tradefilter">

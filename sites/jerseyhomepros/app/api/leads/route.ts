@@ -277,13 +277,18 @@ export async function POST(req: Request) {
       if (!alert.ok) {
         console.error(`[leads] OPERATOR ALERT FAILED lead_id=${leadId} error=${alert.error}`);
       }
+      // Both fields are written every time. The old code wrote one or the
+      // other, so an alert that reached one address and bounced off another
+      // recorded a clean success and the bounce vanished. The message ids are
+      // what /api/health/alerts uses to ask Resend whether these were actually
+      // delivered — operator_notified_at only means Resend accepted them.
       await db
         .from("leads")
-        .update(
-          alert.ok
-            ? { operator_notified_at: new Date().toISOString(), operator_notify_error: null }
-            : { operator_notify_error: alert.error ?? "unknown" }
-        )
+        .update({
+          operator_notified_at: alert.ok ? new Date().toISOString() : null,
+          operator_notify_error: alert.error ?? null,
+          operator_notify_ids: alert.ids ?? null,
+        })
         .eq("id", leadId);
     } catch (err) {
       console.error(

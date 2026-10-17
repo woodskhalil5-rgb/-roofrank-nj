@@ -9,6 +9,16 @@
 .adminstats div{background:#0a0b0c;color:#fff;padding:18px}
 .adminstats strong{display:block;font:400 30px Georgia,serif;color:var(--gold)}
 .adminstats span{font-size:10px;letter-spacing:1.6px;color:#a9aaa8}
+/* The operator-alert failure banner. Deliberately the loudest thing on the
+   page: it is the only warning that a lead was lost which does not itself
+   depend on the email system that lost it. */
+.alertbanner{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  background:#7c1d1d;color:#fff;padding:16px 18px;margin:0 0 20px;
+  border-left:5px solid #f0b429}
+.alertbanner strong{font-size:14px}
+.alertbanner span{font-size:12px;line-height:1.6;color:#f3dede;flex:1;min-width:220px}
+.alertbanner button{margin-left:auto;background:#fff;color:#7c1d1d;border:0;
+  padding:10px 16px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
 .admintabs{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
 .admintabs button{padding:11px 18px;border:1px solid #d8d3c7;background:#fff;font-size:12px;font-weight:700;cursor:pointer}
 .admintabs button.on{background:var(--gold);border-color:var(--gold);color:#10100e}
