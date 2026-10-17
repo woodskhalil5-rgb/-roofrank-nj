@@ -127,6 +127,13 @@ them predated the alert code. Three faults were fixed then (commit 2a49706,
 unset so alerts fell back to a list containing the inboxless `leads@`, and
 nothing anywhere surfacing a failure.
 
+**The path is confirmed working as of 2026-10-17.** Two self-tests were sent
+to `admin@destinymarketinggroup.com` (06:34 UTC, resend id
+`01a14891-eb9c-7cba-bf99-d9d7466cd223`) and Khalil confirmed both arrived in
+the inbox. That is a human observation of delivery, which is the only kind
+available until the webhook is wired up — do not weaken it back to an
+assumption, and do not re-test it without a reason.
+
 - `GET /api/health/alerts?token=$HEALTH_CHECK_TOKEN` sends a real alert down
   the production path and reports what happened. `&send=0` inspects config
   and backlog without sending. `&id=<resend id>` looks up one message.
@@ -138,8 +145,10 @@ nothing anywhere surfacing a failure.
   back onto the row as `operator_notify_error`, which lights the banner.
 
 Known outstanding: the Resend webhook endpoint and `RESEND_WEBHOOK_SECRET`
-still need adding in the Resend dashboard — until then delivery is recorded
-only as "accepted", not "delivered". `leads@` forwarding not set up (and is
+still need adding in the Resend dashboard. Delivery is confirmed by hand
+today; the webhook is what makes it stay confirmed without anyone
+checking — in particular it is what would catch the inbox going bad later.
+`leads@` forwarding not set up (and is
 not needed for alerts any more); Supabase Site URL still points at the
 retired domain; three superseded Vercel projects not deleted; an "emailed ✓"
 marker for the admin dashboard is deferred until there is a real pest
