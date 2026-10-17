@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { adminDb } from "../../../../../lib/server";
+import { adminDb } from "../../../../lib/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
