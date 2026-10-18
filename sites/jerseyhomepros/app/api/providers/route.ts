@@ -43,6 +43,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Choose a service radius between 1 and 100 miles." }, { status: 400 });
     }
 
+    // The service must belong to the trade being applied for. The form only
+    // ever offers the right list, but whatever arrives here was previously
+    // stored verbatim — which is how a moving company ended up on record as
+    // offering "Multiple roofing services". A stale tab, a restored form on
+    // the back button, or a direct POST all produce that mismatch, and the
+    // wrong value then follows the contractor into the admin dashboard.
+    const services = String(body.services ?? "").trim();
+    if (!(trade.providerServices as readonly string[]).includes(services)) {
+      return NextResponse.json(
+        { error: `Choose a ${trade.label.toLowerCase()} service from the list.` },
+        { status: 400 }
+      );
+    }
+
     const db = adminDb();
     if (!db) {
       return NextResponse.json(
@@ -66,7 +80,7 @@ export async function POST(req: Request) {
     const company = String(body.company).trim();
     const contact = String(body.contact).trim();
     const phone = String(body.phone).trim();
-    const services = String(body.services).trim();
+    // `services` is declared above, where it is validated against the trade.
     const radiusMiles = Math.round(radius);
 
     const { data: inserted, error } = await db

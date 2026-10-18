@@ -426,7 +426,7 @@ export async function notifyProviderApproved(
   to: string,
   company: string,
   trade: Trade
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<SendResult> {
   const lines = [
     `${company},`,
     ``,

@@ -8,6 +8,11 @@ type Provider = {
   id: string; created_at: string; company: string; contact: string; email: string;
   phone: string; service_zips: string[]; radius_miles: number; services: string;
   status: string; notes: string; trade: string;
+  approved_at?: string | null;
+  // Proof the contact rules were actually sent. Null on an approved provider
+  // means nobody knows whether they received them.
+  welcomed_at?: string | null;
+  welcome_error?: string | null;
 };
 type Lead = {
   id: string; created_at: string; name: string; phone: string; email: string; zip: string;
@@ -422,12 +427,34 @@ export default function Admin() {
                   <p className="adminmeta">ZIPs: {p.service_zips.join(', ')}</p>
                   <p className="adminmeta">{p.phone} &middot; {p.email}</p>
                   {p.notes && <p className="admindetails">{p.notes}</p>}
+
+                  {/* Whether this contractor was ever sent the contact rules.
+                      They start phoning homeowners once approved, so "we never
+                      actually told them the rules" needs to be visible rather
+                      than inferred. */}
+                  {p.status === 'approved' && (
+                    p.welcome_error ? (
+                      <p className="consentno">Welcome email FAILED &middot; {p.welcome_error}</p>
+                    ) : p.welcomed_at ? (
+                      <p className="consentok">Welcome email sent {when(p.welcomed_at)}</p>
+                    ) : (
+                      <p className="fbwait">
+                        Welcome email not recorded — they may never have been sent the contact rules.
+                      </p>
+                    )
+                  )}
+
                   <div className="adminactions">
                     {['approved', 'pending', 'rejected'].filter((s) => s !== p.status).map((s) => (
                       <button key={s} onClick={() => act({ action: 'set_provider_status', id: p.id, status: s })}>
                         {s === 'approved' ? 'Approve' : s === 'rejected' ? 'Reject' : 'Set pending'}
                       </button>
                     ))}
+                    {p.status === 'approved' && (
+                      <button onClick={() => act({ action: 'resend_welcome', id: p.id })}>
+                        {p.welcomed_at ? 'Resend welcome' : 'Send welcome email'}
+                      </button>
+                    )}
                   </div>
                 </article>
               ))}

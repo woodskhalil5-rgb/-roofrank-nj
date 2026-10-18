@@ -61,7 +61,16 @@ create table if not exists public.roofers (
   -- Resend message ids, one per recipient. operator_notified_at only means
   -- Resend accepted the message; these are what /api/health/alerts uses to
   -- ask whether it was actually delivered or bounced afterwards.
-  operator_notify_ids   text[]
+  operator_notify_ids   text[],
+
+  -- Proof the contractor was sent the contact rules. Approving them is what
+  -- starts leads flowing, and the welcome email is the only place the calling
+  -- rules are stated, so "approved but never welcomed" is a contractor
+  -- phoning homeowners under rules nobody sent them. /admin shows this.
+  approved_at   timestamptz,
+  welcomed_at   timestamptz,
+  welcome_error text,
+  welcome_ids   text[]
 );
 alter table public.roofers enable row level security;
 
@@ -160,6 +169,33 @@ alter table public.lead_matches enable row level security;
 
 create index if not exists matches_lead_idx on public.lead_matches (lead_id);
 create index if not exists matches_roofer_idx on public.lead_matches (roofer_id);
+
+-- ----------------------------------------------------------- mail delivery
+-- Delivery truth, pushed by Resend rather than polled.
+--
+-- The Resend API key is restricted to sending, which is the right setting for
+-- a key sitting in a web app but means nothing here can ask "was it
+-- delivered?". Resend tells us instead, via a webhook at
+-- /api/webhooks/resend, and this is where that lands. Without it the only
+-- record of an alert is "Resend accepted it", which is not the same thing:
+-- mail to a domain with no mailbox is accepted and then bounces.
+create table if not exists public.email_events (
+  id          bigserial primary key,
+  received_at timestamptz not null default now(),
+  message_id  text not null,
+  event       text not null,
+  recipient   text,
+  subject     text,
+  occurred_at timestamptz,
+  payload     jsonb
+);
+alter table public.email_events enable row level security;
+
+create index if not exists email_events_message_idx on public.email_events (message_id);
+create index if not exists email_events_event_idx   on public.email_events (event, received_at desc);
+-- Resend retries webhooks, so the same event can arrive twice.
+create unique index if not exists email_events_unique_idx
+  on public.email_events (message_id, event, coalesce(recipient, ''));
 
 -- -------------------------------------------------- missed-call waitlist
 -- Contractor interest in the missed-call recovery product. Not leads: nothing

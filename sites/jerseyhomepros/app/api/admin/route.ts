@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     }
     const { data: row, error } = await db
       .from("roofers")
-      .update({ status })
+      .update({ status, ...(status === "approved" ? { approved_at: new Date().toISOString() } : {}) })
       .eq("id", id)
       .select("company, email, trade")
       .maybeSingle();
@@ -72,12 +72,63 @@ export async function POST(req: Request) {
 
     // Best-effort welcome. A failed send must not make the approval look failed:
     // the provider is already approved and will still be matched.
+    //
+    // The outcome is now WRITTEN DOWN. It used to be returned here and then
+    // thrown away, so afterwards nobody could tell whether a contractor had
+    // ever been sent the contact rules they are expected to follow — and that
+    // is the one email they get before they start phoning homeowners.
     let welcomed = false;
     if (status === "approved" && row?.email) {
       const out = await notifyProviderApproved(row.email, row.company, tradeOr(row.trade));
       welcomed = out.ok;
+      await db
+        .from("roofers")
+        .update({
+          welcomed_at: out.ok ? new Date().toISOString() : null,
+          welcome_error: out.error ?? null,
+          welcome_ids: out.ids ?? null,
+        })
+        .eq("id", id);
+      if (!out.ok) {
+        console.error(`[admin] WELCOME EMAIL FAILED provider=${id} error=${out.error}`);
+      }
     }
     return NextResponse.json({ ok: true, welcomed });
+  }
+
+  // Re-send the welcome email, for a provider whose send failed or predates
+  // this being recorded at all. Safe to run twice: it is the same message.
+  if (action === "resend_welcome") {
+    const id = String(body.id ?? "");
+    if (!id) return NextResponse.json({ error: "Missing provider." }, { status: 400 });
+
+    const { data: row } = await db
+      .from("roofers")
+      .select("company, email, trade, status")
+      .eq("id", id)
+      .maybeSingle();
+    if (!row?.email) return NextResponse.json({ error: "Provider not found." }, { status: 404 });
+    if (row.status !== "approved") {
+      return NextResponse.json(
+        { error: "Only approved providers get the welcome email." },
+        { status: 400 }
+      );
+    }
+
+    const out = await notifyProviderApproved(row.email, row.company, tradeOr(row.trade));
+    await db
+      .from("roofers")
+      .update({
+        welcomed_at: out.ok ? new Date().toISOString() : null,
+        welcome_error: out.error ?? null,
+        welcome_ids: out.ids ?? null,
+      })
+      .eq("id", id);
+    if (!out.ok) {
+      console.error(`[admin] WELCOME RESEND FAILED provider=${id} error=${out.error}`);
+      return NextResponse.json({ error: `Could not send: ${out.error}` }, { status: 502 });
+    }
+    return NextResponse.json({ ok: true, welcomed: true, to: row.email });
   }
 
   if (action === "set_lead_status") {
