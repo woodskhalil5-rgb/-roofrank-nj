@@ -912,3 +912,59 @@ footer.site p {
     transition: none !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Town cards on the directory index
+   -------------------------------------------------------------------------- */
+
+.town-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.town-card:hover,
+.town-card:focus-visible {
+  border-color: var(--brand-2);
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.town-card .town-name {
+  font-weight: 650;
+  font-size: 1.08rem;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.town-card .town-zip {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.86rem;
+  color: var(--ink-3);
+}
+
+.town-card .chip {
+  margin-top: 4px;
+}
+
+a.chip {
+  text-decoration: none;
+  color: inherit;
+}
+
+a.chip:hover {
+  border-color: var(--brand-2);
+  color: var(--brand);
+  text-decoration: none;
+}
