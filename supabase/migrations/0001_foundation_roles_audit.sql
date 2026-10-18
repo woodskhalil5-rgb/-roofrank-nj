@@ -51,7 +51,6 @@ begin
 end;
 $$;
 
-drop trigger if exists app_user_set_updated_at on public.app_user;
 create trigger app_user_set_updated_at
   before update on public.app_user
   for each row execute function public.set_updated_at();
@@ -85,7 +84,6 @@ begin
 end;
 $$;
 
-drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_auth_user();
@@ -126,16 +124,6 @@ as $$
   select coalesce(public.current_app_role() in ('owner', 'admin', 'employee'), false)
 $$;
 
-create or replace function public.is_signed_in_staff_or_readonly()
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select public.current_app_role() is not null
-$$;
-
 comment on function public.is_admin() is
   'True only for owner/admin. Required for approving or publishing agent profiles.';
 
@@ -171,26 +159,22 @@ alter table public.role_bootstrap enable row level security;
 alter table public.audit_log      enable row level security;
 
 -- app_user: a user can read their own row; admins read all; only admins change roles.
-drop policy if exists app_user_select_self on public.app_user;
 create policy app_user_select_self on public.app_user
   for select to authenticated
   using (id = auth.uid() or public.is_admin());
 
-drop policy if exists app_user_update_admin on public.app_user;
 create policy app_user_update_admin on public.app_user
   for update to authenticated
   using (public.is_admin())
   with check (public.is_admin());
 
 -- role_bootstrap: admin-only, never exposed publicly.
-drop policy if exists role_bootstrap_admin_all on public.role_bootstrap;
 create policy role_bootstrap_admin_all on public.role_bootstrap
   for all to authenticated
   using (public.is_admin())
   with check (public.is_admin());
 
 -- audit_log: staff may read; nobody may write through the API (service role only).
-drop policy if exists audit_log_select_staff on public.audit_log;
 create policy audit_log_select_staff on public.audit_log
   for select to authenticated
   using (public.is_staff());

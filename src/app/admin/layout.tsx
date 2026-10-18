@@ -4,7 +4,7 @@ import { requireStaff, isAdmin } from "@/lib/auth";
 import { signOut } from "@/app/login/actions";
 
 export const metadata: Metadata = {
-  title: "Dashboard",
+  title: "Workspace",
   robots: { index: false, follow: false },
 };
 
@@ -17,46 +17,41 @@ export default async function AdminLayout({
   return (
     <div className="admin-shell">
       <aside className="admin-nav">
-        <div style={{ padding: "0 10px 12px" }}>
-          <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>Destiny MG</div>
-          <div className="muted" style={{ fontSize: "0.76rem" }}>
+        <div style={{ padding: "0 12px 14px" }}>
+          <div style={{ fontWeight: 800 }}>Destiny MG</div>
+          <div className="muted" style={{ fontSize: "0.82rem", lineHeight: 1.4 }}>
             {user.email}
-            <br />
-            <span className="badge badge-neutral" style={{ marginTop: 4 }}>
-              {user.role}
-            </span>
           </div>
+          <span className="badge badge-neutral" style={{ marginTop: 6 }}>
+            {user.role}
+          </span>
         </div>
 
-        <div className="nav-group">Review</div>
+        <div className="nav-group">Daily work</div>
         <Link href="/admin">Overview</Link>
-        <Link href="/admin/approvals">Profile approvals</Link>
-        <Link href="/admin/claims">Agent claims</Link>
+        <Link href="/admin/intake">Add agents</Link>
+        <Link href="/admin/approvals">Approvals</Link>
+        <Link href="/admin/claims">Claims</Link>
 
         <div className="nav-group">Data</div>
-        <Link href="/admin/agents">Agent profiles</Link>
-        <Link href="/admin/research">Research runs</Link>
-        <Link href="/admin/coverage">ZIP coverage</Link>
+        <Link href="/admin/agents">All listings</Link>
+        <Link href="/admin/coverage">Towns</Link>
 
-        <div className="nav-group">Revenue</div>
-        <Link href="/admin/crm">Brokerage pipeline</Link>
+        {admin ? (
+          <>
+            <div className="nav-group">Admin</div>
+            <Link href="/admin/users">Team</Link>
+          </>
+        ) : null}
 
-        <div className="nav-group">Operations</div>
-        <Link href="/admin/service-requests">Home-service requests</Link>
-        <Link href="/admin/notifications">Notifications</Link>
-        {admin ? <Link href="/admin/users">Users and roles</Link> : null}
-
-        <div style={{ padding: "18px 10px 0" }}>
+        <div style={{ padding: "20px 12px 0" }}>
           <form action={signOut}>
-            <button className="btn btn-secondary" type="submit" style={{ width: "100%" }}>
+            <button className="btn btn-secondary btn-small" type="submit" style={{ width: "100%" }}>
               Sign out
             </button>
           </form>
-        </div>
-
-        <div style={{ padding: "14px 10px 0" }}>
-          <Link href="/" className="muted" style={{ fontSize: "0.78rem" }}>
-            View public site →
+          <Link href="/" className="muted" style={{ fontSize: "0.84rem", display: "block", marginTop: 12 }}>
+            View public site
           </Link>
         </div>
       </aside>

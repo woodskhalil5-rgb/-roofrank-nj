@@ -56,8 +56,8 @@ export default async function AgentsPage({
     <>
       <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
         <h1>Agent profiles</h1>
-        <Link className="btn" href="/admin/agents/new">
-          New draft profile
+        <Link className="btn" href="/admin/intake">
+          Add agents
         </Link>
       </div>
 
@@ -72,7 +72,7 @@ export default async function AgentsPage({
       {rows.length === 0 ? (
         <div className="notice notice-info">
           No profiles{status ? ` with status "${status}"` : ""} yet.{" "}
-          <Link href="/admin/agents/new">Create the first draft</Link>.
+          <Link href="/admin/intake">Create the first draft</Link>.
         </div>
       ) : (
         <div className="table-wrap card" style={{ padding: 0 }}>

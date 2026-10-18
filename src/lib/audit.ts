@@ -1,9 +1,9 @@
 import "server-only";
 import { headers } from "next/headers";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface AuditEntry {
-  actorUserId?: string | null;
+  actorUserId: string;
   actorEmail?: string | null;
   action: string;
   entityType: string;
@@ -13,15 +13,18 @@ export interface AuditEntry {
 }
 
 /**
- * Appends to the audit log. The table has no insert policy for any client
- * role, so this always runs with the service role on the server.
+ * Appends to the audit log using the acting user's own session.
+ *
+ * The insert policy requires actor_user_id to equal auth.uid(), so an entry
+ * cannot be written on somebody else's behalf, and there is no update or
+ * delete policy for any client role — the log is append-only.
  *
  * Throws on failure. Callers in consequential paths (approval, publication,
  * permission changes) must not swallow the error: an action that cannot be
  * recorded should not be reported as done.
  */
 export async function recordAudit(entry: AuditEntry): Promise<void> {
-  const supabase = createSupabaseAdminClient();
+  const supabase = await createSupabaseServerClient();
 
   let ip: string | null = null;
   let userAgent: string | null = null;
@@ -31,11 +34,11 @@ export async function recordAudit(entry: AuditEntry): Promise<void> {
     ip = forwarded ? forwarded.split(",")[0].trim() : null;
     userAgent = h.get("user-agent");
   } catch {
-    // Outside a request context (for example a scheduled job).
+    // Outside a request context.
   }
 
   const { error } = await supabase.from("audit_log").insert({
-    actor_user_id: entry.actorUserId ?? null,
+    actor_user_id: entry.actorUserId,
     actor_email: entry.actorEmail ?? null,
     action: entry.action,
     entity_type: entry.entityType,

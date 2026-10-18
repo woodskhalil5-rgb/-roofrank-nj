@@ -6,11 +6,11 @@ import { publicEnv } from "@/lib/env";
 export const metadata: Metadata = {
   metadataBase: new URL(publicEnv.siteUrl),
   title: {
-    default: "Destiny Marketing Group — Real Estate Professional Directory",
+    default: "Find a real estate agent in New Jersey | Destiny Marketing Group",
     template: "%s | Destiny Marketing Group",
   },
   description:
-    "A verified directory of local real estate professionals, with a published ranking methodology and clearly labelled sponsored placements.",
+    "Find local real estate agents by ZIP code. Every licence is checked against the state register, and agents can claim and correct their own listing for free.",
   robots: { index: true, follow: true },
 };
 
@@ -23,13 +23,16 @@ export default function RootLayout({
         <header className="masthead">
           <div className="wrap masthead-inner">
             <Link href="/" className="logo">
-              DESTINY MARKETING GROUP <span>| Real Estate Intelligence</span>
+              Destiny Marketing Group
+              <span>New Jersey real estate directory</span>
             </Link>
             <nav>
-              <Link href="/directory">Directory</Link>
-              <Link href="/methodology">Methodology</Link>
-              <Link href="/claim">Claim your profile</Link>
+              <Link href="/directory">Find an agent</Link>
+              <Link href="/methodology">How we check</Link>
               <Link href="/home-services">Home services</Link>
+              <Link href="/claim" className="nav-cta">
+                Claim your listing
+              </Link>
             </nav>
           </div>
         </header>
@@ -38,16 +41,16 @@ export default function RootLayout({
 
         <footer className="site">
           <div className="wrap">
-            <p style={{ marginBottom: 6 }}>
-              Destiny Marketing Group — independent real estate directory and
-              brokerage marketing services.
+            <p style={{ marginBottom: 8, fontWeight: 600, color: "var(--ink-2)" }}>
+              Destiny Marketing Group — New Jersey real estate directory
             </p>
-            <p className="muted" style={{ margin: 0 }}>
-              Sponsored placements are labelled wherever they appear and never
-              change editorial ranking scores. Home-service requests are passed
-              to Jersey Home Pros, a separate company, only with the visitor&apos;s
-              explicit consent.{" "}
-              <Link href="/methodology">How rankings are produced</Link>
+            <p style={{ margin: 0 }}>
+              Agents are listed free and can claim or correct their listing at no
+              cost. Sponsored listings are labelled wherever they appear and
+              never change the order of results.{" "}
+              <Link href="/methodology">How we check listings</Link>. Home-service
+              requests are passed to Jersey Home Pros, a separate company, only
+              when you ask us to.
             </p>
           </div>
         </footer>

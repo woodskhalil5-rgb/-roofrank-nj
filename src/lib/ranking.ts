@@ -1,15 +1,12 @@
 import "server-only";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /**
  * Ranking is computed only from evidence that has actually been recorded.
+ * A criterion scores zero when no sourced evidence supports it. Nothing uses
+ * sales volume, transaction counts or reviews. Sponsorship is never an input.
  *
- * A criterion scores zero when no sourced evidence supports it. Nothing here
- * uses sales volume, transaction counts or reviews, because the platform holds
- * no authorised source for those; see the published methodology.
- *
- * Sponsorship is never an input. Paid placement lives in sponsored_placement
- * and is rendered as a label.
+ * Runs under the acting staff member's session, so it needs no service-role key.
  */
 
 interface Criterion {
@@ -35,8 +32,10 @@ export interface ScoreBreakdown {
   evidenceCompleteness: number;
 }
 
-export async function computeScore(agentId: string): Promise<ScoreBreakdown | null> {
-  const supabase = createSupabaseAdminClient();
+export async function computeScore(
+  agentId: string,
+): Promise<ScoreBreakdown | null> {
+  const supabase = await createSupabaseServerClient();
 
   const [{ data: methodology }, { data: agent }, { data: evidence }] =
     await Promise.all([
@@ -70,7 +69,9 @@ export async function computeScore(agentId: string): Promise<ScoreBreakdown | nu
   const components: ScoreBreakdown["components"] = {};
   let total = 0;
 
-  const sourcedCount = COMPLETENESS_FIELDS.filter((f) => anySourceFields.has(f)).length;
+  const sourcedCount = COMPLETENESS_FIELDS.filter((f) =>
+    anySourceFields.has(f),
+  ).length;
   const completeness = sourcedCount / COMPLETENESS_FIELDS.length;
 
   for (const criterion of criteria) {
@@ -88,10 +89,10 @@ export async function computeScore(agentId: string): Promise<ScoreBreakdown | nu
       case "brokerage_affiliation_verified":
         if (verifiedFields.has("brokerage")) {
           earned = criterion.weight;
-          basis = "Brokerage affiliation verified against a recorded source";
+          basis = "Brokerage verified against a recorded source";
         } else if (anySourceFields.has("brokerage")) {
           earned = criterion.weight * 0.4;
-          basis = "Brokerage recorded from a source, but not independently verified";
+          basis = "Brokerage recorded from a source but not independently verified";
         }
         break;
 
@@ -141,13 +142,17 @@ export async function computeScore(agentId: string): Promise<ScoreBreakdown | nu
 
 /** Recomputes and stores the score for every ZIP the agent serves. */
 export async function computeAndStoreScore(agentId: string): Promise<void> {
-  const supabase = createSupabaseAdminClient();
+  const supabase = await createSupabaseServerClient();
 
   const breakdown = await computeScore(agentId);
   if (!breakdown) return;
 
   const [{ data: methodology }, { data: agent }] = await Promise.all([
-    supabase.from("ranking_methodology").select("version").eq("is_active", true).maybeSingle(),
+    supabase
+      .from("ranking_methodology")
+      .select("version")
+      .eq("is_active", true)
+      .maybeSingle(),
     supabase.from("agent").select("service_zips").eq("id", agentId).maybeSingle(),
   ]);
 
@@ -156,17 +161,16 @@ export async function computeAndStoreScore(agentId: string): Promise<void> {
   const zips = (agent.service_zips ?? []) as string[];
   if (zips.length === 0) return;
 
-  const payload = zips.map((zip) => ({
-    agent_id: agentId,
-    zip,
-    methodology_version: methodology.version as string,
-    score: breakdown.score,
-    components: breakdown.components,
-    evidence_completeness: breakdown.evidenceCompleteness,
-    computed_at: new Date().toISOString(),
-  }));
-
-  await supabase
-    .from("agent_zip_score")
-    .upsert(payload, { onConflict: "agent_id,zip,methodology_version" });
+  await supabase.from("agent_zip_score").upsert(
+    zips.map((zip) => ({
+      agent_id: agentId,
+      zip,
+      methodology_version: methodology.version as string,
+      score: breakdown.score,
+      components: breakdown.components,
+      evidence_completeness: breakdown.evidenceCompleteness,
+      computed_at: new Date().toISOString(),
+    })),
+    { onConflict: "agent_id,zip,methodology_version" },
+  );
 }

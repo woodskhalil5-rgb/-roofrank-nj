@@ -11,12 +11,12 @@ interface Params {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { zip } = await params;
-  if (!/^[0-9]{5}$/.test(zip)) return { title: "Directory" };
+  if (!/^[0-9]{5}$/.test(zip)) return { title: "Find an agent" };
 
   const supabase = createSupabasePublicClient();
   const { data: area } = await supabase
     .from("zip_area")
-    .select("primary_city, county")
+    .select("primary_city")
     .eq("zip", zip)
     .eq("is_target", true)
     .maybeSingle();
@@ -24,8 +24,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const place = area?.primary_city ? `${area.primary_city}, NJ ${zip}` : zip;
 
   return {
-    title: `Real estate agents serving ${place}`,
-    description: `Verified real estate professionals serving ${place}, with recorded sources and a published ranking methodology.`,
+    title: `Real estate agents in ${place}`,
+    description: `Local real estate agents serving ${place}, with licences checked against the New Jersey state register.`,
     alternates: { canonical: `/directory/${zip}` },
   };
 }
@@ -36,13 +36,21 @@ interface AgentRow {
   slug: string;
   headline: string | null;
   public_phone: string | null;
-  website: string | null;
-  license_number: string | null;
   license_status: string | null;
   license_verified_at: string | null;
+  headshot_url: string | null;
   specialties: string[];
   claim_verified_at: string | null;
-  brokerage: { name: string; slug: string } | null;
+  brokerage: { name: string } | null;
+}
+
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 export default async function ZipDirectoryPage({ params }: Params) {
@@ -60,49 +68,41 @@ export default async function ZipDirectoryPage({ params }: Params) {
 
   if (!area) {
     return (
-      <main className="page">
-        <div className="wrap-narrow">
-          <h1>{zip}</h1>
-          <div className="notice notice-info">
-            This platform does not cover {zip} yet. Coverage is added one area at
-            a time, once research has been reviewed and approved.
-          </div>
-          <Link className="btn btn-secondary" href="/directory">
-            See covered areas
+      <main className="wrap-narrow page">
+        <h1 style={{ maxWidth: "none" }}>We don&apos;t cover {zip} yet</h1>
+        <p className="lede">
+          We verify every agent by hand before listing them, so towns open one at
+          a time. Nothing is listed here until that work is done.
+        </p>
+        <div className="btn-row">
+          <Link className="btn" href="/directory">
+            See which towns are open
+          </Link>
+          <Link className="btn btn-secondary" href="/methodology">
+            How we check agents
           </Link>
         </div>
       </main>
     );
   }
 
-  const [{ data: agents }, { data: methodology }, { data: sponsored }] =
-    await Promise.all([
-      supabase
-        .from("agent")
-        .select(
-          "id, full_name, slug, headline, public_phone, website, license_number, license_status, license_verified_at, specialties, claim_verified_at, brokerage:brokerage_id (name, slug)",
-        )
-        .eq("status", "published")
-        .contains("service_zips", [zip])
-        .order("full_name"),
-      supabase
-        .from("ranking_methodology")
-        .select("version, summary")
-        .eq("is_active", true)
-        .maybeSingle(),
-      supabase
-        .from("sponsored_placement")
-        .select("id, label, agent_id, brokerage_id")
-        .eq("zip", zip),
-    ]);
+  const [{ data: agents }, { data: sponsored }] = await Promise.all([
+    supabase
+      .from("agent")
+      .select(
+        "id, full_name, slug, headline, public_phone, license_status, license_verified_at, headshot_url, specialties, claim_verified_at, brokerage:brokerage_id (name)",
+      )
+      .eq("status", "published")
+      .contains("service_zips", [zip])
+      .order("full_name"),
+    supabase.from("sponsored_placement").select("agent_id").eq("zip", zip),
+  ]);
 
   const rows = (agents ?? []) as unknown as AgentRow[];
-  const sponsoredAgentIds = new Set(
+  const sponsoredIds = new Set(
     (sponsored ?? []).map((s) => s.agent_id as string).filter(Boolean),
   );
 
-  // Editorial order comes from the methodology score. Sponsorship is rendered
-  // as a visible label and is never mixed into the score.
   const scoresResult = rows.length
     ? await supabase
         .from("agent_zip_score")
@@ -117,109 +117,144 @@ export default async function ZipDirectoryPage({ params }: Params) {
   const scoreById = new Map<string, number>(
     (scoresResult?.data ?? []).map((s) => [s.agent_id as string, Number(s.score)]),
   );
+
   const ordered = [...rows].sort((a, b) => {
     const diff = (scoreById.get(b.id) ?? 0) - (scoreById.get(a.id) ?? 0);
     return diff !== 0 ? diff : a.full_name.localeCompare(b.full_name);
   });
 
-  const place = `${area.primary_city as string}, NJ ${zip}`;
+  const town = area.primary_city as string;
 
   return (
-    <main className="page">
-      <div className="wrap">
-        <h1>Real estate agents serving {place}</h1>
-        <p className="muted" style={{ maxWidth: 680 }}>
-          This is a directory of local real estate professionals, not a ranking
-          of top performers. Agents are ordered by how much of their
-          professional record has been independently verified.{" "}
-          <Link href="/methodology">
-            Methodology {methodology?.version ?? ""}
-          </Link>
-        </p>
+    <main>
+      <section className="hero">
+        <div className="wrap">
+          <h1 style={{ maxWidth: "18ch" }}>Real estate agents in {town}</h1>
+          <p className="lede">
+            {ordered.length > 0
+              ? `${ordered.length} agent${ordered.length === 1 ? "" : "s"} serving ${zip}. Licences checked against the state register.`
+              : `We're still checking agents for ${zip}.`}
+          </p>
+          <div className="searchbox" style={{ marginTop: 20 }}>
+            <form action="/directory" method="get">
+              <label htmlFor="zip">Try another ZIP code</label>
+              <div className="searchbox-row">
+                <input
+                  id="zip"
+                  name="zip"
+                  type="search"
+                  inputMode="numeric"
+                  pattern="[0-9]{5}"
+                  maxLength={5}
+                  placeholder="ZIP code"
+                  required
+                />
+                <button className="btn" type="submit">
+                  Find agents
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
 
+      <div className="wrap page">
         {ordered.length === 0 ? (
-          <div className="notice notice-info">
-            No profiles for {place} have completed review and been published yet.
-            Nothing is shown here until an administrator has approved it.
+          <div className="empty">
+            <h3>No agents listed in {town} yet</h3>
+            <p>
+              Every listing is checked by a person before it goes live, and none
+              have finished review for this area. We would rather show you nothing
+              than show you agents we haven&apos;t verified.
+            </p>
+            <Link className="btn btn-secondary" href="/directory">
+              See which towns are open
+            </Link>
           </div>
         ) : (
-          <div className="grid" style={{ marginTop: 20 }}>
+          <>
             {ordered.map((agent, index) => {
-              const verifiedLicence =
-                agent.license_verified_at !== null &&
-                agent.license_status !== null;
+              const licenceOk =
+                agent.license_verified_at !== null && agent.license_status !== null;
+              const isSponsored = sponsoredIds.has(agent.id);
 
               return (
-                <article key={agent.id} className="card">
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 12,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <div>
-                      <h2 style={{ marginBottom: 2 }}>
-                        <span className="muted" style={{ marginRight: 8 }}>
-                          {index + 1}.
-                        </span>
-                        <Link href={`/agent/${agent.slug}`}>
-                          {agent.full_name}
-                        </Link>
-                      </h2>
-                      <p className="muted" style={{ margin: 0 }}>
-                        {agent.brokerage?.name ?? "Brokerage not confirmed"}
-                      </p>
-                    </div>
-                    <div
-                      style={{ display: "flex", gap: 6, alignItems: "flex-start" }}
-                    >
-                      {sponsoredAgentIds.has(agent.id) ? (
-                        <span className="badge badge-sponsored">Sponsored</span>
-                      ) : null}
-                      {verifiedLicence ? (
-                        <span className="badge badge-ok">Licence verified</span>
-                      ) : (
-                        <span className="badge badge-neutral">
-                          Licence not verified
-                        </span>
-                      )}
-                      {agent.claim_verified_at ? (
-                        <span className="badge badge-ok">Claimed by agent</span>
-                      ) : null}
-                    </div>
+                <article
+                  key={agent.id}
+                  className={isSponsored ? "agent-card is-sponsored" : "agent-card"}
+                >
+                  <div className="avatar" aria-hidden="true">
+                    {initials(agent.full_name)}
                   </div>
 
-                  {agent.headline ? (
-                    <p style={{ marginTop: 10, marginBottom: 6 }}>
-                      {agent.headline}
+                  <div className="agent-body">
+                    <h2 className="agent-name">
+                      <span className="rank-no">{index + 1}</span>
+                      <Link href={`/agent/${agent.slug}`}>{agent.full_name}</Link>
+                    </h2>
+                    <p className="agent-firm">
+                      {agent.brokerage?.name ?? "Brokerage not confirmed"}
                     </p>
-                  ) : null}
 
-                  {agent.specialties.length > 0 ? (
-                    <p className="muted" style={{ margin: "6px 0 0" }}>
-                      {agent.specialties.join(" · ")}
-                    </p>
-                  ) : null}
+                    {agent.headline ? (
+                      <p style={{ marginTop: 10 }}>{agent.headline}</p>
+                    ) : null}
 
-                  <div style={{ marginTop: 12 }}>
-                    <Link className="btn btn-secondary" href={`/agent/${agent.slug}`}>
-                      View profile and sources
-                    </Link>
+                    <div className="chips">
+                      {licenceOk ? (
+                        <span className="chip chip-ok">Licence verified</span>
+                      ) : (
+                        <span className="chip chip-warn">Licence not verified</span>
+                      )}
+                      {agent.claim_verified_at ? (
+                        <span className="chip chip-ok">Claimed by agent</span>
+                      ) : null}
+                      {isSponsored ? (
+                        <span className="chip chip-gold">Sponsored</span>
+                      ) : null}
+                      {agent.specialties.slice(0, 3).map((s) => (
+                        <span className="chip" key={s}>
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="agent-actions">
+                      <Link className="btn btn-small" href={`/agent/${agent.slug}`}>
+                        View listing
+                      </Link>
+                      {agent.public_phone ? (
+                        <a
+                          className="btn btn-secondary btn-small"
+                          href={`tel:${agent.public_phone}`}
+                        >
+                          {agent.public_phone}
+                        </a>
+                      ) : null}
+                    </div>
                   </div>
                 </article>
               );
             })}
-          </div>
+
+            <p className="muted" style={{ marginTop: 24 }}>
+              Ordered by how much of each agent&apos;s record we verified, never by
+              payment. <Link href="/methodology">How we check agents</Link>
+            </p>
+          </>
         )}
 
         <hr className="rule" />
-        <p className="muted">
-          Is one of these profiles yours?{" "}
-          <Link href="/claim">Claim it or request a correction</Link>. Agents are
-          never charged to claim or correct a profile.
-        </p>
+        <div className="card card-warm">
+          <h3>Is one of these you?</h3>
+          <p className="muted">
+            Claiming your listing is free, and so is correcting it. You will never
+            be charged to fix your own details.
+          </p>
+          <Link className="btn" href="/claim">
+            Claim your listing
+          </Link>
+        </div>
       </div>
     </main>
   );
