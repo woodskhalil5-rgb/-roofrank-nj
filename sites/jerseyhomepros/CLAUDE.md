@@ -15,6 +15,23 @@ counties. Destiny Marketing Group.
 - Diagnose before asking him to redo work.
 - Don't nag him to test things.
 
+### "We G" — his status check
+
+When Khalil writes **"We G"** (or "we g?"), he is asking two questions and
+wants both answered:
+
+1. **Is the site fine?** Check it, do not answer from memory. Deployment
+   state, `GET /api/health/alerts?token=$HEALTH_CHECK_TOKEN&send=0` for the
+   alert config and backlog, and the database for anything stuck.
+2. **Is there anything he needs to do that Claude cannot?** The things only
+   he can do: third-party dashboards (Resend, Namecheap, Supabase auth
+   settings, Google), anything needing a card or a signature, and recruiting
+   actual contractors. List these specifically, or say plainly that there is
+   nothing.
+
+Answer both every time, briefly. If nothing needs him, say so — do not invent
+work to fill the second half.
+
 ## The rule everything else follows
 
 **Describe what is true now, never what will always be true.** Every feature
