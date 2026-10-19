@@ -968,3 +968,152 @@ a.chip:hover {
   color: var(--brand);
   text-decoration: none;
 }
+
+/* --------------------------------------------------------------------------
+   Split hero: copy and search on the left, promotional positions on the right
+   -------------------------------------------------------------------------- */
+
+.hero-photo {
+  background: var(--warm);
+  border-bottom: 1px solid var(--line);
+  padding: 26px 0 34px;
+}
+
+.hero-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(290px, 0.9fr);
+  gap: 40px;
+  align-items: center;
+  border-radius: var(--r-lg);
+  padding: 54px 44px 58px;
+  box-shadow: var(--shadow);
+  background-color: #10361f;
+  /* Set --hero-photo to a url() to drop a photograph in behind the wash. */
+  background-image: linear-gradient(
+      148deg,
+      rgba(8, 32, 17, 0.94) 0%,
+      rgba(20, 83, 45, 0.88) 55%,
+      rgba(26, 92, 54, 0.82) 100%
+    ),
+    var(--hero-photo, none);
+  background-size: cover;
+  background-position: center;
+}
+
+.hero-photo h1 {
+  color: #fdfbf6;
+  max-width: 15ch;
+}
+
+.hero-photo p.lede {
+  color: rgba(253, 251, 246, 0.84);
+  max-width: 46ch;
+}
+
+.hero-photo .trust-line {
+  color: rgba(253, 251, 246, 0.82);
+}
+
+.hero-photo .trust-line .tick {
+  color: var(--gold);
+}
+
+.hero-copy {
+  min-width: 0;
+}
+
+.hero-featured {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.feature-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--paper);
+  border: 1px solid transparent;
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.feature-card:hover,
+.feature-card:focus-visible {
+  transform: translateX(-4px);
+  text-decoration: none;
+}
+
+.feature-card.is-sponsored {
+  border-color: var(--gold);
+}
+
+.feature-card .avatar {
+  flex: 0 0 54px;
+  width: 54px;
+  height: 54px;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  object-fit: cover;
+}
+
+.feature-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.feature-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.feature-name {
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.feature-firm {
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+
+.feature-card .chips {
+  margin-top: 6px;
+  gap: 5px;
+}
+
+.feature-card .chip {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+}
+
+.section-title {
+  text-align: center;
+  max-width: 26ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 880px) {
+  .hero-split {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 36px 22px 40px;
+  }
+  .hero-photo h1 {
+    max-width: none;
+  }
+}
