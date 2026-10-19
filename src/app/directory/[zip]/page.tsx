@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createSupabasePublicClient } from "@/lib/supabase/server";
 import Track from "@/components/Track";
+import { endsOnOrAfter, placementDay } from "@/lib/placements";
 
 export const revalidate = 300;
 
@@ -97,7 +98,12 @@ export default async function ZipDirectoryPage({ params }: Params) {
       .eq("status", "published")
       .contains("service_zips", [zip])
       .order("full_name"),
-    supabase.from("sponsored_placement").select("agent_id").eq("zip", zip),
+    supabase
+      .from("sponsored_placement")
+      .select("agent_id")
+      .eq("zip", zip)
+      .lte("starts_on", placementDay())
+      .or(endsOnOrAfter(placementDay())),
   ]);
 
   const rows = (agents ?? []) as unknown as AgentRow[];

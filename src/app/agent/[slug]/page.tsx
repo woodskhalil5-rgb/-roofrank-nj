@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { createSupabasePublicClient } from "@/lib/supabase/server";
 import Track from "@/components/Track";
 import TrackedLink from "@/components/TrackedLink";
+import { endsOnOrAfter, placementDay } from "@/lib/placements";
 
 export const revalidate = 300;
 
@@ -95,6 +96,8 @@ export default async function AgentListingPage({ params }: Params) {
         .from("sponsored_placement")
         .select("id")
         .eq("agent_id", agent.id)
+        .lte("starts_on", placementDay())
+        .or(endsOnOrAfter(placementDay()))
         .limit(1),
       (agent.service_zips as string[]).length > 0
         ? supabase

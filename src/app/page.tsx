@@ -2,6 +2,11 @@ import Link from "next/link";
 import { createSupabasePublicClient } from "@/lib/supabase/server";
 import Track from "@/components/Track";
 import TrackedLink from "@/components/TrackedLink";
+import {
+  endsOnOrAfter,
+  placementDay,
+  STATEWIDE_SLOTS,
+} from "@/lib/placements";
 
 export const revalidate = 300;
 
@@ -81,20 +86,22 @@ const AGENT_COLUMNS =
  */
 async function getFeatured(): Promise<FeaturedCard[]> {
   const supabase = createSupabasePublicClient();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = placementDay();
 
   // Statewide placements carry no ZIP; ZIP-scoped rows belong to town pages.
+  // Both ends of the window are filtered in the query: filtering expired rows
+  // after the limit would let ended campaigns crowd out a live one.
+  // Earliest start wins a slot, so the first brokerage to buy keeps it.
   const { data: placements } = await supabase
     .from("sponsored_placement")
     .select("agent_id, label, starts_on, ends_on")
     .is("zip", null)
     .lte("starts_on", today)
+    .or(endsOnOrAfter(today))
     .order("starts_on", { ascending: true })
-    .limit(3);
+    .limit(STATEWIDE_SLOTS);
 
-  const live = (placements ?? []).filter(
-    (p) => !p.ends_on || (p.ends_on as string) >= today,
-  );
+  const live = placements ?? [];
 
   const cards: FeaturedCard[] = [];
   const takenIds: string[] = [];
@@ -121,13 +128,13 @@ async function getFeatured(): Promise<FeaturedCard[]> {
   }
 
   // Fill any unsold position with a published listing, free of charge.
-  if (cards.length < 3) {
+  if (cards.length < STATEWIDE_SLOTS) {
     let fill = supabase
       .from("agent")
       .select(AGENT_COLUMNS)
       .eq("status", "published")
       .order("published_at", { ascending: false })
-      .limit(3 - cards.length);
+      .limit(STATEWIDE_SLOTS - cards.length);
 
     if (takenIds.length > 0) {
       fill = fill.not("id", "in", `(${takenIds.join(",")})`);

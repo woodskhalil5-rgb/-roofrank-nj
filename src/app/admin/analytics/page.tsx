@@ -2,6 +2,11 @@ import Link from "next/link";
 import { requireStaff } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { EVENT_LABELS, EVENT_TYPES, type EventType } from "@/lib/analytics";
+import {
+  endsOnOrAfter,
+  placementDay,
+  STATEWIDE_SLOTS,
+} from "@/lib/placements";
 
 export const dynamic = "force-dynamic";
 
@@ -32,13 +37,24 @@ export default async function AnalyticsPage({
 
   const supabase = await createSupabaseServerClient();
 
-  const { data, error } = await supabase
-    .from("analytics_daily")
-    .select("day, event_type, agent_id, zip, is_paid, count")
-    .gte("day", since)
-    .order("day", { ascending: false });
+  const day = placementDay();
+
+  const [{ data, error }, { count: liveStatewide }] = await Promise.all([
+    supabase
+      .from("analytics_daily")
+      .select("day, event_type, agent_id, zip, is_paid, count")
+      .gte("day", since)
+      .order("day", { ascending: false }),
+    supabase
+      .from("sponsored_placement")
+      .select("id", { count: "exact", head: true })
+      .is("zip", null)
+      .lte("starts_on", day)
+      .or(endsOnOrAfter(day)),
+  ]);
 
   const rows = (data ?? []) as Row[];
+  const sold = liveStatewide ?? 0;
 
   const totals = new Map<EventType, { paid: number; free: number }>();
   for (const t of EVENT_TYPES) totals.set(t, { paid: 0, free: 0 });
@@ -159,6 +175,27 @@ export default async function AnalyticsPage({
           Could not read the tallies: {error.message}
         </div>
       ) : null}
+
+      {sold > STATEWIDE_SLOTS ? (
+        <div className="notice notice-bad">
+          <strong>
+            {sold} statewide placements are running and there are only{" "}
+            {STATEWIDE_SLOTS} positions.
+          </strong>
+          <p style={{ margin: "6px 0 0" }}>
+            The {STATEWIDE_SLOTS} with the earliest start dates are on the
+            homepage. The rest are paying for a position nobody can see. End a
+            campaign or move one to a town page.
+          </p>
+        </div>
+      ) : (
+        <p className="muted">
+          {sold} of {STATEWIDE_SLOTS} homepage positions sold.
+          {sold < STATEWIDE_SLOTS
+            ? " Unsold positions show a published listing at no charge, with no Sponsored label."
+            : ""}
+        </p>
+      )}
 
       <div className="metric-row">
         {EVENT_TYPES.map((t) => {
