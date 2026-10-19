@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createSupabasePublicClient } from "@/lib/supabase/server";
+import Track from "@/components/Track";
+import TrackedLink from "@/components/TrackedLink";
 
 export const revalidate = 300;
 
@@ -113,6 +115,7 @@ export default async function AgentListingPage({ params }: Params) {
 
   return (
     <main>
+      <Track event="profile_view" agentId={agent.id as string} paid={isSponsored} />
       <section className="hero">
         <div className="wrap">
           <div
@@ -178,24 +181,48 @@ export default async function AgentListingPage({ params }: Params) {
             }}
           >
             {agent.public_phone ? (
-              <a className="btn" href={`tel:${agent.public_phone}`}>
+              <TrackedLink
+                className="btn"
+                href={`tel:${agent.public_phone}`}
+                external
+                track={{
+                  event: "contact_click",
+                  agentId: agent.id as string,
+                  paid: isSponsored,
+                }}
+              >
                 Call {agent.public_phone as string}
-              </a>
+              </TrackedLink>
             ) : null}
             {agent.public_email ? (
-              <a className="btn btn-secondary" href={`mailto:${agent.public_email}`}>
+              <TrackedLink
+                className="btn btn-secondary"
+                href={`mailto:${agent.public_email}`}
+                external
+                track={{
+                  event: "contact_click",
+                  agentId: agent.id as string,
+                  paid: isSponsored,
+                }}
+              >
                 Email {name.split(" ")[0]}
-              </a>
+              </TrackedLink>
             ) : null}
             {agent.website ? (
-              <a
+              <TrackedLink
                 className="btn btn-secondary"
                 href={agent.website as string}
+                external
                 rel="nofollow noopener noreferrer"
                 target="_blank"
+                track={{
+                  event: "contact_click",
+                  agentId: agent.id as string,
+                  paid: isSponsored,
+                }}
               >
                 Their website
-              </a>
+              </TrackedLink>
             ) : null}
             {!agent.public_phone && !agent.public_email && !agent.website ? (
               <p className="muted" style={{ margin: 0 }}>

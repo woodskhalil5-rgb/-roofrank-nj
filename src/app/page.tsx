@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createSupabasePublicClient } from "@/lib/supabase/server";
+import Track from "@/components/Track";
+import TrackedLink from "@/components/TrackedLink";
 
 export const revalidate = 300;
 
@@ -8,6 +10,8 @@ interface FeaturedCard {
   fullName: string;
   slug: string;
   brokerage: string | null;
+  brokeragePhone: string | null;
+  brokerageLogoUrl: string | null;
   headshotUrl: string | null;
   licenceVerified: boolean;
   claimed: boolean;
@@ -16,11 +20,11 @@ interface FeaturedCard {
   sponsored: boolean;
 }
 
-function initials(name: string): string {
+function initials(name: string, max = 2): string {
   return name
     .split(/\s+/)
     .filter(Boolean)
-    .slice(0, 2)
+    .slice(0, max)
     .map((p) => p[0]?.toUpperCase() ?? "")
     .join("");
 }
@@ -34,7 +38,11 @@ interface AgentRow {
   headshot_url: string | null;
   claim_verified_at: string | null;
   brokerage_name_raw: string | null;
-  brokerage: { name: string } | null;
+  brokerage: {
+    name: string;
+    phone: string | null;
+    logo_url: string | null;
+  } | null;
 }
 
 function toCard(
@@ -47,6 +55,8 @@ function toCard(
     fullName: row.full_name,
     slug: row.slug,
     brokerage: row.brokerage?.name ?? row.brokerage_name_raw ?? null,
+    brokeragePhone: row.brokerage?.phone ?? null,
+    brokerageLogoUrl: row.brokerage?.logo_url ?? null,
     headshotUrl: row.headshot_url,
     licenceVerified:
       row.license_verified_at !== null && row.license_status !== null,
@@ -57,17 +67,17 @@ function toCard(
 }
 
 const AGENT_COLUMNS =
-  "id, full_name, slug, license_status, license_verified_at, headshot_url, claim_verified_at, brokerage_name_raw, brokerage:brokerage_id (name)";
+  "id, full_name, slug, license_status, license_verified_at, headshot_url, claim_verified_at, brokerage_name_raw, brokerage:brokerage_id (name, phone, logo_url)";
 
 /**
  * The three promotional positions in the hero.
  *
- * A position that has been sold shows that advertiser with its purchased
- * category and a Sponsored label. A position nobody has bought shows a
- * published agent at no charge and carries no category and no label, because
- * there is nothing sponsored about it. Either way the card states only what we
- * have a source for: who they are, where they work, and what we verified.
- * Never a rating, a ranking or a sales figure.
+ * A sold position shows that advertiser with its purchased category and a
+ * Sponsored label. An unsold position shows a published agent at no charge,
+ * with no category and no label, because nothing about it is sponsored.
+ * Either way a card states only what we hold a source for — who they are,
+ * who they work for, and what we verified. Never a rating, a ranking or a
+ * sales figure.
  */
 async function getFeatured(): Promise<FeaturedCard[]> {
   const supabase = createSupabasePublicClient();
@@ -130,6 +140,100 @@ async function getFeatured(): Promise<FeaturedCard[]> {
   }
 
   return cards;
+}
+
+/**
+ * A paid placement is the agent's own advertising, and N.J.A.C. 11:5-6.1(b)
+ * requires it to carry the brokerage name displayed more prominently than the
+ * agent's, plus the office telephone number wherever the agent's own contact
+ * details appear. The logo leads the card to satisfy that without setting the
+ * brokerage name in outsized type.
+ */
+function SponsoredCard({ card }: { card: FeaturedCard }) {
+  return (
+    <TrackedLink
+      className="feature-card brokerage-led is-sponsored"
+      href={`/agent/${card.slug}`}
+      track={{
+        event: "placement_click",
+        agentId: card.id,
+        paid: true,
+      }}
+    >
+      {card.brokerageLogoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          className="brand-logo"
+          src={card.brokerageLogoUrl}
+          alt={card.brokerage ?? "Brokerage"}
+        />
+      ) : (
+        <span className="brand-logo" aria-hidden="true">
+          {initials(card.brokerage ?? "Brokerage", 3)}
+        </span>
+      )}
+
+      <span className="feature-body">
+        {card.category ? (
+          <span className="feature-eyebrow">{card.category}</span>
+        ) : null}
+        <span className="firm-lead">
+          {card.brokerage ?? "Brokerage not confirmed"}
+        </span>
+        <span className="agent-row">
+          {card.headshotUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img className="avatar" src={card.headshotUrl} alt={card.fullName} />
+          ) : (
+            <span className="avatar" aria-hidden="true">
+              {initials(card.fullName)}
+            </span>
+          )}
+          <span className="agent-sub">{card.fullName}</span>
+        </span>
+        {card.brokeragePhone ? (
+          <span className="office-line">Office {card.brokeragePhone}</span>
+        ) : null}
+        <span className="chips">
+          {card.licenceVerified ? (
+            <span className="chip chip-ok">Licence verified</span>
+          ) : null}
+          <span className="chip chip-gold">Sponsored</span>
+        </span>
+      </span>
+    </TrackedLink>
+  );
+}
+
+function FreeCard({ card }: { card: FeaturedCard }) {
+  return (
+    <TrackedLink
+      className="feature-card"
+      href={`/agent/${card.slug}`}
+      track={{ event: "placement_click", agentId: card.id, paid: false }}
+    >
+      {card.headshotUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="avatar" src={card.headshotUrl} alt={card.fullName} />
+      ) : (
+        <span className="avatar" aria-hidden="true">
+          {initials(card.fullName)}
+        </span>
+      )}
+      <span className="feature-body">
+        <span className="feature-name">{card.fullName}</span>
+        <span className="feature-firm">
+          {card.brokerage ?? "Brokerage not confirmed"}
+        </span>
+        <span className="chips">
+          {card.licenceVerified ? (
+            <span className="chip chip-ok">Licence verified</span>
+          ) : null}
+          {card.claimed ? <span className="chip chip-ok">Claimed</span> : null}
+        </span>
+      </span>
+    </TrackedLink>
+  );
 }
 
 export default async function HomePage() {
@@ -203,47 +307,18 @@ export default async function HomePage() {
           {featured.length > 0 ? (
             <aside className="hero-featured" aria-label="Featured agents">
               {featured.map((card) => (
-                <Link
-                  key={card.id}
-                  href={`/agent/${card.slug}`}
-                  className={
-                    card.sponsored ? "feature-card is-sponsored" : "feature-card"
-                  }
-                >
-                  {card.headshotUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      className="avatar"
-                      src={card.headshotUrl}
-                      alt={card.fullName}
-                    />
+                <div key={card.id}>
+                  <Track
+                    event="placement_impression"
+                    agentId={card.id}
+                    paid={card.sponsored}
+                  />
+                  {card.sponsored ? (
+                    <SponsoredCard card={card} />
                   ) : (
-                    <span className="avatar" aria-hidden="true">
-                      {initials(card.fullName)}
-                    </span>
+                    <FreeCard card={card} />
                   )}
-
-                  <span className="feature-body">
-                    {card.category ? (
-                      <span className="feature-eyebrow">{card.category}</span>
-                    ) : null}
-                    <span className="feature-name">{card.fullName}</span>
-                    <span className="feature-firm">
-                      {card.brokerage ?? "Brokerage not confirmed"}
-                    </span>
-                    <span className="chips">
-                      {card.licenceVerified ? (
-                        <span className="chip chip-ok">Licence verified</span>
-                      ) : null}
-                      {card.claimed ? (
-                        <span className="chip chip-ok">Claimed</span>
-                      ) : null}
-                      {card.sponsored ? (
-                        <span className="chip chip-gold">Sponsored</span>
-                      ) : null}
-                    </span>
-                  </span>
-                </Link>
+                </div>
               ))}
             </aside>
           ) : null}

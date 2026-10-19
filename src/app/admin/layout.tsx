@@ -36,6 +36,7 @@ export default async function AdminLayout({
         <div className="nav-group">Data</div>
         <Link href="/admin/agents">All listings</Link>
         <Link href="/admin/coverage">Towns</Link>
+        <Link href="/admin/analytics">Measurement</Link>
 
         {admin ? (
           <>

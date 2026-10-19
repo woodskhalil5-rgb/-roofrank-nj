@@ -1117,3 +1117,103 @@ a.chip:hover {
     max-width: none;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Sponsored card: brokerage leads, agent sits beneath
+   N.J.A.C. 11:5-6.1(b)(1) — the broker's name must be displayed more
+   prominently than the salesperson's. The logo carries that prominence.
+   -------------------------------------------------------------------------- */
+
+.feature-card.brokerage-led {
+  align-items: flex-start;
+}
+
+.brand-logo {
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  background: var(--brand);
+  color: #fdfbf6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  object-fit: contain;
+}
+
+.firm-lead {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.agent-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 5px;
+}
+
+.agent-row .avatar {
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  font-size: 0.62rem;
+}
+
+.agent-sub {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.office-line {
+  font-size: 0.76rem;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Measurement tables in the dashboard
+   -------------------------------------------------------------------------- */
+
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.metric {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 16px 18px;
+}
+
+.metric .metric-label {
+  font-size: 0.76rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 700;
+}
+
+.metric .metric-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  margin-top: 4px;
+}
+
+.metric .metric-note {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  margin-top: 2px;
+}

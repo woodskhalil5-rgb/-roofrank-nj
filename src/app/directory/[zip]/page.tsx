@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createSupabasePublicClient } from "@/lib/supabase/server";
+import Track from "@/components/Track";
 
 export const revalidate = 300;
 
@@ -69,6 +70,7 @@ export default async function ZipDirectoryPage({ params }: Params) {
   if (!area) {
     return (
       <main className="wrap-narrow page">
+        <Track event="zip_search" zip={zip} />
         <h1 style={{ maxWidth: "none" }}>We don&apos;t cover {zip} yet</h1>
         <p className="lede">
           We verify every agent by hand before listing them, so towns open one at
@@ -127,6 +129,7 @@ export default async function ZipDirectoryPage({ params }: Params) {
 
   return (
     <main>
+      <Track event="zip_search" zip={zip} />
       <section className="hero">
         <div className="wrap">
           <h1 style={{ maxWidth: "18ch" }}>Real estate agents in {town}</h1>
