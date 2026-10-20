@@ -37,11 +37,13 @@ export default async function AdminLayout({
         <Link href="/admin/agents">All listings</Link>
         <Link href="/admin/coverage">Towns</Link>
         <Link href="/admin/analytics">Measurement</Link>
+        <Link href="/admin/placements">Placements</Link>
 
         {admin ? (
           <>
             <div className="nav-group">Admin</div>
             <Link href="/admin/users">Team</Link>
+            <Link href="/admin/clients">Client access</Link>
           </>
         ) : null}
 

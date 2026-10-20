@@ -28,7 +28,22 @@ export async function signIn(
     return { status: "error", message: "Those details were not accepted." };
   }
 
-  redirect(next.startsWith("/") ? next : "/admin");
+  // Staff go to the dashboard, advertisers to their own results. Sending a
+  // client to /admin would only bounce them to the no-access page.
+  let destination = next.startsWith("/") ? next : "/admin";
+  if (destination === "/admin") {
+    const { data: profile } = await supabase
+      .from("app_user")
+      .select("role")
+      .eq("email", email)
+      .maybeSingle();
+    const role = profile?.role as string | undefined;
+    if (role && !["owner", "admin", "employee"].includes(role)) {
+      destination = "/portal";
+    }
+  }
+
+  redirect(destination);
 }
 
 export async function signOut(): Promise<void> {

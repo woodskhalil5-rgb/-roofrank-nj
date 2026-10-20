@@ -103,3 +103,37 @@ export function fieldErrors(error: z.ZodError): Record<string, string> {
   }
   return out;
 }
+
+/**
+ * Selling one of the promotional positions.
+ *
+ * An end date is required, not optional. The database's own public policy on
+ * sponsored_placement reads `CURRENT_DATE <= ends_on`, which is NULL-blind: an
+ * open-ended campaign would be stored happily and then shown to nobody. Until
+ * that policy is changed, every campaign gets an explicit end date so the
+ * application and the database agree about what is running.
+ */
+export const placementSchema = z
+  .object({
+    agentId: z.string().uuid("Choose the agent this placement is for"),
+    brokerageId: z.string().uuid().optional().or(z.literal("")),
+    label: z.string().trim().min(2, "Name the position sold").max(80),
+    scope: z.enum(["statewide", "zip"]),
+    zip: z.string().trim().optional().or(z.literal("")),
+    startsOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a start date"),
+    endsOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick an end date"),
+    monthlyValue: z
+      .string()
+      .trim()
+      .regex(/^\d{1,7}(\.\d{1,2})?$/, "Enter the monthly amount, e.g. 650"),
+  })
+  .refine((v) => v.endsOn >= v.startsOn, {
+    message: "The end date cannot be before the start date",
+    path: ["endsOn"],
+  })
+  .refine((v) => v.scope === "statewide" || /^[0-9]{5}$/.test(v.zip ?? ""), {
+    message: "Enter the five-digit ZIP this placement runs in",
+    path: ["zip"],
+  });
+
+export type PlacementInput = z.infer<typeof placementSchema>;
