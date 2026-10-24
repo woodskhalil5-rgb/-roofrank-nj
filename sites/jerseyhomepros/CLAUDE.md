@@ -171,6 +171,8 @@ DMG marketing; contractors sign in with email + password.
 - A request started from a profile sets `leads.requested_roofer_id`.
   **Attribution only — matching is unchanged.** If the chosen company doesn't
   cover the ZIP, the homeowner is told so in the confirmation.
+- `nj_zips.city` and `county` are empty for every row, so profiles show ZIPs;
+  unclaimed listings carry their own `roofers.city`.
 - `/account` contractor dashboard. Accounts are set up from a one-time link
   (`/account/setup?token=`) that WE email through Resend; only the token's
   SHA-256 is stored, 72-hour expiry. This deliberately avoids Supabase's
@@ -180,6 +182,34 @@ DMG marketing; contractors sign in with email + password.
   in the admin "Pro requests" tab.
 - `/api/admin` no longer selects `*` from roofers, so the token hash never
   reaches the browser. Keep it that way.
+
+### Unclaimed listings, claims, paid access (shipped 2026-10-24)
+
+Khalil's model: pre-list real companies (roofing and HVAC first) from public
+records, show a state registration check they can't get elsewhere, and give
+them no leads from JHP traffic until they claim AND pay.
+
+- `roofers.status = 'unclaimed'` + `source = 'public_records'`. The page
+  says it isn't a member; requests from it go to participating companies
+  covering the ZIP, **never to the listed company**, and the form and the
+  confirmation both say so. Every unclaimed page offers removal by email.
+- Registration badge renders only when `license_checked_at` is set, always
+  with the date and a link to newjersey.mylicense.com. **The sandbox cannot
+  reach that site and WebFetch can't drive its search form** — checks run in
+  Khalil's browser (built-in browser pane) when his computer is online. Never
+  set `license_checked_at` without an actual lookup.
+- `leads_enabled` gates `match_lead`. Claimed companies start false; admin
+  "Start requests (paid)" flips it and sends the welcome/contact-rules email.
+  No card billing exists yet — payment is handled by Khalil outside the site.
+  Adams and Jackie were left at true (pre-existing access).
+- `receivesRequests(p)` = approved AND leads_enabled. Use it, not `status`,
+  anywhere the site says whether a request reaches a company.
+- `area_demand(roofer_id, days)` = real non-spam leads in the trade within
+  the company's radius. The only number a claim pitch may quote.
+- Claims (`claims` table) are verified by the operator by calling the number
+  on the company's own website/registration before approval.
+- **Preview deployments have no service-role key**, so every DB-backed page
+  404s or shows empty there. Verify DB pages on production.
 
 ### Operator alert — how to check it
 
