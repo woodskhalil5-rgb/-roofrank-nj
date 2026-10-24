@@ -149,6 +149,35 @@ company is Khalil's job and nothing technical substitutes for it.
 No analytics: `NEXT_PUBLIC_GTM_ID` is unset, so no tracking script loads. Form
 and funnel changes wait until there is conversion data.
 
+### Directory and contractor dashboard (shipped 2026-10-24)
+
+Khalil's decisions, in his answers: profiles are public, but contact goes
+through the JHP request form (no phone on profiles); stats are profile
+views, estimate/website clicks and leads; "ask for more" means more leads or
+DMG marketing; contractors sign in with email + password.
+
+- `/pros` directory (trade + ZIP search via `directory_search`, the same
+  radius test as `match_lead`) and `/pros/<slug>` profiles. Only providers
+  with `status='approved' AND listed AND slug IS NOT NULL` appear. `listed`
+  defaults to **false**: applying for leads is not consent to a public page.
+  Admin "List in directory" or the contractor's own toggle turns it on.
+- Profile clicks go through `/pros/<slug>/request` and `/pros/<slug>/website`
+  redirects, which count and forward. Views are counted by a client beacon to
+  `/api/pros/view` so crawlers and link previews don't count, one per
+  visitor per day. `visitor` is a daily-salted IP hash; no IP is stored.
+- A request started from a profile sets `leads.requested_roofer_id`.
+  **Attribution only — matching is unchanged.** If the chosen company doesn't
+  cover the ZIP, the homeowner is told so in the confirmation.
+- `/account` contractor dashboard. Accounts are set up from a one-time link
+  (`/account/setup?token=`) that WE email through Resend; only the token's
+  SHA-256 is stored, 72-hour expiry. This deliberately avoids Supabase's
+  mailer (rate-limited, and the Site URL still points at the retired domain).
+  `roofers.auth_user_id` links the login. Admin "Invite to dashboard" sends it.
+- "Ask for more" writes `service_requests` and alerts the operator; it shows
+  in the admin "Pro requests" tab.
+- `/api/admin` no longer selects `*` from roofers, so the token hash never
+  reaches the browser. Keep it that way.
+
 ### Operator alert — how to check it
 
 The alert had never run in production until 2026-10-17: every lead row had
