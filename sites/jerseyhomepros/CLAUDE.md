@@ -130,10 +130,24 @@ cleaning. Ten guide pages. `/join` for contractors, `/admin` for the operator,
 Supabase project `fpvvadcyuzcnjuzyhaav`. Vercel project `jersey-home-pros`,
 root directory `sites/jerseyhomepros` in a monorepo.
 
-Only one approved provider exists: Roach Be Gone, pest, ZIP 08096, 40-mile
-radius. It is the only company a real request can currently reach. Moving and
-cleaning are live on the site with **no** approved provider, so those requests
-match nobody and the operator alert is the only thing that surfaces them.
+Three approved providers, one per trade (checked against the database
+2026-10-24):
+
+- Roach Be Gone — pest, ZIP 08096, 40-mile radius.
+- Adams Moving Services LLC — moving, ZIPs 08045, 08066, 08085, 08096, 08234,
+  100-mile radius.
+- Jackie Purely Polished — cleaning, ZIP 08021, 25-mile radius.
+
+All three were sent the welcome email (`welcomed_at` set, no `welcome_error`).
+They cluster around Camden and Gloucester counties.
+
+Roofing and hvac are live on the site with **no** approved provider, so those
+requests match nobody and the operator alert is the only thing that surfaces
+them. Supply, not traffic, is the bottleneck: recruiting a roofer and an HVAC
+company is Khalil's job and nothing technical substitutes for it.
+
+No analytics: `NEXT_PUBLIC_GTM_ID` is unset, so no tracking script loads. Form
+and funnel changes wait until there is conversion data.
 
 ### Operator alert — how to check it
 
@@ -168,5 +182,5 @@ checking — in particular it is what would catch the inbox going bad later.
 `leads@` forwarding not set up (and is
 not needed for alerts any more); Supabase Site URL still points at the
 retired domain; three superseded Vercel projects not deleted; an "emailed ✓"
-marker for the admin dashboard is deferred until there is a real pest
-contractor (the API already returns `welcomed`).
+marker for the admin dashboard is deferred until there is real lead volume
+(the API already returns `welcomed`); no GA4 property yet.
