@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listedProBySlug, logProEvent } from "../../../../lib/pros";
+import { listedProBySlug, logProEvent, receivesRequests } from "../../../../lib/pros";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,5 +16,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
   if (!pro) return NextResponse.redirect(`${origin}/pros`, 302);
   await logProEvent(req, pro.id, "request_click");
   const q = new URLSearchParams({ pro: pro.slug, pro_name: pro.company });
+  // Tells the form to say plainly that this company won't get the request.
+  if (!receivesRequests(pro)) q.set("pro_unclaimed", "1");
   return NextResponse.redirect(`${origin}/${pro.trade}?${q.toString()}#estimate`, 302);
 }

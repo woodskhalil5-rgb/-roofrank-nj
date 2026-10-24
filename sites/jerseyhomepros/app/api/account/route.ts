@@ -18,6 +18,7 @@ const MARKETING_ITEMS = [
 ] as const;
 
 const LEAD_ITEMS = [
+  "Start receiving requests",
   "More ZIP codes",
   "A wider radius",
   "Another trade",
@@ -41,7 +42,7 @@ export async function GET(req: Request) {
   since.setMonth(since.getMonth() - 5, 1);
   since.setHours(0, 0, 0, 0);
 
-  const [events, matches, requests] = await Promise.all([
+  const [events, matches, requests, demand] = await Promise.all([
     db
       .from("profile_events")
       .select("created_at, kind")
@@ -63,6 +64,7 @@ export async function GET(req: Request) {
       .eq("roofer_id", me.id)
       .order("created_at", { ascending: false })
       .limit(20),
+    db.rpc("area_demand", { p_roofer_id: me.id, p_days: 30 }),
   ]);
 
   type LeadRow = {
@@ -126,7 +128,11 @@ export async function GET(req: Request) {
       services: me.services,
       service_zips: me.service_zips,
       radius_miles: me.radius_miles,
+      leads_enabled: me.leads_enabled,
     },
+    // Real requests in their trade and area, last 30 days — the ones they
+    // would have been eligible for. A count from the database, never an estimate.
+    areaDemand30: typeof demand.data === "number" ? demand.data : 0,
     last30,
     months: months.map((m) => ({ month: m, ...byMonth.get(m)! })),
     leads: leads.slice(0, 50),

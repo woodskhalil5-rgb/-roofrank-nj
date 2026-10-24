@@ -21,12 +21,12 @@ export async function GET(req: Request) {
   const db = adminDb();
   if (!db) return NextResponse.json({ error: "Database not connected." }, { status: 503 });
 
-  const [providers, leads, matches, performance, requests] = await Promise.all([
+  const [providers, leads, matches, performance, requests, claims] = await Promise.all([
     db
       .from("roofers")
       // Explicit columns: the setup-token hash never leaves the server.
       .select(
-        "id, created_at, company, contact, email, phone, service_zips, radius_miles, services, status, notes, trade, approved_at, welcomed_at, welcome_error, slug, listed, auth_user_id, bio, website, setup_token_expires"
+        "id, created_at, company, contact, email, phone, service_zips, radius_miles, services, status, notes, trade, approved_at, welcomed_at, welcome_error, slug, listed, auth_user_id, bio, website, setup_token_expires, leads_enabled, source, city, license_label, license_number, license_status, license_checked_at"
       )
       .order("created_at", { ascending: false }),
     db.from("leads").select("*").order("created_at", { ascending: false }).limit(300),
@@ -41,6 +41,11 @@ export async function GET(req: Request) {
       .select("*, roofers(company, contact, email, phone, trade)")
       .order("created_at", { ascending: false })
       .limit(200),
+    db
+      .from("claims")
+      .select("id, created_at, roofer_id, contact, email, phone, role, status, operator_notify_error, roofers(company, trade, city, status, license_number, website)")
+      .order("created_at", { ascending: false })
+      .limit(200),
   ]);
 
   return NextResponse.json({
@@ -50,6 +55,7 @@ export async function GET(req: Request) {
     matches: matches.data ?? [],
     performance: performance.data ?? [],
     requests: requests.data ?? [],
+    claims: claims.data ?? [],
   });
 }
 
@@ -91,7 +97,8 @@ export async function POST(req: Request) {
     // ever been sent the contact rules they are expected to follow — and that
     // is the one email they get before they start phoning homeowners.
     let welcomed = false;
-    if (status === "approved" && row?.email) {
+    const { data: access } = await db.from("roofers").select("leads_enabled").eq("id", id).maybeSingle();
+    if (status === "approved" && row?.email && access?.leads_enabled !== false) {
       const out = await notifyProviderApproved(row.email, row.company, tradeOr(row.trade));
       welcomed = out.ok;
       await db
@@ -267,8 +274,8 @@ export async function POST(req: Request) {
       .eq("id", id)
       .maybeSingle();
     if (!row) return NextResponse.json({ error: "Provider not found." }, { status: 404 });
-    if (listed && row.status !== "approved") {
-      return NextResponse.json({ error: "Approve them before listing them." }, { status: 400 });
+    if (listed && row.status !== "approved" && row.status !== "unclaimed") {
+      return NextResponse.json({ error: "Only approved or unclaimed companies can be listed." }, { status: 400 });
     }
     const update: Record<string, unknown> = { listed };
     if (listed && !row.slug) update.slug = await freeSlug(db, row.company, row.id);
@@ -294,6 +301,90 @@ export async function POST(req: Request) {
     }
     const { error } = await db.from("service_requests").update({ status }).eq("id", id);
     if (error) return NextResponse.json({ error: "Update failed." }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
+  // Hand an unclaimed listing to the person who claimed it, after the
+  // operator has confirmed they work there. They get the page and the
+  // dashboard; requests stay off until set_leads_enabled (i.e. they've paid).
+  if (action === "approve_claim") {
+    const id = String(body.id ?? "");
+    const { data: claim } = await db
+      .from("claims")
+      .select("id, roofer_id, contact, email, phone, status")
+      .eq("id", id)
+      .maybeSingle();
+    if (!claim) return NextResponse.json({ error: "Claim not found." }, { status: 404 });
+    if (claim.status !== "new") return NextResponse.json({ error: "Already decided." }, { status: 400 });
+
+    const { data: row } = await db.from("roofers").select("status").eq("id", claim.roofer_id).maybeSingle();
+    if (row?.status !== "unclaimed") {
+      return NextResponse.json({ error: "That listing is no longer unclaimed." }, { status: 400 });
+    }
+    const { error } = await db
+      .from("roofers")
+      .update({
+        status: "approved",
+        leads_enabled: false,
+        contact: claim.contact,
+        email: claim.email,
+        phone: claim.phone,
+        approved_at: new Date().toISOString(),
+      })
+      .eq("id", claim.roofer_id);
+    if (error) return NextResponse.json({ error: "Update failed." }, { status: 500 });
+
+    await db.from("claims").update({ status: "approved" }).eq("id", claim.id);
+    // Any other pending claims on the same company lose by definition.
+    await db.from("claims").update({ status: "rejected" })
+      .eq("roofer_id", claim.roofer_id).eq("status", "new");
+
+    const out = await issueAccountLink(claim.roofer_id, "invite");
+    if (!out.ok) {
+      return NextResponse.json(
+        { error: `Claim approved, but the dashboard link didn't send: ${out.error}. Use Invite to dashboard.` },
+        { status: 502 }
+      );
+    }
+    return NextResponse.json({ ok: true, to: out.to });
+  }
+
+  if (action === "reject_claim") {
+    const id = String(body.id ?? "");
+    const { error } = await db.from("claims").update({ status: "rejected" }).eq("id", id).eq("status", "new");
+    if (error) return NextResponse.json({ error: "Update failed." }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
+  // Paid lead access. Turning it on is the moment requests start, so it is
+  // also when the contact rules must reach them: the welcome email is sent
+  // if it never was.
+  if (action === "set_leads_enabled") {
+    const id = String(body.id ?? "");
+    const enabled = body.enabled === true;
+    const { data: row } = await db
+      .from("roofers")
+      .select("company, email, trade, status, welcomed_at")
+      .eq("id", id)
+      .maybeSingle();
+    if (!row) return NextResponse.json({ error: "Provider not found." }, { status: 404 });
+    if (enabled && row.status !== "approved") {
+      return NextResponse.json({ error: "Only approved companies can receive requests." }, { status: 400 });
+    }
+    const { error } = await db.from("roofers").update({ leads_enabled: enabled }).eq("id", id);
+    if (error) return NextResponse.json({ error: "Update failed." }, { status: 500 });
+
+    if (enabled && !row.welcomed_at && row.email) {
+      const out = await notifyProviderApproved(row.email, row.company, tradeOr(row.trade));
+      await db
+        .from("roofers")
+        .update({
+          welcomed_at: out.ok ? new Date().toISOString() : null,
+          welcome_error: out.error ?? null,
+          welcome_ids: out.ids ?? null,
+        })
+        .eq("id", id);
+    }
     return NextResponse.json({ ok: true });
   }
 

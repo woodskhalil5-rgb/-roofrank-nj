@@ -187,18 +187,18 @@ export async function POST(req: Request) {
     // The directory profile the homeowner started from, if any. Attribution
     // only: it is recorded on the lead and changes nothing about matching, so
     // the request still reaches only companies that serve this ZIP.
-    let requested: { id: string; company: string } | null = null;
+    let requested: { id: string; company: string; status: string; leads_enabled: boolean } | null = null;
     const proSlug = String(body.pro ?? "");
     if (/^[a-z0-9]+(-[a-z0-9]+)*$/.test(proSlug)) {
       const { data: proRow } = await db
         .from("roofers")
-        .select("id, company")
+        .select("id, company, status, leads_enabled")
         .eq("slug", proSlug)
         .eq("trade", trade.slug)
-        .eq("status", "approved")
+        .in("status", ["approved", "unclaimed"])
         .eq("listed", true)
         .maybeSingle();
-      requested = (proRow as { id: string; company: string } | null) ?? null;
+      requested = (proRow as { id: string; company: string; status: string; leads_enabled: boolean } | null) ?? null;
     }
 
     const shown = `${sharingConsentText(trade)} ${TERMS_ACK}`;
@@ -332,8 +332,10 @@ export async function POST(req: Request) {
         .select("id", { count: "exact", head: true })
         .eq("lead_id", leadId)
         .eq("roofer_id", requested.id);
-      if ((reachedChosen ?? 0) === 0) {
-        message = `${requested.company} doesn't cover ZIP ${zip}, so your request did not go to them. ${message}`;
+      if (requested.status !== "approved" || !requested.leads_enabled) {
+        message = `${requested.company} isn't taking requests through ${SITE.brand}, so your request did not go to them. ${message}`;
+      } else if ((reachedChosen ?? 0) === 0) {
+        message = `${requested.company} isn't taking requests for ZIP ${zip} through ${SITE.brand} right now, so your request did not go to them. ${message}`;
       }
     }
 

@@ -2,8 +2,12 @@ import type { MetadataRoute } from 'next';
 import { SITE } from '../lib/site';
 import { TRADE_SLUGS } from '../lib/trades';
 import { GUIDE_SLUGS } from '../lib/guides';
+import { adminDb } from '../lib/server';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// Rebuilt hourly so newly listed profiles are discoverable.
+export const revalidate = 3600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const tradePaths = TRADE_SLUGS.map((t) => `/${t}`);
   const guidePaths = GUIDE_SLUGS.map((g) => `/guides/${g}`);
   const paths = ['', '/start', ...tradePaths, '/pros', '/guides', ...guidePaths, '/join', '/privacy', '/terms'];
@@ -21,10 +25,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
     return 0.5;
   };
 
-  return paths.map((p) => ({
+  const fixed = paths.map((p) => ({
     url: `${SITE.url}${p}`,
     lastModified: new Date(),
     changeFrequency: 'monthly' as const,
     priority: priority(p),
   }));
+
+  // Every listed directory profile, members and unclaimed alike.
+  const db = adminDb();
+  const { data } = db
+    ? await db.from('roofers').select('slug').eq('listed', true)
+        .in('status', ['approved', 'unclaimed']).not('slug', 'is', null)
+    : { data: [] };
+  const profiles = ((data ?? []) as { slug: string }[]).map((r) => ({
+    url: `${SITE.url}/pros/${r.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.6,
+  }));
+
+  return [...fixed, ...profiles];
 }

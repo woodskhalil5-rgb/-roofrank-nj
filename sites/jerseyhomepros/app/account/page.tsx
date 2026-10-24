@@ -8,7 +8,7 @@ type Counts = { views: number; request_clicks: number; website_clicks: number; l
 type Me = {
   company: string; contact: string; email: string; trade: string; status: string;
   slug: string | null; listed: boolean; bio: string; website: string; services: string;
-  service_zips: string[]; radius_miles: number;
+  service_zips: string[]; radius_miles: number; leads_enabled: boolean;
 };
 type Lead = {
   id: string; created_at: string; matched_at: string; name: string; phone: string; email: string;
@@ -18,7 +18,7 @@ type Lead = {
 type Req = { id: string; created_at: string; kind: string; items: string[]; details: string; status: string };
 type Data = {
   me: Me; last30: Counts; months: ({ month: string } & Counts)[]; leads: Lead[]; totalLeads: number;
-  requests: Req[]; marketingItems: string[]; leadItems: string[];
+  requests: Req[]; marketingItems: string[]; leadItems: string[]; areaDemand30: number;
 };
 
 function when(iso: string) {
@@ -213,6 +213,31 @@ export default function Account() {
           {t.label} &middot; within {data.me.radius_miles} mi of ZIP {data.me.service_zips.join(", ")}
           {data.me.status !== "approved" && <> &middot; <b>Not currently receiving leads ({data.me.status})</b></>}
         </p>
+
+        {data.me.status === "approved" && !data.me.leads_enabled && (
+          <div className="claimbox" style={{ margin: "16px 0 6px" }}>
+            <div className="eyebrow">YOU&rsquo;RE NOT RECEIVING REQUESTS YET</div>
+            <h3>
+              {data.areaDemand30 > 0
+                ? `${data.areaDemand30} ${data.areaDemand30 === 1 ? "homeowner" : "homeowners"} near you asked for ${t.work} in the last 30 days.`
+                : `Start receiving ${t.label.toLowerCase()} requests in your area.`}
+            </h3>
+            <p>
+              Your page is yours, but requests from homeowners in your area are going to other companies.
+              Turn requests on and they come to you by email the moment they arrive.
+            </p>
+            <button className="button gold" type="button"
+                    onClick={async () => {
+                      setReqNote("Sending…");
+                      const out = await post({ action: "service_request", kind: "more_leads", items: ["Start receiving requests"], details: "" });
+                      setReqNote(out.ok ? `Sent. ${SITE.operator} will contact you about pricing at ${data.me.email}.` : out.error ?? "");
+                      if (out.ok && token) load(token);
+                    }}>
+              Start receiving requests <span>&rarr;</span>
+            </button>
+            {reqNote && <p role="status" style={{ marginTop: 12 }}>{reqNote}</p>}
+          </div>
+        )}
 
         <div className="eyebrow dark" style={{ margin: "22px 0 10px" }}>LAST 30 DAYS</div>
         <div className="adminstats">

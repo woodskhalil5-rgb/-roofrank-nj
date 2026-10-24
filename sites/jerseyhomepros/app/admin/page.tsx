@@ -17,6 +17,18 @@ type Provider = {
   listed?: boolean;
   auth_user_id?: string | null;
   setup_token_expires?: string | null;
+  leads_enabled?: boolean;
+  source?: string;
+  city?: string;
+  license_label?: string;
+  license_number?: string;
+  license_status?: string;
+  license_checked_at?: string | null;
+};
+type Claim = {
+  id: string; created_at: string; roofer_id: string; contact: string; email: string; phone: string;
+  role: string; status: string; operator_notify_error?: string | null;
+  roofers: { company: string; trade: string; city: string; status: string; license_number: string; website: string } | null;
 };
 type ServiceRequest = {
   id: string; created_at: string; kind: string; items: string[]; details: string; status: string;
@@ -68,7 +80,7 @@ export default function Admin() {
   const [password, setPassword] = useState('');
   const [mode, setMode] = useState<'password' | 'link'>('password');
   const [note, setNote] = useState('');
-  const [tab, setTab] = useState<'leads' | 'providers' | 'performance' | 'requests'>('leads');
+  const [tab, setTab] = useState<'leads' | 'providers' | 'performance' | 'requests' | 'claims' | 'unclaimed'>('leads');
   const [tradeFilter, setTradeFilter] = useState<TradeSlug | 'all'>('all');
   // Rejected providers and spam leads stay out of the way until asked for.
   const [showArchived, setShowArchived] = useState(false);
@@ -79,6 +91,7 @@ export default function Admin() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [perf, setPerf] = useState<Perf[]>([]);
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [claims, setClaims] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(false);
   const [denied, setDenied] = useState(false);
 
@@ -102,6 +115,7 @@ export default function Admin() {
       setMatches(j.matches ?? []);
       setPerf(j.performance ?? []);
       setRequests(j.requests ?? []);
+      setClaims(j.claims ?? []);
     } finally {
       setLoading(false);
     }
@@ -138,6 +152,7 @@ export default function Admin() {
   const shownProviders = useMemo(
     () => providers.filter((p) =>
       (tradeFilter === 'all' || p.trade === tradeFilter) &&
+      p.status !== 'unclaimed' &&
       (showArchived || p.status !== 'rejected')
     ),
     [providers, tradeFilter, showArchived]
@@ -195,7 +210,7 @@ export default function Admin() {
     });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) setNote(j.error ?? 'That action failed.');
-    else if (payload.action === 'invite_account') setNote(`Dashboard link emailed to ${j.to}.`);
+    else if (payload.action === 'invite_account' || payload.action === 'approve_claim') setNote(`Dashboard link emailed to ${j.to}.`);
     await load(token);
   }
 
@@ -263,6 +278,9 @@ export default function Admin() {
   }
 
   const pending = shownProviders.filter((p) => p.status === 'pending');
+  const unclaimed = providers.filter((p) =>
+    p.status === 'unclaimed' && (tradeFilter === 'all' || p.trade === tradeFilter));
+  const newClaims = claims.filter((c) => c.status === 'new').length;
   const shownLeadIds = new Set(shownLeads.map((l) => l.id));
   const unsent = matches.filter((m) => !m.notified_at && shownLeadIds.has(m.lead_id)).length;
 
@@ -327,6 +345,12 @@ export default function Admin() {
           <button className={tab === 'leads' ? 'on' : ''} onClick={() => setTab('leads')}>Leads</button>
           <button className={tab === 'providers' ? 'on' : ''} onClick={() => setTab('providers')}>Pros</button>
           <button className={tab === 'performance' ? 'on' : ''} onClick={() => setTab('performance')}>Performance</button>
+          <button className={tab === 'claims' ? 'on' : ''} onClick={() => setTab('claims')}>
+            Claims{newClaims > 0 ? ` (${newClaims})` : ''}
+          </button>
+          <button className={tab === 'unclaimed' ? 'on' : ''} onClick={() => setTab('unclaimed')}>
+            Unclaimed listings ({unclaimed.length})
+          </button>
           <button className={tab === 'requests' ? 'on' : ''} onClick={() => setTab('requests')}>
             Pro requests{requests.filter((r) => r.status === 'new').length > 0 ? ` (${requests.filter((r) => r.status === 'new').length})` : ''}
           </button>
@@ -392,6 +416,64 @@ export default function Admin() {
                   </article>
                 );
               })}
+            </div>
+          )
+        )}
+
+        {tab === 'claims' && (
+          claims.length === 0 ? <p className="adminnote">No claims yet. They come from the Claim button on unclaimed directory pages.</p> : (
+            <div className="admingrid">
+              {claims.map((c) => (
+                <article key={c.id} className="admincard">
+                  <header>
+                    <b>{c.roofers?.company ?? 'Listing'}</b>
+                    <span className="tradechip">{tradeOr(c.roofers?.trade ?? '').label}</span>
+                    <span className={`pill pill-${c.status === 'approved' ? 'approved' : c.status === 'rejected' ? 'rejected' : 'new'}`}>{c.status}</span>
+                  </header>
+                  <p className="adminmeta">{when(c.created_at)}{c.roofers?.city ? ` · ${c.roofers.city}` : ''}</p>
+                  <p><b>{c.contact}</b>{c.role ? ` — ${c.role}` : ''}</p>
+                  <p className="adminmeta">{c.phone} &middot; {c.email}</p>
+                  {c.status === 'new' && (
+                    <p className="fbwait">
+                      Check they work there first: call the number on the company&rsquo;s own website or state
+                      registration{c.roofers?.license_number ? ` (#${c.roofers.license_number})` : ''}, not the one above.
+                    </p>
+                  )}
+                  {c.operator_notify_error && <p className="consentno">Alert email failed &middot; {c.operator_notify_error}</p>}
+                  {c.status === 'new' && (
+                    <div className="adminactions">
+                      <button onClick={() => act({ action: 'approve_claim', id: c.id })}>Approve &amp; send dashboard link</button>
+                      <button onClick={() => act({ action: 'reject_claim', id: c.id })}>Reject</button>
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+          )
+        )}
+
+        {tab === 'unclaimed' && (
+          unclaimed.length === 0 ? <p className="adminnote">No unclaimed listings yet.</p> : (
+            <div className="admingrid">
+              {unclaimed.map((p) => (
+                <article key={p.id} className="admincard">
+                  <header>
+                    <b>{p.company}</b>
+                    <span className="tradechip">{tradeOr(p.trade).label}</span>
+                    <span className={`pill pill-${p.listed ? 'approved' : 'pending'}`}>{p.listed ? 'listed' : 'hidden'}</span>
+                  </header>
+                  <p className="adminmeta">{p.city || 'No town'} &middot; ZIP {p.service_zips.join(', ')}</p>
+                  {p.license_checked_at
+                    ? <p className="consentok">{p.license_label || 'Registration'} #{p.license_number} &middot; {p.license_status} &middot; checked {when(p.license_checked_at)}</p>
+                    : <p className="fbwait">Registration not checked</p>}
+                  {p.slug && <p className="adminmeta"><a href={`/pros/${p.slug}`} target="_blank" rel="noopener" style={{ textDecoration: 'underline' }}>/pros/{p.slug}</a></p>}
+                  <div className="adminactions">
+                    <button onClick={() => act({ action: 'set_listed', id: p.id, listed: !p.listed })}>
+                      {p.listed ? 'Hide' : 'List'}
+                    </button>
+                  </div>
+                </article>
+              ))}
             </div>
           )
         )}
@@ -498,6 +580,12 @@ export default function Admin() {
                       Dashboard: {p.auth_user_id ? 'set up' : p.setup_token_expires ? 'invite sent, not set up yet' : 'not invited'}
                     </p>
                   )}
+                  {p.status === 'approved' && (
+                    <p className={p.leads_enabled ? 'consentok' : 'fbwait'}>
+                      {p.leads_enabled ? 'Receiving requests' : 'Not receiving requests — turn on once they’ve paid'}
+                      {p.source === 'public_records' ? ' · claimed listing' : ''}
+                    </p>
+                  )}
 
                   <div className="adminactions">
                     {['approved', 'pending', 'rejected'].filter((s) => s !== p.status).map((s) => (
@@ -505,6 +593,11 @@ export default function Admin() {
                         {s === 'approved' ? 'Approve' : s === 'rejected' ? 'Reject' : 'Set pending'}
                       </button>
                     ))}
+                    {p.status === 'approved' && (
+                      <button onClick={() => act({ action: 'set_leads_enabled', id: p.id, enabled: !p.leads_enabled })}>
+                        {p.leads_enabled ? 'Stop requests' : 'Start requests (paid)'}
+                      </button>
+                    )}
                     {p.status === 'approved' && (
                       <button onClick={() => act({ action: 'set_listed', id: p.id, listed: !p.listed })}>
                         {p.listed ? 'Hide from directory' : 'List in directory'}

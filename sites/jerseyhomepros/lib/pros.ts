@@ -21,10 +21,34 @@ export type PublicPro = {
   website: string;
   radius_miles: number;
   service_zips: string[];
+  /** 'approved' = in the network; 'unclaimed' = listed from public records. */
+  status: string;
+  city: string;
+  license_label: string;
+  license_number: string;
+  license_status: string;
+  license_checked_at: string | null;
+  leads_enabled: boolean;
 };
 
+/** Whether a request from this profile can actually reach the company. */
+export function receivesRequests(p: { status: string; leads_enabled: boolean }): boolean {
+  return p.status === "approved" && p.leads_enabled;
+}
+
 export const PUBLIC_PRO_COLUMNS =
-  "id, slug, company, trade, services, bio, website, radius_miles, service_zips";
+  "id, slug, company, trade, services, bio, website, radius_miles, service_zips, status, city, license_label, license_number, license_status, license_checked_at, leads_enabled";
+
+/** The state's own lookup, linked beside every registration badge so anyone
+ *  can check the record themselves. */
+export const NJ_LICENSE_LOOKUP = "https://newjersey.mylicense.com/verification/";
+
+/** "Checked Oct 24, 2026" style date for the registration badge. */
+export function checkedOn(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric", timeZone: "America/New_York",
+  });
+}
 
 export function slugify(company: string): string {
   return company
@@ -35,7 +59,7 @@ export function slugify(company: string): string {
     .replace(/-+$/g, "");
 }
 
-/** A listed, approved provider by slug, or null. Unlisted pages 404. */
+/** A listed provider (in the network, or unclaimed) by slug, or null. Unlisted pages 404. */
 export async function listedProBySlug(slug: string): Promise<PublicPro | null> {
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) return null;
   const db = adminDb();
@@ -44,7 +68,7 @@ export async function listedProBySlug(slug: string): Promise<PublicPro | null> {
     .from("roofers")
     .select(PUBLIC_PRO_COLUMNS)
     .eq("slug", slug)
-    .eq("status", "approved")
+    .in("status", ["approved", "unclaimed"])
     .eq("listed", true)
     .maybeSingle();
   return (data as PublicPro | null) ?? null;
@@ -125,6 +149,7 @@ export type ContractorRow = {
   services: string;
   service_zips: string[];
   radius_miles: number;
+  leads_enabled: boolean;
 };
 
 /**
@@ -148,7 +173,7 @@ export async function requireContractor(req: Request): Promise<ContractorRow | n
   if (!db) return null;
   const { data: row } = await db
     .from("roofers")
-    .select("id, company, contact, email, trade, status, slug, listed, bio, website, services, service_zips, radius_miles")
+    .select("id, company, contact, email, trade, status, slug, listed, bio, website, services, service_zips, radius_miles, leads_enabled")
     .eq("auth_user_id", data.user.id)
     .maybeSingle();
   return (row as ContractorRow | null) ?? null;

@@ -19,12 +19,12 @@ export default function LeadForm({ trade }: { trade: Trade }) {
   // Set when the homeowner arrived from a directory profile. Read from the URL
   // after mount because the trade pages are statically rendered. The server
   // re-checks the slug; the name here is display only.
-  const [pro, setPro] = useState<{ slug: string; name: string } | null>(null);
+  const [pro, setPro] = useState<{ slug: string; name: string; unclaimed: boolean } | null>(null);
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const slug = q.get("pro") ?? "";
     if (/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) {
-      setPro({ slug, name: (q.get("pro_name") ?? "").slice(0, 120) });
+      setPro({ slug, name: (q.get("pro_name") ?? "").slice(0, 120), unclaimed: q.get("pro_unclaimed") === "1" });
     }
   }, []);
 
@@ -84,9 +84,19 @@ export default function LeadForm({ trade }: { trade: Trade }) {
 
       {pro && !done && (
         <p className="profrom">
-          Started from {pro.name ? <b>{pro.name}</b> : "a company"}&rsquo;s profile. If your ZIP code is in
-          their service area, your request goes to them. Other participating {trade.companies} covering
-          your ZIP may receive it too.
+          {pro.unclaimed ? (
+            <>
+              {pro.name ? <b>{pro.name}</b> : "That company"} isn&rsquo;t taking requests through {SITE.brand}, so this
+              request will <b>not</b> go to them. It goes to participating {trade.companies} that cover your
+              ZIP code.
+            </>
+          ) : (
+            <>
+              Started from {pro.name ? <b>{pro.name}</b> : "a company"}&rsquo;s profile. If your ZIP code is in
+              their service area, your request goes to them. Other participating {trade.companies} covering
+              your ZIP may receive it too.
+            </>
+          )}
         </p>
       )}
 

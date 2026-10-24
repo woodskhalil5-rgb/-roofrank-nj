@@ -543,3 +543,40 @@ export async function notifyOperatorServiceRequest(
   ];
   return sendEmail(to, `${company} wants ${what}`, lines.join("\n"));
 }
+
+/**
+ * Someone asked to claim an unclaimed directory listing. Nothing is handed
+ * over automatically: the operator checks the claimant against the company's
+ * public details first, because a claim grants control of the page.
+ */
+export async function notifyOperatorClaim(
+  company: string,
+  trade: Trade,
+  city: string,
+  contact: string,
+  email: string,
+  phone: string,
+  role: string,
+  demand30: number
+): Promise<SendResult> {
+  const to = alertEmails();
+  if (to.length === 0) return { ok: false, error: "no_alert_emails_configured" };
+  const lines = [
+    `Someone wants to claim ${company}'s directory page.`,
+    ``,
+    `Check they really work there before approving — call the number on the`,
+    `company's state registration or website, not the one below.`,
+    ``,
+    `Company:  ${company} (${trade.label}${city ? `, ${city}` : ""})`,
+    `Claimant: ${contact}${role ? `, ${role}` : ""}`,
+    `Email:    ${email}`,
+    `Phone:    ${phone}`,
+    ``,
+    `Requests in their trade and area, last 30 days: ${demand30}`,
+    ``,
+    `Approve or reject in the Claims tab: ${SITE.url}/admin`,
+    ``,
+    `— ${SITE.brand} (automatic operator alert)`,
+  ];
+  return sendEmail(to, `Claim request — ${company}`, lines.join("\n"));
+}

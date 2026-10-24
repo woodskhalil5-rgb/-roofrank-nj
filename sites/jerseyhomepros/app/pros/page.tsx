@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { SITE } from "../../lib/site";
 import { TRADES, TRADE_SLUGS, isTradeSlug, tradeOr } from "../../lib/trades";
 import { adminDb } from "../../lib/server";
-import { PUBLIC_PRO_COLUMNS, type PublicPro } from "../../lib/pros";
+import { PUBLIC_PRO_COLUMNS, receivesRequests, type PublicPro } from "../../lib/pros";
 import { Brand, SiteFooter } from "../Brand";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +40,7 @@ async function search(zip: string | null, trade: string | null): Promise<{ hits:
   let q = db
     .from("roofers")
     .select(PUBLIC_PRO_COLUMNS)
-    .eq("status", "approved")
+    .in("status", ["approved", "unclaimed"])
     .eq("listed", true)
     .not("slug", "is", null)
     .order("company");
@@ -57,7 +57,12 @@ export default async function ProsPage({
   const sp = await searchParams;
   const trade = sp.trade && isTradeSlug(sp.trade) ? sp.trade : null;
   const zip = sp.zip && /^[0-9]{5}$/.test(sp.zip) ? sp.zip : null;
-  const { hits, badZip } = await search(zip, trade);
+  const found = await search(zip, trade);
+  const badZip = found.badZip;
+  // Network members first, then unclaimed listings; distance order within each.
+  const hits = [...found.hits].sort(
+    (a, b) => Number(!receivesRequests(a)) - Number(!receivesRequests(b))
+  );
 
   return (
     <main>
@@ -72,9 +77,9 @@ export default async function ProsPage({
           <div className="eyebrow"><i></i> THE {SITE.brand.toUpperCase()} DIRECTORY</div>
           <h1>Find a pro<br /><em>who works your area.</em></h1>
           <p>
-            Every company here is approved into the network and serves the ZIP codes shown on
-            its profile. Requests go through {SITE.brand}, so your details are only shared with
-            companies that cover your address.
+            Companies marked as members are approved into the network. Others are listed from
+            public records and haven&rsquo;t joined yet. Requests go through {SITE.brand}, and your
+            details are only shared with member companies that cover your address.
           </p>
           <form className="prosearch" action="/pros" method="get">
             <select name="trade" defaultValue={trade ?? ""} aria-label="Trade">
@@ -116,7 +121,13 @@ export default async function ProsPage({
                   <h3>{p.company}</h3>
                   <p>
                     {t.label}
-                    {p.distance_miles !== null ? ` · about ${p.distance_miles} mi away` : ` · within ${p.radius_miles} mi of its base`}
+                    {p.distance_miles !== null ? ` · about ${p.distance_miles} mi away` : p.city ? ` · ${p.city}` : ""}
+                  </p>
+                  <p className="procardtags">
+                    {receivesRequests(p)
+                      ? <span className="tagmember">Network member</span>
+                      : <span className="tagunclaimed">{p.status === "approved" ? "Claimed · not taking requests" : "Not in the network yet"}</span>}
+                    {p.license_checked_at && <span className="tagcheck">&#10003; State registration checked</span>}
                   </p>
                   <span className="tradego">View profile <span>&#8594;</span></span>
                 </a>

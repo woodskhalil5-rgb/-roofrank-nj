@@ -138,3 +138,15 @@
 .acctlead{border-left:2px solid #c9c3b4;padding:10px 12px;margin:9px 0;background:#faf8f3;font-size:12px;line-height:1.6}
 .acctlead b{font-size:13px}
 @media(max-width:800px){.acctgrid{grid-template-columns:1fr}.prosearch{flex-direction:column}.prosearch .button{width:100%}}
+.procardtags{display:flex;flex-wrap:wrap;gap:6px;margin:-8px 0 18px!important}
+.procardtags span,.probadge{font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px}
+.tagmember{background:#dde9dd;color:#2f5330}
+.tagunclaimed{background:#efece4;color:#6b6c66}
+.tagcheck{background:#f3e3bf;color:#6d5118}
+.probadge{display:inline-flex;gap:8px;align-items:center;background:#1b1c1a;border:1px solid #3a3b37;color:#e9d6ab;margin-top:22px}
+.probadge a{color:#c9c9c3;text-decoration:underline;text-transform:none;letter-spacing:0;font-weight:400}
+.unclaimednote{background:#fdf7e8;border-left:3px solid var(--gold);padding:14px 16px;font-size:13px;line-height:1.7;color:#4d4e48}
+.claimbox{background:#0a0b0c;color:#fff;padding:26px}
+.claimbox h3{font:400 24px/1.2 Georgia,serif;margin:6px 0 8px;color:#fff}
+.claimbox p{color:#b8b9b4;font-size:13px;line-height:1.7}
+.claimbox b{color:var(--gold)}
