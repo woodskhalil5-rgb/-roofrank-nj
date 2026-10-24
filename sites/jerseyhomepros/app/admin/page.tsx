@@ -13,6 +13,15 @@ type Provider = {
   // means nobody knows whether they received them.
   welcomed_at?: string | null;
   welcome_error?: string | null;
+  slug?: string | null;
+  listed?: boolean;
+  auth_user_id?: string | null;
+  setup_token_expires?: string | null;
+};
+type ServiceRequest = {
+  id: string; created_at: string; kind: string; items: string[]; details: string; status: string;
+  operator_notify_error?: string | null;
+  roofers: { company: string; contact: string; email: string; phone: string; trade: string } | null;
 };
 type Lead = {
   id: string; created_at: string; name: string; phone: string; email: string; zip: string;
@@ -59,7 +68,7 @@ export default function Admin() {
   const [password, setPassword] = useState('');
   const [mode, setMode] = useState<'password' | 'link'>('password');
   const [note, setNote] = useState('');
-  const [tab, setTab] = useState<'leads' | 'providers' | 'performance'>('leads');
+  const [tab, setTab] = useState<'leads' | 'providers' | 'performance' | 'requests'>('leads');
   const [tradeFilter, setTradeFilter] = useState<TradeSlug | 'all'>('all');
   // Rejected providers and spam leads stay out of the way until asked for.
   const [showArchived, setShowArchived] = useState(false);
@@ -69,6 +78,7 @@ export default function Admin() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [perf, setPerf] = useState<Perf[]>([]);
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [denied, setDenied] = useState(false);
 
@@ -91,6 +101,7 @@ export default function Admin() {
       setLeads(j.leads ?? []);
       setMatches(j.matches ?? []);
       setPerf(j.performance ?? []);
+      setRequests(j.requests ?? []);
     } finally {
       setLoading(false);
     }
@@ -177,11 +188,14 @@ export default function Admin() {
 
   async function act(payload: Record<string, unknown>) {
     if (!token) return;
-    await fetch('/api/admin', {
+    const r = await fetch('/api/admin', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) setNote(j.error ?? 'That action failed.');
+    else if (payload.action === 'invite_account') setNote(`Dashboard link emailed to ${j.to}.`);
     await load(token);
   }
 
@@ -313,6 +327,9 @@ export default function Admin() {
           <button className={tab === 'leads' ? 'on' : ''} onClick={() => setTab('leads')}>Leads</button>
           <button className={tab === 'providers' ? 'on' : ''} onClick={() => setTab('providers')}>Pros</button>
           <button className={tab === 'performance' ? 'on' : ''} onClick={() => setTab('performance')}>Performance</button>
+          <button className={tab === 'requests' ? 'on' : ''} onClick={() => setTab('requests')}>
+            Pro requests{requests.filter((r) => r.status === 'new').length > 0 ? ` (${requests.filter((r) => r.status === 'new').length})` : ''}
+          </button>
           {unsent > 0 && (
             <button className="retrybtn" onClick={() => act({ action: 'retry_notifications' })}>
               Retry {unsent} unsent {unsent === 1 ? 'notice' : 'notices'}
@@ -375,6 +392,34 @@ export default function Admin() {
                   </article>
                 );
               })}
+            </div>
+          )
+        )}
+
+        {tab === 'requests' && (
+          requests.length === 0 ? <p className="adminnote">No requests from pros yet. They arrive from the Ask for more form on each pro&rsquo;s dashboard.</p> : (
+            <div className="admingrid">
+              {requests.map((r) => (
+                <article key={r.id} className="admincard">
+                  <header>
+                    <b>{r.roofers?.company ?? 'Pro'}</b>
+                    <span className="tradechip">{r.kind === 'marketing' ? 'Marketing' : 'More leads'}</span>
+                    <span className={`pill pill-${r.status === 'done' ? 'closed' : r.status === 'contacted' ? 'working' : 'new'}`}>{r.status}</span>
+                  </header>
+                  <p className="adminmeta">{when(r.created_at)} &middot; {r.roofers?.contact}</p>
+                  {r.items.length > 0 && <p><b>{r.items.join(', ')}</b></p>}
+                  {r.details && <p className="admindetails">{r.details}</p>}
+                  <p className="adminmeta">{r.roofers?.phone} &middot; {r.roofers?.email}</p>
+                  {r.operator_notify_error && <p className="consentno">Alert email failed &middot; {r.operator_notify_error}</p>}
+                  <div className="adminactions">
+                    {['new', 'contacted', 'done'].filter((st) => st !== r.status).map((st) => (
+                      <button key={st} onClick={() => act({ action: 'set_request_status', id: r.id, status: st })}>
+                        Mark {st}
+                      </button>
+                    ))}
+                  </div>
+                </article>
+              ))}
             </div>
           )
         )}
@@ -444,12 +489,32 @@ export default function Admin() {
                     )
                   )}
 
+                  {p.status === 'approved' && (
+                    <p className="adminmeta">
+                      {p.listed && p.slug
+                        ? <>Directory: <a href={`/pros/${p.slug}`} target="_blank" rel="noopener" style={{ textDecoration: 'underline' }}>/pros/{p.slug}</a></>
+                        : 'Directory: hidden'}
+                      {' · '}
+                      Dashboard: {p.auth_user_id ? 'set up' : p.setup_token_expires ? 'invite sent, not set up yet' : 'not invited'}
+                    </p>
+                  )}
+
                   <div className="adminactions">
                     {['approved', 'pending', 'rejected'].filter((s) => s !== p.status).map((s) => (
                       <button key={s} onClick={() => act({ action: 'set_provider_status', id: p.id, status: s })}>
                         {s === 'approved' ? 'Approve' : s === 'rejected' ? 'Reject' : 'Set pending'}
                       </button>
                     ))}
+                    {p.status === 'approved' && (
+                      <button onClick={() => act({ action: 'set_listed', id: p.id, listed: !p.listed })}>
+                        {p.listed ? 'Hide from directory' : 'List in directory'}
+                      </button>
+                    )}
+                    {p.status === 'approved' && (
+                      <button onClick={() => act({ action: 'invite_account', id: p.id })}>
+                        {p.auth_user_id ? 'Email password reset' : p.setup_token_expires ? 'Resend dashboard invite' : 'Invite to dashboard'}
+                      </button>
+                    )}
                     {p.status === 'approved' && (
                       <button onClick={() => act({ action: 'resend_welcome', id: p.id })}>
                         {p.welcomed_at ? 'Resend welcome' : 'Send welcome email'}

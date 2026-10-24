@@ -8,6 +8,7 @@ import {
   type LeadForEmail,
 } from "../../../lib/server";
 import { tradeOr } from "../../../lib/trades";
+import { issueAccountLink, slugify } from "../../../lib/pros";
 
 // A Response body can only be consumed once, so this must build a fresh
 // object per request rather than share one module-level instance.
@@ -20,8 +21,14 @@ export async function GET(req: Request) {
   const db = adminDb();
   if (!db) return NextResponse.json({ error: "Database not connected." }, { status: 503 });
 
-  const [providers, leads, matches, performance] = await Promise.all([
-    db.from("roofers").select("*").order("created_at", { ascending: false }),
+  const [providers, leads, matches, performance, requests] = await Promise.all([
+    db
+      .from("roofers")
+      // Explicit columns: the setup-token hash never leaves the server.
+      .select(
+        "id, created_at, company, contact, email, phone, service_zips, radius_miles, services, status, notes, trade, approved_at, welcomed_at, welcome_error, slug, listed, auth_user_id, bio, website, setup_token_expires"
+      )
+      .order("created_at", { ascending: false }),
     db.from("leads").select("*").order("created_at", { ascending: false }).limit(300),
     db
       .from("lead_matches")
@@ -29,6 +36,11 @@ export async function GET(req: Request) {
       .order("created_at", { ascending: false })
       .limit(1000),
     db.from("roofer_performance").select("*").order("leads_received", { ascending: false }),
+    db
+      .from("service_requests")
+      .select("*, roofers(company, contact, email, phone, trade)")
+      .order("created_at", { ascending: false })
+      .limit(200),
   ]);
 
   return NextResponse.json({
@@ -37,6 +49,7 @@ export async function GET(req: Request) {
     leads: leads.data ?? [],
     matches: matches.data ?? [],
     performance: performance.data ?? [],
+    requests: requests.data ?? [],
   });
 }
 
@@ -243,5 +256,61 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, sent, failed, alertsSent, alertsFailed });
   }
 
+  // Show or hide a provider's public directory profile. Only approved
+  // providers can be listed; a slug is assigned the first time.
+  if (action === "set_listed") {
+    const id = String(body.id ?? "");
+    const listed = body.listed === true;
+    const { data: row } = await db
+      .from("roofers")
+      .select("id, company, status, slug")
+      .eq("id", id)
+      .maybeSingle();
+    if (!row) return NextResponse.json({ error: "Provider not found." }, { status: 404 });
+    if (listed && row.status !== "approved") {
+      return NextResponse.json({ error: "Approve them before listing them." }, { status: 400 });
+    }
+    const update: Record<string, unknown> = { listed };
+    if (listed && !row.slug) update.slug = await freeSlug(db, row.company, row.id);
+    const { error } = await db.from("roofers").update(update).eq("id", id);
+    if (error) return NextResponse.json({ error: "Update failed." }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
+  // Email a provider the link that sets up (or resets) their dashboard login.
+  if (action === "invite_account") {
+    const id = String(body.id ?? "");
+    const { data: row } = await db.from("roofers").select("auth_user_id").eq("id", id).maybeSingle();
+    const out = await issueAccountLink(id, row?.auth_user_id ? "reset" : "invite");
+    if (!out.ok) return NextResponse.json({ error: `Could not send: ${out.error}` }, { status: 502 });
+    return NextResponse.json({ ok: true, to: out.to });
+  }
+
+  if (action === "set_request_status") {
+    const id = String(body.id ?? "");
+    const status = String(body.status ?? "");
+    if (!id || !["new", "contacted", "done"].includes(status)) {
+      return NextResponse.json({ error: "Invalid status." }, { status: 400 });
+    }
+    const { error } = await db.from("service_requests").update({ status }).eq("id", id);
+    if (error) return NextResponse.json({ error: "Update failed." }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
   return NextResponse.json({ error: "Unknown action." }, { status: 400 });
+}
+
+/** A slug for this company that no other provider has. */
+async function freeSlug(
+  db: NonNullable<ReturnType<typeof adminDb>>,
+  company: string,
+  id: string
+): Promise<string> {
+  const base = slugify(company) || "pro";
+  for (let n = 1; n <= 20; n++) {
+    const candidate = n === 1 ? base : `${base}-${n}`;
+    const { data } = await db.from("roofers").select("id").eq("slug", candidate).maybeSingle();
+    if (!data || data.id === id) return candidate;
+  }
+  return `${base}-${id.slice(0, 6)}`;
 }

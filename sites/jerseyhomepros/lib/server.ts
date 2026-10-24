@@ -459,3 +459,87 @@ export async function notifyProviderApproved(
 
   return sendEmail(to, `You're approved — ${SITE.brand}`, lines);
 }
+
+/**
+ * Contractor dashboard setup or password reset. Sent through Resend rather
+ * than Supabase's own mailer, so it does not depend on the auth Site URL or on
+ * the built-in mailer's couple-an-hour limit. The link carries a one-time
+ * token that expires in 72 hours.
+ */
+export async function sendAccountLink(
+  to: string,
+  company: string,
+  link: string,
+  kind: "invite" | "reset"
+): Promise<SendResult> {
+  const lines =
+    kind === "invite"
+      ? [
+          `${company},`,
+          ``,
+          `Your ${SITE.brand} dashboard is ready. It shows the requests we've sent`,
+          `you, how many homeowners viewed your directory profile and clicked to`,
+          `contact you, and lets you edit your profile or ask us for more.`,
+          ``,
+          `Choose a password to finish setting it up:`,
+          link,
+          ``,
+          `The link works once and expires in 72 hours. After that, sign in any`,
+          `time at ${SITE.url}/account.`,
+          ``,
+          `— ${SITE.brand}`,
+        ]
+      : [
+          `${company},`,
+          ``,
+          `Someone asked to reset the password for your ${SITE.brand} dashboard.`,
+          `If that was you, choose a new one here:`,
+          link,
+          ``,
+          `The link works once and expires in 72 hours. If you didn't ask for this,`,
+          `ignore this email and nothing changes.`,
+          ``,
+          `— ${SITE.brand}`,
+        ];
+  return sendEmail(
+    to,
+    kind === "invite" ? `Your ${SITE.brand} dashboard is ready` : `Reset your ${SITE.brand} password`,
+    lines.join("\n")
+  );
+}
+
+/**
+ * A contractor asked Destiny Marketing Group for more leads or for marketing
+ * work. Sent to the operator, because nobody else acts on it.
+ */
+export async function notifyOperatorServiceRequest(
+  company: string,
+  contact: string,
+  email: string,
+  phone: string,
+  trade: Trade,
+  kind: "more_leads" | "marketing",
+  items: string[],
+  details: string
+): Promise<SendResult> {
+  const to = alertEmails();
+  if (to.length === 0) return { ok: false, error: "no_alert_emails_configured" };
+  const what = kind === "more_leads" ? "more leads" : "marketing services";
+  const lines = [
+    `${company} asked for ${what} from their dashboard.`,
+    ``,
+    ...(items.length > 0 ? [`Asked about: ${items.join(", ")}`] : []),
+    ...(details ? [`Notes: ${details}`] : []),
+    ``,
+    `Company: ${company}`,
+    `Contact: ${contact}`,
+    `Email:   ${email}`,
+    `Phone:   ${phone}`,
+    `Trade:   ${trade.label}`,
+    ``,
+    `Admin: ${SITE.url}/admin`,
+    ``,
+    `— ${SITE.brand} (automatic operator alert)`,
+  ];
+  return sendEmail(to, `${company} wants ${what}`, lines.join("\n"));
+}

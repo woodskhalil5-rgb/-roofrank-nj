@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SITE } from "../lib/site";
 import type { Trade } from "../lib/trades";
 import { sharingConsentText, phoneConsentText, TERMS_ACK } from "../lib/consent";
@@ -16,6 +16,17 @@ export default function LeadForm({ trade }: { trade: Trade }) {
   // only thing that makes a number necessary — otherwise email is enough, which
   // is exactly what the contractor notification tells them to use.
   const [wantsCalls, setWantsCalls] = useState(false);
+  // Set when the homeowner arrived from a directory profile. Read from the URL
+  // after mount because the trade pages are statically rendered. The server
+  // re-checks the slug; the name here is display only.
+  const [pro, setPro] = useState<{ slug: string; name: string } | null>(null);
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const slug = q.get("pro") ?? "";
+    if (/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) {
+      setPro({ slug, name: (q.get("pro_name") ?? "").slice(0, 120) });
+    }
+  }, []);
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -28,7 +39,7 @@ export default function LeadForm({ trade }: { trade: Trade }) {
       const r = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, trade: trade.slug }),
+        body: JSON.stringify({ ...data, trade: trade.slug, ...(pro ? { pro: pro.slug } : {}) }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || "Please try again.");
@@ -70,6 +81,14 @@ export default function LeadForm({ trade }: { trade: Trade }) {
         <span>HOMEOWNER REQUEST</span>
         <b>Tell us about your {trade.label.toLowerCase()} project</b>
       </div>
+
+      {pro && !done && (
+        <p className="profrom">
+          Started from {pro.name ? <b>{pro.name}</b> : "a company"}&rsquo;s profile. If your ZIP code is in
+          their service area, your request goes to them. Other participating {trade.companies} covering
+          your ZIP may receive it too.
+        </p>
+      )}
 
       {!done && (
         <>

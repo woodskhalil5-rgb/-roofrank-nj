@@ -108,3 +108,33 @@
   .costtable td:first-child{font-weight:800;font-size:15px;padding-top:10px}
   .costtable td:not(:first-child){color:#3f4038}
 }
+
+/* ---- Directory + contractor account ---- */
+.prohero{min-height:0}
+.prohero .heroContent{padding:70px 0 72px}
+.prohero h1{font-size:clamp(40px,5.6vw,66px)}
+.prosearch{display:flex;gap:10px;margin-top:30px;max-width:620px;flex-wrap:wrap}
+.prosearch select,.prosearch input{flex:1;min-width:150px;padding:15px 14px;border:1px solid #3a3b37;
+  background:#121312;color:#fff;font:13px Arial;border-radius:0;outline-color:var(--gold)}
+.prosearch .button{flex:0 0 auto}
+.probtns{display:flex;gap:10px;flex-wrap:wrap}
+.prodetails article{min-height:0}
+.profrom{font-size:12px;line-height:1.6;color:#5d5e58;background:#f1efe7;border-left:2px solid var(--gold);
+  padding:11px 13px;margin:-8px 0 20px}
+.acctgrid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;align-items:start}
+.acctcard{background:#fff;border:1px solid #e4dfd4;padding:22px;margin-bottom:14px}
+.acctcard h2{font:400 22px/1.2 Georgia,serif;margin:0 0 6px}
+.acctcard>p{font-size:13px;line-height:1.7;color:#60615a;margin:4px 0 12px}
+.acctcard label{display:flex;flex-direction:column;gap:7px;margin:12px 0;font-size:11px;font-weight:700}
+.acctcard input:not([type=checkbox]),.acctcard textarea,.acctcard select{padding:11px;border:1px solid #ddd;
+  background:#fff;font:13px Arial;border-radius:0}
+.acctcard .check{flex-direction:row;align-items:flex-start;gap:9px;font-weight:400;font-size:12px;line-height:1.5}
+.acctcard .check input{margin-top:2px;accent-color:#a47a2d}
+.accttable{width:100%;border-collapse:collapse;font-size:12px}
+.accttable th{text-align:left;font-size:9px;letter-spacing:1.3px;text-transform:uppercase;color:#80817a;
+  padding:8px 6px;border-bottom:1px solid #e4dfd4}
+.accttable td{padding:9px 6px;border-bottom:1px solid #f0ece2;vertical-align:top}
+.accttable td.num{font:400 17px Georgia,serif;text-align:right}
+.acctlead{border-left:2px solid #c9c3b4;padding:10px 12px;margin:9px 0;background:#faf8f3;font-size:12px;line-height:1.6}
+.acctlead b{font-size:13px}
+@media(max-width:800px){.acctgrid{grid-template-columns:1fr}.prosearch{flex-direction:column}.prosearch .button{width:100%}}

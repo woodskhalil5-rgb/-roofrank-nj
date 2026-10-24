@@ -184,6 +184,23 @@ export async function POST(req: Request) {
       details: String(body.details ?? "").trim().slice(0, 4000),
     };
 
+    // The directory profile the homeowner started from, if any. Attribution
+    // only: it is recorded on the lead and changes nothing about matching, so
+    // the request still reaches only companies that serve this ZIP.
+    let requested: { id: string; company: string } | null = null;
+    const proSlug = String(body.pro ?? "");
+    if (/^[a-z0-9]+(-[a-z0-9]+)*$/.test(proSlug)) {
+      const { data: proRow } = await db
+        .from("roofers")
+        .select("id, company")
+        .eq("slug", proSlug)
+        .eq("trade", trade.slug)
+        .eq("status", "approved")
+        .eq("listed", true)
+        .maybeSingle();
+      requested = (proRow as { id: string; company: string } | null) ?? null;
+    }
+
     const shown = `${sharingConsentText(trade)} ${TERMS_ACK}`;
     const consentText = phoneConsent ? `${shown}\n\n${phoneConsentText(trade)}` : shown;
 
@@ -200,6 +217,7 @@ export async function POST(req: Request) {
         consent_user_agent: (req.headers.get("user-agent") ?? "").slice(0, 400),
         consent_at: new Date().toISOString(),
         status: "new",
+        requested_roofer_id: requested?.id ?? null,
       })
       .select("id")
       .single();
@@ -304,11 +322,26 @@ export async function POST(req: Request) {
       console.warn(`[leads] UNMATCHED lead_id=${leadId} trade=${trade.slug} zip=${zip}`);
     }
 
+    // A homeowner who chose a company from its profile is told plainly when
+    // that company does not cover their ZIP, rather than left to assume it
+    // received the request.
+    let message = confirmation(matched, trade);
+    if (requested) {
+      const { count: reachedChosen } = await db
+        .from("lead_matches")
+        .select("id", { count: "exact", head: true })
+        .eq("lead_id", leadId)
+        .eq("roofer_id", requested.id);
+      if ((reachedChosen ?? 0) === 0) {
+        message = `${requested.company} doesn't cover ZIP ${zip}, so your request did not go to them. ${message}`;
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       matched,
       lead_id: leadId,
-      message: confirmation(matched, trade),
+      message,
     });
   } catch (err) {
     console.error(`[leads] unhandled error=${err instanceof Error ? err.message : String(err)}`);

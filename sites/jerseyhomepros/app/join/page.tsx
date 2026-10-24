@@ -47,6 +47,7 @@ export default function Join() {
         <div className="eyebrow dark">FOR CONTRACTORS</div>
         <h1>{SITE.join.h1}</h1>
         <p>{SITE.join.p} Approved companies receive homeowner requests in their trade and service area by email.</p>
+        <p>Already in the network? <a href="/account" style={{ textDecoration: "underline" }}>Sign in to your dashboard</a>.</p>
 
         {!done && (
           <form onSubmit={submit}>

@@ -12,7 +12,7 @@ export default function Privacy() {
       <Brand />
       <article className="simplecard legalpage">
         <h1>Privacy Notice</h1>
-        <p className="legaldate">Last updated: 10 October 2026</p>
+        <p className="legaldate">Last updated: 24 October 2026</p>
 
         <h2>Who we are</h2>
         <p>
@@ -55,6 +55,14 @@ export default function Privacy() {
           <b>Automatically:</b> IP address and browser information recorded at the moment you
           submit, together with the exact consent wording shown to you. We keep this to evidence
           what you agreed to.
+        </p>
+        <p>
+          <b>On contractor profiles:</b> when you open a company&rsquo;s profile in our directory, or
+          click its estimate or website button, we count it so that company can see how many people
+          looked. We store a one-way code made from your IP address and that day&rsquo;s date, which
+          lets us count a visitor once per day without keeping the address itself. If you send a
+          request after starting from a profile, we note which profile on your request. That company
+          receives your request only if it serves your ZIP code.
         </p>
         <p>
           <b>We do not ask for sensitive information.</b> Please do not send health details,
