@@ -130,18 +130,21 @@ cleaning. Ten guide pages. `/join` for contractors, `/admin` for the operator,
 Supabase project `fpvvadcyuzcnjuzyhaav`. Vercel project `jersey-home-pros`,
 root directory `sites/jerseyhomepros` in a monorepo.
 
-Three approved providers, one per trade (checked against the database
-2026-10-24):
+Two approved providers (checked against the database 2026-10-24), both
+listed in the directory and sent dashboard invites that day:
 
-- Roach Be Gone — pest, ZIP 08096, 40-mile radius.
 - Adams Moving Services LLC — moving, ZIPs 08045, 08066, 08085, 08096, 08234,
   100-mile radius.
 - Jackie Purely Polished — cleaning, ZIP 08021, 25-mile radius.
 
-All three were sent the welcome email (`welcomed_at` set, no `welcome_error`).
+Both were sent the welcome email (`welcomed_at` set, no `welcome_error`).
 They cluster around Camden and Gloucester counties.
 
-Roofing and hvac are live on the site with **no** approved provider, so those
+**Roach Be Gone was Khalil's test account, not a real company** (its email is
+his Gmail). Rejected 2026-10-24 so real pest requests stop being reported to
+homeowners as "sent to 1 company". Do not re-approve it.
+
+Roofing, hvac and pest are live on the site with **no** approved provider, so those
 requests match nobody and the operator alert is the only thing that surfaces
 them. Supply, not traffic, is the bottleneck: recruiting a roofer and an HVAC
 company is Khalil's job and nothing technical substitutes for it.
