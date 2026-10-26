@@ -6,7 +6,8 @@
  * `slug` is the URL segment AND the value stored on leads and providers, so it
  * must never be changed once leads exist under it.
  */
-export type TradeSlug = "roofing" | "hvac" | "pest" | "moving" | "cleaning" | "landscaping" | "hardscaping";
+export type TradeSlug =
+  | "roofing" | "hvac" | "pest" | "moving" | "cleaning" | "landscaping" | "hardscaping" | "windows";
 
 export type Trade = {
   slug: TradeSlug;
@@ -439,6 +440,63 @@ export const TRADES: Record<TradeSlug, Trade> = {
     },
     detailsHint:
       "What are you building or fixing, and roughly how big? Photos you can describe in words help too…",
+  },
+
+  windows: {
+    slug: "windows",
+    label: "Windows & Doors",
+    company: "window and door company",
+    companies: "window and door companies",
+    work: "window or door help",
+    icon: "▥",
+    blurb: "Window and door repair, replacement and installation.",
+    hero: {
+      eyebrow: "NEW JERSEY WINDOWS & DOORS, MADE SIMPLE",
+      line1: "Your windows.",
+      lineEm: "Your choice.",
+      line2: "Start with confidence.",
+      sub: "Find help with drafty or broken windows, foggy glass, new entry doors and full replacements—right here in New Jersey.",
+    },
+    how: {
+      h2a: "Windows and doors,",
+      h2em: "without the runaround.",
+      p: "Whether it’s one cracked pane or a whole-house replacement, start with one simple request.",
+    },
+    estimate: {
+      h2a: "Let’s fix your",
+      h2em: "windows and doors.",
+      p: "Share a few details. We’ll use them to help connect your request with participating window and door companies that serve your area.",
+    },
+    cards: [
+      { icon: "▥", title: "Window Replacement", body: "Single windows or the whole house." },
+      { icon: "✕", title: "Window Repair", body: "Broken glass, foggy panes, stuck sashes." },
+      { icon: "▯", title: "Entry & Patio Doors", body: "New doors, sliders and storm doors." },
+      { icon: "≈", title: "Drafts & Sealing", body: "Leaks, drafts and worn weatherstripping." },
+    ],
+    services: [
+      "Replace one or a few windows",
+      "Replace all windows",
+      "Window repair — glass, seal or sash",
+      "Entry door replacement",
+      "Patio or sliding door",
+      "Storm door",
+      "Drafts or leaks around windows/doors",
+      "Not sure yet",
+    ],
+    providerServices: [
+      "Window replacement",
+      "Window repair and glass",
+      "Entry and patio doors",
+      "Storm doors and windows",
+      "Multiple window and door services",
+    ],
+    meta: {
+      title: "Window & Door Contractors in New Jersey | Jersey Home Pros",
+      description:
+        "Compare window and door replacement and repair companies and request an estimate from participating New Jersey contractors.",
+    },
+    detailsHint:
+      "How many windows or doors, and what’s wrong with them? Rough sizes or the age of the house help too…",
   },
 };
 

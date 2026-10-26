@@ -13,7 +13,7 @@ export const SITE = {
   meta: {
     title: "Jersey Home Pros | Find Trusted Home Contractors in New Jersey",
     description:
-      "Tell us what your home needs and we connect your request with participating New Jersey contractors who serve your area. Roofing, heating and cooling, pest control, moving, cleaning, landscaping and hardscaping.",
+      "Tell us what your home needs and we connect your request with participating New Jersey contractors who serve your area. Roofing, heating and cooling, pest control, moving, cleaning, landscaping, hardscaping, and windows and doors.",
     ogDescription: "A smarter way to find home contractors in New Jersey.",
   },
 
@@ -22,7 +22,7 @@ export const SITE = {
     line1: "Your home.",
     lineEm: "Your choice.",
     line2: "Start with confidence.",
-    sub: "One request connects you with participating New Jersey contractors who serve your area — roofing, heating and cooling, pest control, moving, cleaning, landscaping and hardscaping.",
+    sub: "One request connects you with participating New Jersey contractors who serve your area — roofing, heating and cooling, pest control, moving, cleaning, landscaping, hardscaping, and windows and doors.",
   },
 
   proof: [

@@ -123,9 +123,12 @@ than implying it was verified.
 
 ## Current state
 
-Live at jerseyhomepros.com. Seven trades: roofing, hvac, pest, moving,
-cleaning, landscaping, hardscaping (the last two added 2026-10-26, separate
-per Khalil). Ten guide pages. `/join` for contractors, `/admin` for the operator,
+Live at jerseyhomepros.com. Eight trades: roofing, hvac, pest, moving,
+cleaning, landscaping, hardscaping (added 2026-10-26, separate per Khalil),
+windows ("Windows & Doors", added 2026-10-26). Khalil intends to cover all
+home-service trades eventually. Brutal-honest advice given him: add a trade
+once there is a company for it — a trade with no provider is a dead end for
+every homeowner who uses it. Ten guide pages. `/join` for contractors, `/admin` for the operator,
 `/receptionist` for the unbuilt missed-call product (deliberately unlinked).
 
 Supabase project `fpvvadcyuzcnjuzyhaav`. Vercel project `jersey-home-pros`,
@@ -220,7 +223,14 @@ a gold HUD layer — one-time scan sweep, brackets on 7 areas, each an SVG
 link to that trade's form. Bracket coordinates are in the 2048x1360 crop of
 the original. Tags NAME areas and must never claim a detection ("damage
 found" etc.) — the page has no way to know. Phones hide the tags and show
-numbered buttons under the photo. Khalil asked for an "Iron Man / Jarvis"
+numbered buttons under the photo.
+
+Two scenes (since 2026-10-26): tapping the front door ("Go inside") zooms
+toward the door and swaps to `public/home-inside.*` (Khalil's AI interior,
+cropped 2048x1360 from y=280) with its own zones; "← Outside" goes back.
+The left exterior window is Windows & Doors, not Cleaning; cleaning lives
+inside on the kitchen. HomeMap is a client component for the scene state.
+Khalil asked for an "Iron Man / Jarvis"
 feel: keep the style, never use Marvel names or marks.
 
 ### Operator alert — how to check it

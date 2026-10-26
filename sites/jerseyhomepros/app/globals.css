@@ -206,6 +206,20 @@
   .hud .hudgrid,.hud .hudzone{animation:none;opacity:1}
   .hud .hudpulse,.hud .hudlive{animation:none}
 }
+/* walk-inside: push toward the front door, fade, then the inside photo eases in */
+.hud .hudphoto{display:block;animation:hudarrive .55s ease-out both}
+.hud.hudmoving .hudphoto{transform-origin:var(--door,50% 60%);animation:hudpush .65s cubic-bezier(.5,0,.75,0) forwards}
+.hud.hud-outside .hudphoto{animation:none}
+.hud.hud-outside.hudmoving .hudphoto{animation:hudpush .65s cubic-bezier(.5,0,.75,0) forwards}
+.hud.hudmoving svg{opacity:0;transition:opacity .2s}
+.hud .huddoor .hudtag rect{fill:#d6ad58}
+.hud .huddoor .hudlabel{fill:#10100e}
+.hud .huddoor:hover .hudtag rect,.hud .huddoor:focus-visible .hudtag rect{fill:#fff}
+@keyframes hudpush{to{transform:scale(2.6);opacity:0;filter:blur(3px)}}
+@keyframes hudarrive{from{transform:scale(1.12);opacity:0}to{transform:none;opacity:1}}
+.hud.hud-outside.hudreturn .hudphoto{animation:hudarrive .55s ease-out both}
+.legenddoor{display:none}
+@media(prefers-reduced-motion:reduce){.hud .hudphoto,.hud.hudmoving .hudphoto,.hud.hud-outside.hudreturn .hudphoto{animation:none}}
 .homemaplegend{display:none}
 @media(max-width:640px){
   .hud .hudtag,.hud .hudstatus{display:none}
@@ -214,6 +228,7 @@
   .homemaplegend{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px}
   .homemaplegend a{display:flex;align-items:center;gap:10px;min-height:54px;padding:12px 14px;border:1px solid #4a4b45;background:#121312;color:#fff;font-size:17px;font-weight:700;line-height:1.2}
   .homemaplegend b{color:#d6ad58;font-size:15px}
+  .legenddoor{display:block;grid-column:1/-1;min-height:56px;border:0;background:#d6ad58;color:#10100e;font:800 17px Arial,Helvetica,sans-serif;cursor:pointer}
 }
 
 /* ---- Homepage hero = home scan ---- */

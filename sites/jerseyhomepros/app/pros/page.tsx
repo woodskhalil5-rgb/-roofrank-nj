@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: `Find a Pro | ${SITE.brand}`,
   description:
-    "Browse participating New Jersey contractors by trade and ZIP code — roofing, heating and cooling, pest control, moving, cleaning, landscaping and hardscaping.",
+    "Browse participating New Jersey contractors by trade and ZIP code — roofing, heating and cooling, pest control, moving, cleaning, landscaping, hardscaping, and windows and doors.",
   alternates: { canonical: "/pros" },
 };
 

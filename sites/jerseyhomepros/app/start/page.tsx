@@ -22,7 +22,7 @@ import "./landing.css";
 export const metadata: Metadata = {
   title: "Find Help for Your Home | New Jersey Home Services | Jersey Home Pros",
   description:
-    "Tell us what your home needs and start with a local service request. Roofing, heating and cooling, pest control, moving, cleaning, landscaping and hardscaping across New Jersey.",
+    "Tell us what your home needs and start with a local service request. Roofing, heating and cooling, pest control, moving, cleaning, landscaping, hardscaping, and windows and doors across New Jersey.",
   alternates: { canonical: "/start" },
   openGraph: {
     title: "Find help for your home — Jersey Home Pros",
