@@ -16,11 +16,13 @@ type Zone = {
   x: number; y: number; w: number; h: number;
   /** Where the tag sits relative to the bracket. */
   tag: "above" | "below" | "inside-bottom";
+  /** Optional left edge for the tag, when the default would sit on a neighbour. */
+  tagX?: number;
 };
 
 const ZONES: Zone[] = [
   { slug: "roofing", label: "Roofing", hint: "Leaks, storm damage, replacement", x: 551, y: 316, w: 901, h: 196, tag: "above" },
-  { slug: "cleaning", label: "Cleaning", hint: "Deep cleans, windows, move-out", x: 337, y: 501, w: 185, h: 490, tag: "above" },
+  { slug: "cleaning", label: "Cleaning", hint: "Deep cleans, windows, move-out", x: 337, y: 501, w: 185, h: 490, tag: "above", tagX: 226 },
   { slug: "hvac", label: "Heating & Cooling", hint: "No heat, no AC, tune-ups", x: 629, y: 1001, w: 134, h: 122, tag: "above" },
   { slug: "pest", label: "Pest Control", hint: "Mice, insects, termites", x: 80, y: 1022, w: 520, h: 84, tag: "below" },
   { slug: "moving", label: "Moving", hint: "Local moves, packing, heavy items", x: 1444, y: 872, w: 324, h: 199, tag: "above" },
@@ -28,10 +30,12 @@ const ZONES: Zone[] = [
   { slug: "hardscaping", label: "Hardscaping", hint: "Patios, walkways, driveways", x: 1440, y: 1112, w: 580, h: 228, tag: "inside-bottom" },
 ];
 
-const TAG_H = 46;
-/** Rough width for an uppercase tag: number + label at 23px bold with tracking. */
+/** Tags are sized to stay readable on a laptop (about 16px on screen), not
+ *  just on a big monitor — older eyes are a big part of this audience. */
+const TAG_H = 62;
+/** Rough width for an uppercase tag: number + label at 32px bold with tracking. */
 function tagWidth(z: Zone): number {
-  return Math.round(z.label.length * 17.5 + 92);
+  return Math.round(z.label.length * 24 + 118);
 }
 
 function Bracket({ x, y, w, h }: { x: number; y: number; w: number; h: number }) {
@@ -80,9 +84,9 @@ export default function HomeMap({ hero = false }: { hero?: boolean }) {
 
           {/* status line: describes the interface, never a finding */}
           <g className="hudstatus">
-            <rect x="28" y="28" width="610" height="52" rx="4" />
-            <circle cx="62" cy="54" r="8" className="hudlive" />
-            <text x="84" y="63">HOME SCAN · {ZONES.length} AREAS · TAP ONE</text>
+            <rect x="28" y="28" width="800" height="66" rx="4" />
+            <circle cx="66" cy="61" r="10" className="hudlive" />
+            <text x="92" y="72">HOME SCAN · {ZONES.length} AREAS · TAP ONE</text>
           </g>
 
           {ZONES.map((z, i) => {
@@ -91,7 +95,7 @@ export default function HomeMap({ hero = false }: { hero?: boolean }) {
               z.tag === "above" ? z.y - TAG_H - 10
               : z.tag === "below" ? z.y + z.h + 10
               : z.y + z.h - TAG_H - 14;
-            const tx = z.tag === "inside-bottom" ? z.x + 14 : z.x;
+            const tx = z.tagX ?? (z.tag === "inside-bottom" ? z.x + 14 : z.x);
             const n = String(i + 1).padStart(2, "0");
             return (
               <a key={z.slug} href={`/${z.slug}#estimate`} className="hudzone"
@@ -103,8 +107,8 @@ export default function HomeMap({ hero = false }: { hero?: boolean }) {
                 <circle className="huddot" cx={z.x + z.w / 2} cy={z.y + z.h / 2} r="10" />
                 <g className="hudtag">
                   <rect x={tx} y={ty} width={tw} height={TAG_H} rx="4" />
-                  <text x={tx + 16} y={ty + 31} className="hudnum">{n}</text>
-                  <text x={tx + 62} y={ty + 31} className="hudlabel">{z.label.toUpperCase()}</text>
+                  <text x={tx + 18} y={ty + 42} className="hudnum">{n}</text>
+                  <text x={tx + 80} y={ty + 42} className="hudlabel">{z.label.toUpperCase()}</text>
                 </g>
               </a>
             );

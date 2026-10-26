@@ -182,7 +182,7 @@
 .hud .hudgrid{opacity:0;animation:hudfade 1.4s ease-out .1s forwards}
 .hud .hudscan{animation:hudscan 1.6s cubic-bezier(.45,0,.2,1) .2s 1 forwards}
 .hud .hudstatus rect{fill:rgba(10,11,12,.72);stroke:#d6ad58;stroke-width:2}
-.hud .hudstatus text{fill:#e9d6ab;font:700 23px Arial,Helvetica,sans-serif;letter-spacing:3px}
+.hud .hudstatus text{fill:#e9d6ab;font:700 30px Arial,Helvetica,sans-serif;letter-spacing:3px}
 .hud .hudlive{fill:#d6ad58;animation:hudblink 1.6s ease-in-out infinite}
 .hud .hudzone{cursor:pointer;outline:none;opacity:0;transform-box:fill-box;transform-origin:center;animation:hudin .55s ease-out var(--d,1s) forwards}
 .hud .hudarea{fill:#d6ad58;fill-opacity:0;transition:fill-opacity .2s ease}
@@ -190,8 +190,8 @@
 .hud .huddot{fill:#f2c86a;stroke:#0a0b0c;stroke-width:3}
 .hud .hudpulse{fill:#f2c86a;fill-opacity:.5;transform-box:fill-box;transform-origin:center;animation:hudpulse 2.4s ease-out infinite}
 .hud .hudtag rect{fill:rgba(10,11,12,.8);stroke:#d6ad58;stroke-width:2}
-.hud .hudnum{fill:#f2c86a;font:800 23px Arial,Helvetica,sans-serif}
-.hud .hudlabel{fill:#fff;font:800 23px Arial,Helvetica,sans-serif;letter-spacing:2px}
+.hud .hudnum{fill:#f2c86a;font:800 32px Arial,Helvetica,sans-serif}
+.hud .hudlabel{fill:#fff;font:800 32px Arial,Helvetica,sans-serif;letter-spacing:2px}
 .hud .hudzone:hover .hudarea,.hud .hudzone:focus-visible .hudarea{fill-opacity:.16}
 .hud .hudzone:hover .hudtag rect,.hud .hudzone:focus-visible .hudtag rect{fill:#d6ad58}
 .hud .hudzone:hover .hudlabel,.hud .hudzone:focus-visible .hudlabel,.hud .hudzone:hover .hudnum,.hud .hudzone:focus-visible .hudnum{fill:#10100e}
@@ -211,9 +211,9 @@
   .hud .hudtag,.hud .hudstatus{display:none}
   .hud .hudbracket{stroke-width:10}
   .hud .huddot{transform-box:fill-box;transform-origin:center;transform:scale(2)}
-  .homemaplegend{display:flex;flex-wrap:wrap;gap:8px;padding:14px 16px 16px}
-  .homemaplegend a{display:inline-flex;align-items:center;gap:9px;padding:10px 13px;border:1px solid #3a3b37;background:#121312;color:#fff;font-size:13px;font-weight:700}
-  .homemaplegend b{color:#d6ad58;font-size:12px}
+  .homemaplegend{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px}
+  .homemaplegend a{display:flex;align-items:center;gap:10px;min-height:54px;padding:12px 14px;border:1px solid #4a4b45;background:#121312;color:#fff;font-size:17px;font-weight:700;line-height:1.2}
+  .homemaplegend b{color:#d6ad58;font-size:15px}
 }
 
 /* ---- Homepage hero = home scan ---- */
@@ -221,10 +221,13 @@
 .homehero:after{display:none}
 .homehero .heroContent{padding:64px 0 6px}
 .homehero h1{font-size:clamp(44px,6.2vw,80px)}
-.homehero .heroContent>p{max-width:600px}
+.homehero .heroContent>p{max-width:620px;font-size:18px;line-height:1.7;color:#dcdcd6}
+.homehero .button{font-size:16px;padding:18px 24px}
+.homehero .textlink{font-size:16px}
+.homehero .heroContent>p.nocam{margin-top:14px;color:#d6ad58;font-size:15px;font-weight:700}
 .homemaphero{margin-top:36px;border:1px solid #d6ad5866;box-shadow:0 30px 90px rgba(0,0,0,.55),0 0 40px rgba(214,173,88,.12)}
 .scansteps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:26px}
-.scansteps div{display:flex;gap:14px;align-items:baseline;color:#c9c9c3;font-size:13px;line-height:1.6;border-top:1px solid #2f302c;padding-top:14px}
+.scansteps div{display:flex;gap:14px;align-items:baseline;color:#e6e6e0;font-size:16px;line-height:1.6;border-top:1px solid #2f302c;padding-top:14px}
 .scansteps strong{font:400 26px Georgia,serif;color:var(--gold)}
 .scansteps b{color:#fff}
 @media(max-width:800px){.scansteps{grid-template-columns:1fr;gap:4px}.homehero .heroContent{padding-top:40px}}
