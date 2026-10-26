@@ -246,3 +246,6 @@
 .scansteps strong{font:400 26px Georgia,serif;color:var(--gold)}
 .scansteps b{color:#fff}
 @media(max-width:800px){.scansteps{grid-template-columns:1fr;gap:4px}.homehero .heroContent{padding-top:40px}}
+
+/* footer links wrap on phones (8+ trades no longer fit one line) */
+.footlinks{flex-wrap:wrap;row-gap:10px}
