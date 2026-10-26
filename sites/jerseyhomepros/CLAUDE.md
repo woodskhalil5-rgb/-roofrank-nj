@@ -212,6 +212,13 @@ them no leads from JHP traffic until they claim AND pay.
   the company's radius. The only number a claim pitch may quote.
 - Claims (`claims` table) are verified by the operator by calling the number
   on the company's own website/registration before approval.
+- **First batch pre-listed 2026-10-26:** 12 roofing + 12 HVAC companies in
+  Camden/Gloucester/Burlington, taken straight from the state HIC registry
+  (wildcard name search `%ROOF%`, `%HEATING%`, `%AIR COND%`, `%HVAC%` by
+  town, Active only; waterproofing and franchise DBAs skipped). Lookups ran
+  in Khalil's built-in browser via same-origin fetch POSTs to
+  `/verification/Search.aspx?facility=Y` (ASP.NET form; include
+  `sch_button`). `services` is just the trade name — nothing else is known.
 - **Preview deployments have no service-role key**, so every DB-backed page
   404s or shows empty there. Verify DB pages on production.
 
