@@ -44,6 +44,9 @@ export default function LeadForm({ trade }: { trade: Trade }) {
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || "Please try again.");
       setDone(true);
+      // GA4 conversion. Trade only — never the homeowner's details.
+      const w = window as unknown as { gtag?: (...a: unknown[]) => void };
+      w.gtag?.("event", "generate_lead", { trade: trade.slug, from_profile: Boolean(pro) });
       // The server decides the wording, because only the server knows whether
       // the request actually reached a contractor. A fixed "we'll follow up"
       // string here would promise something the software may not do.

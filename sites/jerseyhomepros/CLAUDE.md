@@ -157,8 +157,9 @@ Analytics (since 2026-10-26): GA4 property "Jersey Home Pros" in account
 "Destiny Marketing Group", owned by admin@destinymarketinggroup.com (NOT his
 personal Gmail). Measurement ID `G-6LE5838F0S` (zero before the S) is in
 `NEXT_PUBLIC_GA_ID`; layout.tsx loads gtag directly. "Modeling
-contributions" data sharing was turned off. No conversion events yet —
-form submits should be marked as `generate_lead` next.
+contributions" data sharing was turned off. A successful request form
+fires `generate_lead` with `trade` and `from_profile` only (no PII) — mark
+it as a key event in GA4 so it counts as a conversion.
 
 ### Directory and contractor dashboard (shipped 2026-10-24)
 
