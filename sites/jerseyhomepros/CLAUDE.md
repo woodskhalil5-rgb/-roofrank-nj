@@ -224,6 +224,10 @@ them no leads from JHP traffic until they claim AND pay.
   in Khalil's built-in browser via same-origin fetch POSTs to
   `/verification/Search.aspx?facility=Y` (ASP.NET form; include
   `sch_button`). `services` is just the trade name — nothing else is known.
+  Second batch same day: 10 landscaping, 8 hardscaping, 5 windows, 2 pest
+  (49 unclaimed total). Moving and cleaning had no HIC registrants; pest is
+  really licensed by NJDEP and movers by DCA (phone-only check), and neither
+  has a public online lookup — so those trades can't carry a badge from here.
 - **Preview deployments have no service-role key**, so every DB-backed page
   404s or shows empty there. Verify DB pages on production.
 
