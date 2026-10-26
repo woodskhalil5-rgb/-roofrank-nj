@@ -59,3 +59,10 @@ PROS / jerseyhomepros.com). Overlays are rendered as transparent PNGs with
 Playwright and composited with ffmpeg; `reels/couch-overlays.js` is the first
 one (moving-couch clip, Oct 26) and the template to copy. Keep the clip's own
 audio; Khalil adds a trending sound in the Instagram app.
+
+### The series: "Hired the wrong contractor again?" (Khalil, 2026-10-26)
+Every reel is a funny fictional contractor/DIY fail. Caption pattern "Hired the
+wrong ___ … again? 😩"; end card "Wrong contractor again? / Tap the problem.
+Compare local pros. You choose." Never imply our pros are vetted,
+background-checked, guaranteed or "the right one" — none of that is done.
+The true promise is comparing and choosing.
