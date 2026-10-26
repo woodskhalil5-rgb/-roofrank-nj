@@ -1,6 +1,7 @@
 import { SITE } from "../lib/site";
 import { TRADES, TRADE_SLUGS } from "../lib/trades";
 import { Brand, SiteFooter } from "./Brand";
+import HomeMap from "./HomeMap";
 
 /**
  * Homepage. Its job is to route a homeowner to the right trade quickly;
@@ -48,6 +49,8 @@ export default function Home() {
           <h2>{SITE.how.h2a}<br /><em>{SITE.how.h2em}</em></h2>
           <p>{SITE.how.p}</p>
         </div>
+        <HomeMap />
+
         <div className="tradegrid">
           {trades.map((t) => (
             <a className="tradecard" key={t.slug} href={`/${t.slug}`}>

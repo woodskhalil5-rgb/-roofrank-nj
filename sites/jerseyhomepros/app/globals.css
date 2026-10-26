@@ -171,3 +171,22 @@
 .photobtn{padding:10px 14px;cursor:pointer}
 .photoremove{background:none;border:0;color:#6d2626;font-size:11px;text-decoration:underline;cursor:pointer;padding:4px 0}
 @media(max-width:600px){.profacts dl{grid-template-columns:1fr;gap:2px}.profacts dd{margin-bottom:8px}}
+
+/* ---- Clickable house (homepage) ---- */
+.homemap{background:var(--black);color:#fff;margin-top:42px;border:1px solid #2a2b27}
+.homemaphead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:20px 24px 0}
+.homemaphead p{margin:0;font-size:13px;color:#b8b9b4}
+.homemap svg{display:block;width:100%;height:auto}
+.homemap .hmspot{cursor:pointer;outline:none}
+.homemap .hmspot .hmarea{transition:fill-opacity .18s ease,stroke-width .18s ease}
+.homemap .hmspot:hover .hmarea,.homemap .hmspot:focus-visible .hmarea{fill:#d6ad58;fill-opacity:.22;stroke-width:3}
+.homemap .hmspot:focus-visible{outline:2px solid #d6ad58;outline-offset:2px}
+.homemap .hmpin{cursor:pointer}
+.homemap .hmpulse{fill:#d6ad58;fill-opacity:.35;transform-box:fill-box;transform-origin:center;animation:hmpulse 2.2s ease-out infinite}
+.homemap .hmlabel{fill:#fff;font:800 15px Arial,Helvetica,sans-serif;letter-spacing:.3px;paint-order:stroke;stroke:#0a0b0c;stroke-width:4px}
+.homemap .hmhint{fill:#c9c9c3;font:12px Arial,Helvetica,sans-serif;paint-order:stroke;stroke:#0a0b0c;stroke-width:4px}
+.homemap .hmpin:hover .hmlabel{fill:#d6ad58}
+@keyframes hmpulse{0%{transform:scale(1);fill-opacity:.45}100%{transform:scale(2.4);fill-opacity:0}}
+@media(prefers-reduced-motion:reduce){.homemap .hmpulse{animation:none}}
+/* Phones: the hints crowd a narrow drawing, so only the trade names show. */
+@media(max-width:640px){.homemap .hmhint{display:none}.homemap .hmlabel{font-size:20px}}
