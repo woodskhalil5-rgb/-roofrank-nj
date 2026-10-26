@@ -173,20 +173,26 @@
 @media(max-width:600px){.profacts dl{grid-template-columns:1fr;gap:2px}.profacts dd{margin-bottom:8px}}
 
 /* ---- Clickable house (homepage) ---- */
-.homemap{background:var(--black);color:#fff;margin-top:42px;border:1px solid #2a2b27}
-.homemaphead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:20px 24px 0}
-.homemaphead p{margin:0;font-size:13px;color:#b8b9b4}
+.homemap{background:#fff;margin-top:42px;border:1px solid #e6e2d9}
+.homemaphead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px 22px 14px}
+.homemaphead p{margin:0;font-size:13px;color:#60615a}
 .homemap svg{display:block;width:100%;height:auto}
 .homemap .hmspot{cursor:pointer;outline:none}
-.homemap .hmspot .hmarea{transition:fill-opacity .18s ease,stroke-width .18s ease}
-.homemap .hmspot:hover .hmarea,.homemap .hmspot:focus-visible .hmarea{fill:#d6ad58;fill-opacity:.22;stroke-width:3}
-.homemap .hmspot:focus-visible{outline:2px solid #d6ad58;outline-offset:2px}
+.homemap .hmspot .hmarea{transition:filter .18s ease}
+.homemap .hmspot:hover .hmarea,.homemap .hmspot:focus-visible .hmarea{filter:brightness(1.15) drop-shadow(0 0 6px #d6ad58)}
+.homemap .hmspot:focus-visible{outline:3px solid #d6ad58;outline-offset:2px}
 .homemap .hmpin{cursor:pointer}
-.homemap .hmpulse{fill:#d6ad58;fill-opacity:.35;transform-box:fill-box;transform-origin:center;animation:hmpulse 2.2s ease-out infinite}
-.homemap .hmlabel{fill:#fff;font:800 15px Arial,Helvetica,sans-serif;letter-spacing:.3px;paint-order:stroke;stroke:#0a0b0c;stroke-width:4px}
-.homemap .hmhint{fill:#c9c9c3;font:12px Arial,Helvetica,sans-serif;paint-order:stroke;stroke:#0a0b0c;stroke-width:4px}
-.homemap .hmpin:hover .hmlabel{fill:#d6ad58}
-@keyframes hmpulse{0%{transform:scale(1);fill-opacity:.45}100%{transform:scale(2.4);fill-opacity:0}}
+.homemap .hmpulse{fill:#d6ad58;fill-opacity:.45;transform-box:fill-box;transform-origin:center;animation:hmpulse 2.2s ease-out infinite}
+.homemap .hmlabel{fill:#171817;font:800 14px Arial,Helvetica,sans-serif}
+.homemap .hmhint{fill:#6b6c66;font:11px Arial,Helvetica,sans-serif}
+.homemap .hmpin:hover .hmlabel{fill:#97702a}
+@keyframes hmpulse{0%{transform:scale(1);fill-opacity:.55}100%{transform:scale(2.6);fill-opacity:0}}
 @media(prefers-reduced-motion:reduce){.homemap .hmpulse{animation:none}}
-/* Phones: the hints crowd a narrow drawing, so only the trade names show. */
-@media(max-width:640px){.homemap .hmhint{display:none}.homemap .hmlabel{font-size:20px}}
+.homemaplegend{display:none}
+@media(max-width:640px){
+  .homemap .hmchip,.homemap .hmlabel,.homemap .hmhint{display:none}
+  .homemap .hmpin circle{transform-box:fill-box;transform-origin:center;transform:scale(1.6)}
+  .homemaplegend{display:flex;flex-wrap:wrap;gap:8px;padding:14px 16px 16px}
+  .homemaplegend a{display:inline-flex;align-items:center;gap:8px;padding:10px 13px;border:1px solid #e6e2d9;background:#faf8f3;font-size:13px;font-weight:700}
+  .homemaplegend i{width:10px;height:10px;border-radius:50%;background:#d6ad58;display:inline-block}
+}
