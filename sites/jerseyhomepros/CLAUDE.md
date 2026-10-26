@@ -153,8 +153,12 @@ requests match nobody and the operator alert is the only thing that surfaces
 them. Supply, not traffic, is the bottleneck: recruiting a roofer and an HVAC
 company is Khalil's job and nothing technical substitutes for it.
 
-No analytics: `NEXT_PUBLIC_GTM_ID` is unset, so no tracking script loads. Form
-and funnel changes wait until there is conversion data.
+Analytics (since 2026-10-26): GA4 property "Jersey Home Pros" in account
+"Destiny Marketing Group", owned by admin@destinymarketinggroup.com (NOT his
+personal Gmail). Measurement ID `G-6LE5838F0S` (zero before the S) is in
+`NEXT_PUBLIC_GA_ID`; layout.tsx loads gtag directly. "Modeling
+contributions" data sharing was turned off. No conversion events yet —
+form submits should be marked as `generate_lead` next.
 
 ### Directory and contractor dashboard (shipped 2026-10-24)
 
