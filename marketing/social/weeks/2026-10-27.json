@@ -1,0 +1,139 @@
+{
+  "week": "2026-10-27",
+  "posts": [
+    {
+      "id": "2026-10-27-tue-meet-home-scan",
+      "photo": "home-hud.jpg",
+      "crop": [
+        130,
+        40,
+        1340,
+        1018
+      ],
+      "brackets": [
+        {
+          "rect": [
+            430,
+            247,
+            704,
+            153
+          ],
+          "label": "ROOF"
+        },
+        {
+          "rect": [
+            491,
+            782,
+            105,
+            95
+          ],
+          "label": "AC"
+        },
+        {
+          "rect": [
+            715,
+            609,
+            98,
+            188
+          ],
+          "label": "GO INSIDE"
+        }
+      ],
+      "eyebrow": "INTRODUCING HOME SCAN",
+      "headline": "Tap the problem.",
+      "headlineEm": "Skip the guesswork.",
+      "sub": "Point at the part of the house that needs help. We connect you with local pros. Free for homeowners.",
+      "story": true
+    },
+    {
+      "id": "2026-10-29-thu-heat-check",
+      "photo": "home-inside.jpg",
+      "crop": [
+        330,
+        0,
+        790,
+        600
+      ],
+      "status": "HOME SCAN \u00b7 INSIDE",
+      "brackets": [
+        {
+          "rect": [
+            625,
+            16,
+            258,
+            117
+          ],
+          "label": "VENT"
+        },
+        {
+          "rect": [
+            552,
+            520,
+            72,
+            66
+          ],
+          "label": "THERMOSTAT"
+        }
+      ],
+      "eyebrow": "SOUTH JERSEY FALL CHECKLIST",
+      "headline": "First cold night coming.",
+      "headlineEm": "Is your heat ready?",
+      "sub": "A tune-up before the cold snap beats a no-heat call in January.",
+      "story": true
+    },
+    {
+      "id": "2026-10-31-sat-halloween-pests",
+      "photo": "home-inside.jpg",
+      "crop": [
+        900,
+        330,
+        700,
+        531
+      ],
+      "status": "HOME SCAN \u00b7 INSIDE",
+      "brackets": [
+        {
+          "rect": [
+            1330,
+            600,
+            240,
+            260
+          ],
+          "label": "KITCHEN"
+        }
+      ],
+      "eyebrow": "HAPPY HALLOWEEN",
+      "headline": "Scratching in the walls?",
+      "headlineEm": "Probably not a ghost.",
+      "sub": "Mice move indoors as it gets cold. Tap Pest Control and get help this week.",
+      "story": true
+    },
+    {
+      "id": "2026-11-01-sun-leaf-cleanup",
+      "photo": "home-hud.jpg",
+      "crop": [
+        0,
+        500,
+        740,
+        562
+      ],
+      "status": "HOME SCAN \u00b7 OUTSIDE",
+      "brackets": [
+        {
+          "rect": [
+            47,
+            912,
+            590,
+            134
+          ],
+          "label": "LAWN & BEDS"
+        }
+      ],
+      "eyebrow": "SOUTH JERSEY FALL CHECKLIST",
+      "headline": "Leaves left all winter",
+      "headlineEm": "= bare spots in spring.",
+      "sub": "Book a fall cleanup before the last leaves drop.",
+      "story": false
+    }
+  ]
+}
