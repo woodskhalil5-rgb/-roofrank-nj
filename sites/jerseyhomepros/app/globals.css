@@ -172,27 +172,46 @@
 .photoremove{background:none;border:0;color:#6d2626;font-size:11px;text-decoration:underline;cursor:pointer;padding:4px 0}
 @media(max-width:600px){.profacts dl{grid-template-columns:1fr;gap:2px}.profacts dd{margin-bottom:8px}}
 
-/* ---- Clickable house (homepage) ---- */
-.homemap{background:#fff;margin-top:42px;border:1px solid #e6e2d9}
+/* ---- Clickable house (homepage): photo + HUD ---- */
+.homemap{background:var(--black);color:#fff;margin-top:42px;border:1px solid #2a2b27}
 .homemaphead{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px 22px 14px}
-.homemaphead p{margin:0;font-size:13px;color:#60615a}
-.homemap svg{display:block;width:100%;height:auto}
-.homemap .hmspot{cursor:pointer;outline:none}
-.homemap .hmspot .hmarea{transition:filter .18s ease}
-.homemap .hmspot:hover .hmarea,.homemap .hmspot:focus-visible .hmarea{filter:brightness(1.15) drop-shadow(0 0 6px #d6ad58)}
-.homemap .hmspot:focus-visible{outline:3px solid #d6ad58;outline-offset:2px}
-.homemap .hmpin{cursor:pointer}
-.homemap .hmpulse{fill:#d6ad58;fill-opacity:.45;transform-box:fill-box;transform-origin:center;animation:hmpulse 2.2s ease-out infinite}
-.homemap .hmlabel{fill:#171817;font:800 14px Arial,Helvetica,sans-serif}
-.homemap .hmhint{fill:#6b6c66;font:11px Arial,Helvetica,sans-serif}
-.homemap .hmpin:hover .hmlabel{fill:#97702a}
-@keyframes hmpulse{0%{transform:scale(1);fill-opacity:.55}100%{transform:scale(2.6);fill-opacity:0}}
-@media(prefers-reduced-motion:reduce){.homemap .hmpulse{animation:none}}
+.homemaphead p{margin:0;font-size:13px;color:#b8b9b4}
+.hud{position:relative;line-height:0;overflow:hidden}
+.hud img{display:block;width:100%;height:auto}
+.hud svg{position:absolute;inset:0;width:100%;height:100%}
+.hud .hudgrid{opacity:0;animation:hudfade 1.4s ease-out .1s forwards}
+.hud .hudscan{animation:hudscan 1.6s cubic-bezier(.45,0,.2,1) .2s 1 forwards}
+.hud .hudstatus rect{fill:rgba(10,11,12,.72);stroke:#d6ad58;stroke-width:2}
+.hud .hudstatus text{fill:#e9d6ab;font:700 23px Arial,Helvetica,sans-serif;letter-spacing:3px}
+.hud .hudlive{fill:#d6ad58;animation:hudblink 1.6s ease-in-out infinite}
+.hud .hudzone{cursor:pointer;outline:none;opacity:0;transform-box:fill-box;transform-origin:center;animation:hudin .55s ease-out var(--d,1s) forwards}
+.hud .hudarea{fill:#d6ad58;fill-opacity:0;transition:fill-opacity .2s ease}
+.hud .hudbracket{fill:none;stroke:#f2c86a;stroke-width:6;stroke-linecap:square;filter:drop-shadow(0 0 6px rgba(214,173,88,.9))}
+.hud .huddot{fill:#f2c86a;stroke:#0a0b0c;stroke-width:3}
+.hud .hudpulse{fill:#f2c86a;fill-opacity:.5;transform-box:fill-box;transform-origin:center;animation:hudpulse 2.4s ease-out infinite}
+.hud .hudtag rect{fill:rgba(10,11,12,.8);stroke:#d6ad58;stroke-width:2}
+.hud .hudnum{fill:#f2c86a;font:800 23px Arial,Helvetica,sans-serif}
+.hud .hudlabel{fill:#fff;font:800 23px Arial,Helvetica,sans-serif;letter-spacing:2px}
+.hud .hudzone:hover .hudarea,.hud .hudzone:focus-visible .hudarea{fill-opacity:.16}
+.hud .hudzone:hover .hudtag rect,.hud .hudzone:focus-visible .hudtag rect{fill:#d6ad58}
+.hud .hudzone:hover .hudlabel,.hud .hudzone:focus-visible .hudlabel,.hud .hudzone:hover .hudnum,.hud .hudzone:focus-visible .hudnum{fill:#10100e}
+.hud .hudzone:focus-visible .hudbracket{stroke:#fff}
+@keyframes hudscan{0%{transform:translateY(0)}100%{transform:translateY(1560px);opacity:0}}
+@keyframes hudfade{to{opacity:1}}
+@keyframes hudin{0%{opacity:0;transform:scale(1.03)}100%{opacity:1;transform:none}}
+@keyframes hudpulse{0%{transform:scale(1);fill-opacity:.55}100%{transform:scale(2.8);fill-opacity:0}}
+@keyframes hudblink{50%{opacity:.25}}
+@media(prefers-reduced-motion:reduce){
+  .hud .hudscan{display:none}
+  .hud .hudgrid,.hud .hudzone{animation:none;opacity:1}
+  .hud .hudpulse,.hud .hudlive{animation:none}
+}
 .homemaplegend{display:none}
 @media(max-width:640px){
-  .homemap .hmchip,.homemap .hmlabel,.homemap .hmhint{display:none}
-  .homemap .hmpin circle{transform-box:fill-box;transform-origin:center;transform:scale(1.6)}
+  .hud .hudtag,.hud .hudstatus{display:none}
+  .hud .hudbracket{stroke-width:10}
+  .hud .huddot{transform-box:fill-box;transform-origin:center;transform:scale(2)}
   .homemaplegend{display:flex;flex-wrap:wrap;gap:8px;padding:14px 16px 16px}
-  .homemaplegend a{display:inline-flex;align-items:center;gap:8px;padding:10px 13px;border:1px solid #e6e2d9;background:#faf8f3;font-size:13px;font-weight:700}
-  .homemaplegend i{width:10px;height:10px;border-radius:50%;background:#d6ad58;display:inline-block}
+  .homemaplegend a{display:inline-flex;align-items:center;gap:9px;padding:10px 13px;border:1px solid #3a3b37;background:#121312;color:#fff;font-size:13px;font-weight:700}
+  .homemaplegend b{color:#d6ad58;font-size:12px}
 }

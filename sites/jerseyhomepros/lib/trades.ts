@@ -6,7 +6,7 @@
  * `slug` is the URL segment AND the value stored on leads and providers, so it
  * must never be changed once leads exist under it.
  */
-export type TradeSlug = "roofing" | "hvac" | "pest" | "moving" | "cleaning";
+export type TradeSlug = "roofing" | "hvac" | "pest" | "moving" | "cleaning" | "landscaping" | "hardscaping";
 
 export type Trade = {
   slug: TradeSlug;
@@ -324,6 +324,121 @@ export const TRADES: Record<TradeSlug, Trade> = {
     },
     detailsHint:
       "How many bedrooms and bathrooms, and how often? Pets, and anything needing special care, are useful to know…",
+  },
+  landscaping: {
+    slug: "landscaping",
+    label: "Landscaping",
+    company: "landscaping company",
+    companies: "landscaping companies",
+    work: "landscaping help",
+    icon: "❦",
+    blurb: "Lawn care, planting, garden beds and yard cleanups.",
+    hero: {
+      eyebrow: "NEW JERSEY LANDSCAPING, MADE SIMPLE",
+      line1: "Your yard.",
+      lineEm: "Your choice.",
+      line2: "Start with confidence.",
+      sub: "Find help with lawn care, planting, garden beds, mulching and seasonal cleanups—right here in New Jersey.",
+    },
+    how: {
+      h2a: "Landscaping,",
+      h2em: "without the runaround.",
+      p: "Whether it’s a weekly mow or a whole new front yard, start with one simple request.",
+    },
+    estimate: {
+      h2a: "Let’s get your yard",
+      h2em: "looking right.",
+      p: "Share a few details. We’ll use them to help connect your request with participating landscaping companies that serve your area.",
+    },
+    cards: [
+      { icon: "❦", title: "Lawn Care", body: "Mowing, edging, fertilizing and overseeding." },
+      { icon: "✿", title: "Planting & Beds", body: "Shrubs, flowers, trees and fresh garden beds." },
+      { icon: "◈", title: "Cleanups", body: "Spring and fall cleanups, leaves and debris." },
+      { icon: "◎", title: "Landscape Design", body: "A plan for a new or reworked yard." },
+    ],
+    services: [
+      "Lawn mowing and maintenance",
+      "Spring or fall cleanup",
+      "Mulching and garden beds",
+      "Planting — shrubs, trees or flowers",
+      "Sod or seeding",
+      "Tree or shrub trimming",
+      "Landscape design",
+      "Not sure yet",
+    ],
+    providerServices: [
+      "Lawn maintenance",
+      "Seasonal cleanups",
+      "Planting and garden beds",
+      "Sod, seeding and lawn renovation",
+      "Landscape design",
+      "Multiple landscaping services",
+    ],
+    meta: {
+      title: "Landscaping Companies in New Jersey | Jersey Home Pros",
+      description:
+        "Compare landscaping services and request an estimate from participating New Jersey landscaping companies.",
+    },
+    detailsHint:
+      "Roughly how big is the yard, and is this one-time or ongoing? A rough budget helps too…",
+  },
+
+  hardscaping: {
+    slug: "hardscaping",
+    label: "Hardscaping",
+    company: "hardscaping company",
+    companies: "hardscaping companies",
+    work: "hardscaping help",
+    icon: "▦",
+    blurb: "Patios, pavers, walkways, driveways and retaining walls.",
+    hero: {
+      eyebrow: "NEW JERSEY HARDSCAPING, MADE SIMPLE",
+      line1: "Your outdoor space.",
+      lineEm: "Your choice.",
+      line2: "Start with confidence.",
+      sub: "Find help with paver patios, walkways, driveways, retaining walls and outdoor living—right here in New Jersey.",
+    },
+    how: {
+      h2a: "Hardscaping,",
+      h2em: "without the runaround.",
+      p: "Whether it’s a cracked walkway or a brand-new patio, start with one simple request.",
+    },
+    estimate: {
+      h2a: "Let’s build your",
+      h2em: "outdoor space.",
+      p: "Share a few details. We’ll use them to help connect your request with participating hardscaping companies that serve your area.",
+    },
+    cards: [
+      { icon: "▦", title: "Patios", body: "Paver, stone and concrete patios." },
+      { icon: "⇢", title: "Walkways & Driveways", body: "New installs, repairs and resurfacing." },
+      { icon: "▤", title: "Retaining Walls", body: "Block and stone walls for slopes and beds." },
+      { icon: "◎", title: "Outdoor Living", body: "Fire pits, steps, seating walls and more." },
+    ],
+    services: [
+      "Paver or stone patio",
+      "Walkway",
+      "Driveway — pavers or concrete",
+      "Retaining wall",
+      "Steps or stoop",
+      "Fire pit or outdoor kitchen",
+      "Repair or reset existing pavers",
+      "Not sure yet",
+    ],
+    providerServices: [
+      "Patios and walkways",
+      "Driveways",
+      "Retaining walls",
+      "Outdoor living features",
+      "Paver repair and restoration",
+      "Multiple hardscaping services",
+    ],
+    meta: {
+      title: "Hardscaping & Patio Contractors in New Jersey | Jersey Home Pros",
+      description:
+        "Compare patio, paver, walkway and retaining wall contractors and request an estimate from participating New Jersey hardscaping companies.",
+    },
+    detailsHint:
+      "What are you building or fixing, and roughly how big? Photos you can describe in words help too…",
   },
 };
 
