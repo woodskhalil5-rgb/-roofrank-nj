@@ -47,3 +47,15 @@ leads_enabled) for posts that push requests.
 `weeks/<monday>.json`, `weeks/<monday>-captions.md` (feed + story image names,
 link, caption, 5–9 hashtags with South Jersey towns), images rendered with
 `node make_posts.js weeks/<monday>.json <outdir>`.
+
+## Reels (since 2026-10-26: this is the main format now)
+Khalil disliked the static photo graphics; he wants funny, family-friendly
+reels. Workflow: the Sunday task writes 4 Higgsfield (AI video) prompts to
+`reels/<monday>.md`; Khalil generates the 8-second 720x1280 clips and sends
+them back in chat; we add a white meme caption box at the top, a gold
+bracket + "01 TAP <TRADE>" tag popping in at the punchline, and a 2.6s
+end card (dark gold-gradient, brackets, "Skip the …" serif line, JERSEY HOME
+PROS / jerseyhomepros.com). Overlays are rendered as transparent PNGs with
+Playwright and composited with ffmpeg; `reels/couch-overlays.js` is the first
+one (moving-couch clip, Oct 26) and the template to copy. Keep the clip's own
+audio; Khalil adds a trending sound in the Instagram app.
