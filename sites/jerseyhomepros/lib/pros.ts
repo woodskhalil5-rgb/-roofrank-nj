@@ -29,7 +29,24 @@ export type PublicPro = {
   license_status: string;
   license_checked_at: string | null;
   leads_enabled: boolean;
+  logo_path: string;
+  gallery_paths: string[];
+  year_founded: number | null;
+  hours: string;
+  towns: string;
+  service_list: string[];
+  highlights: string[];
 };
+
+export const PHOTO_BUCKET = "pro-photos";
+export const MAX_GALLERY = 8;
+
+/** Public URL for a stored profile photo, or null when there is none. */
+export function photoUrl(path: string | null | undefined): string | null {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!path || !base) return null;
+  return `${base}/storage/v1/object/public/${PHOTO_BUCKET}/${path.split("/").map(encodeURIComponent).join("/")}`;
+}
 
 /** Whether a request from this profile can actually reach the company. */
 export function receivesRequests(p: { status: string; leads_enabled: boolean }): boolean {
@@ -37,7 +54,7 @@ export function receivesRequests(p: { status: string; leads_enabled: boolean }):
 }
 
 export const PUBLIC_PRO_COLUMNS =
-  "id, slug, company, trade, services, bio, website, radius_miles, service_zips, status, city, license_label, license_number, license_status, license_checked_at, leads_enabled";
+  "id, slug, company, trade, services, bio, website, radius_miles, service_zips, status, city, license_label, license_number, license_status, license_checked_at, leads_enabled, logo_path, gallery_paths, year_founded, hours, towns, service_list, highlights";
 
 /** The state's own lookup, linked beside every registration badge so anyone
  *  can check the record themselves. */
@@ -150,6 +167,13 @@ export type ContractorRow = {
   service_zips: string[];
   radius_miles: number;
   leads_enabled: boolean;
+  logo_path: string;
+  gallery_paths: string[];
+  year_founded: number | null;
+  hours: string;
+  towns: string;
+  service_list: string[];
+  highlights: string[];
 };
 
 /**
@@ -173,7 +197,7 @@ export async function requireContractor(req: Request): Promise<ContractorRow | n
   if (!db) return null;
   const { data: row } = await db
     .from("roofers")
-    .select("id, company, contact, email, trade, status, slug, listed, bio, website, services, service_zips, radius_miles, leads_enabled")
+    .select("id, company, contact, email, trade, status, slug, listed, bio, website, services, service_zips, radius_miles, leads_enabled, logo_path, gallery_paths, year_founded, hours, towns, service_list, highlights")
     .eq("auth_user_id", data.user.id)
     .maybeSingle();
   return (row as ContractorRow | null) ?? null;

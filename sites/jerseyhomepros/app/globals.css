@@ -150,3 +150,24 @@
 .claimbox h3{font:400 24px/1.2 Georgia,serif;margin:6px 0 8px;color:#fff}
 .claimbox p{color:#b8b9b4;font-size:13px;line-height:1.7}
 .claimbox b{color:var(--gold)}
+/* ---- Profile photos and details ---- */
+.prologo{display:block;width:96px;height:96px;object-fit:cover;background:#fff;border:1px solid var(--gold);margin:22px 0 -6px}
+.progallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:34px}
+.progallery img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid #e6e2d9}
+.profacts{background:#fff;border:1px solid #e6e2d9;padding:24px 26px;margin-bottom:22px}
+.profacts dl{display:grid;grid-template-columns:max-content 1fr;gap:8px 22px;margin:14px 0;font-size:14px}
+.profacts dt{color:#80817a;font-size:12px;font-weight:700}
+.profacts dd{margin:0;color:#2a2b27}
+.prohighlights{list-style:none;padding:0;margin:14px 0 4px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.prohighlights li{padding:10px 12px;background:#f7f5ef;border-left:2px solid var(--gold);font-size:13.5px}
+.proservices{margin:0;padding-left:18px;font-size:12px;line-height:1.8;color:#73746e}
+.photomgr{border-bottom:1px solid #f0ece2;padding-bottom:14px}
+.photorow{display:flex;gap:14px;align-items:center}
+.photothumb{display:block;width:96px;height:96px;object-fit:cover;border:1px solid #e4dfd4;background:#faf8f3}
+.photothumb.empty{display:grid;place-items:center;text-align:center;font-size:11px;color:#8a8b84;padding:6px}
+.photoadd{cursor:pointer;border-style:dashed;font-weight:700;color:#6d5118}
+.photogrid{display:flex;flex-wrap:wrap;gap:10px}
+.photocell{display:flex;flex-direction:column;gap:4px}
+.photobtn{padding:10px 14px;cursor:pointer}
+.photoremove{background:none;border:0;color:#6d2626;font-size:11px;text-decoration:underline;cursor:pointer;padding:4px 0}
+@media(max-width:600px){.profacts dl{grid-template-columns:1fr;gap:2px}.profacts dd{margin-bottom:8px}}

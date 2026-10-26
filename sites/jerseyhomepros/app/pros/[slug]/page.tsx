@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { SITE } from "../../../lib/site";
 import { tradeOr } from "../../../lib/trades";
 import { adminDb } from "../../../lib/server";
-import { listedProBySlug, safeWebsite, checkedOn, NJ_LICENSE_LOOKUP, receivesRequests } from "../../../lib/pros";
+import { listedProBySlug, safeWebsite, checkedOn, NJ_LICENSE_LOOKUP, receivesRequests, photoUrl } from "../../../lib/pros";
 import { Brand, SiteFooter } from "../../Brand";
 import ViewBeacon from "./ViewBeacon";
 
@@ -35,6 +35,10 @@ export default async function ProPage({ params }: { params: Promise<{ slug: stri
   const member = receivesRequests(pro);
   const claimed = pro.status === "approved" && !member;
   const website = safeWebsite(pro.website);
+  const logo = photoUrl(pro.logo_path);
+  const gallery = pro.gallery_paths.map((p) => photoUrl(p)).filter((u): u is string => Boolean(u));
+  const years = pro.year_founded ? new Date().getFullYear() - pro.year_founded : null;
+  const hasDetails = Boolean(pro.towns || pro.hours || pro.year_founded || pro.highlights.length);
 
   const db = adminDb();
   // Real requests in this trade and area in the last 30 days. Shown in the
@@ -62,6 +66,7 @@ export default async function ProPage({ params }: { params: Promise<{ slug: stri
           <div className="eyebrow">
             <i></i> {t.label.toUpperCase()} &middot; {member ? "NETWORK MEMBER" : claimed ? "CLAIMED BY THE COMPANY" : "NOT IN THE NETWORK YET"}
           </div>
+          {logo && <img className="prologo" src={logo} alt={`${pro.company} logo`} />}
           <h1>{pro.company}</h1>
           <p>
             {member
@@ -107,11 +112,36 @@ export default async function ProPage({ params }: { params: Promise<{ slug: stri
           </p>
         )}
 
+        {gallery.length > 0 && (
+          <div className="progallery">
+            {gallery.map((u) => (
+              <a key={u} href={u} target="_blank" rel="noopener"><img src={u} alt={`Work by ${pro.company}`} loading="lazy" /></a>
+            ))}
+          </div>
+        )}
+
+        {hasDetails && (
+          <div className="profacts">
+            <div className="eyebrow dark">FROM THE COMPANY</div>
+            {pro.highlights.length > 0 && (
+              <ul className="prohighlights">{pro.highlights.map((h) => <li key={h}>{h}</li>)}</ul>
+            )}
+            <dl>
+              {pro.year_founded && <><dt>In business since</dt><dd>{pro.year_founded}{years !== null && years > 0 ? ` (${years} ${years === 1 ? "year" : "years"})` : ""}</dd></>}
+              {pro.towns && <><dt>Towns served</dt><dd>{pro.towns}</dd></>}
+              {pro.hours && <><dt>Hours</dt><dd>{pro.hours}</dd></>}
+            </dl>
+            <p className="adminmeta">Provided by {pro.company}. {SITE.brand} hasn&rsquo;t verified these details.</p>
+          </div>
+        )}
+
         <div className="servicegrid prodetails">
           <article>
             <span className="serviceicon">{t.icon}</span>
             <h3>Services</h3>
-            <p>{pro.services}</p>
+            {pro.service_list.length > 0
+              ? <ul className="proservices">{pro.service_list.map((s) => <li key={s}>{s}</li>)}</ul>
+              : <p>{pro.services}</p>}
           </article>
           <article>
             <span className="serviceicon">&#9678;</span>

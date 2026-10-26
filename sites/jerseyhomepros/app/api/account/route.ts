@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { adminDb, notifyOperatorServiceRequest } from "../../../lib/server";
-import { requireContractor, safeWebsite, slugify } from "../../../lib/pros";
+import { requireContractor, safeWebsite, slugify, photoUrl, MAX_GALLERY } from "../../../lib/pros";
 import { tradeOr } from "../../../lib/trades";
 
 export const runtime = "nodejs";
@@ -129,7 +129,16 @@ export async function GET(req: Request) {
       service_zips: me.service_zips,
       radius_miles: me.radius_miles,
       leads_enabled: me.leads_enabled,
+      year_founded: me.year_founded,
+      hours: me.hours,
+      towns: me.towns,
+      service_list: me.service_list,
+      highlights: me.highlights,
+      logo: me.logo_path ? { path: me.logo_path, url: photoUrl(me.logo_path) } : null,
+      gallery: me.gallery_paths.map((p) => ({ path: p, url: photoUrl(p) })),
     },
+    serviceOptions: tradeOr(me.trade).providerServices,
+    maxGallery: MAX_GALLERY,
     // Real requests in their trade and area, last 30 days — the ones they
     // would have been eligible for. A count from the database, never an estimate.
     areaDemand30: typeof demand.data === "number" ? demand.data : 0,
@@ -158,14 +167,37 @@ export async function POST(req: Request) {
   const action = String(body.action ?? "");
 
   if (action === "update_profile") {
-    const bio = String(body.bio ?? "").trim().slice(0, 600);
+    const bio = String(body.bio ?? "").trim().slice(0, 1500);
     const rawSite = String(body.website ?? "").trim();
     const website = rawSite ? safeWebsite(rawSite) : "";
     if (website === null) {
       return NextResponse.json({ error: "That website address doesn't look right." }, { status: 400 });
     }
     const listed = body.listed === true;
-    const update: Record<string, unknown> = { bio, website, listed };
+
+    // Everything below is the company's own description of itself. The
+    // profile labels it as such; none of it is checked by us.
+    const rawYear = String(body.year_founded ?? "").trim();
+    const year = rawYear ? Number(rawYear) : null;
+    if (year !== null && (!Number.isInteger(year) || year < 1850 || year > new Date().getFullYear())) {
+      return NextResponse.json({ error: "Enter the year the business started, like 2012." }, { status: 400 });
+    }
+    const allowed: readonly string[] = tradeOr(me.trade).providerServices;
+    const service_list = (Array.isArray(body.service_list) ? body.service_list : [])
+      .map((x) => String(x))
+      .filter((x) => allowed.includes(x));
+    const highlights = (Array.isArray(body.highlights) ? body.highlights : [])
+      .map((x) => String(x).trim().slice(0, 70))
+      .filter(Boolean)
+      .slice(0, 4);
+    const update: Record<string, unknown> = {
+      bio, website, listed,
+      year_founded: year,
+      hours: String(body.hours ?? "").trim().slice(0, 200),
+      towns: String(body.towns ?? "").trim().slice(0, 400),
+      service_list,
+      highlights,
+    };
     // A profile needs an address before it can be shown.
     if (listed && !me.slug) update.slug = `${slugify(me.company) || "pro"}-${me.id.slice(0, 6)}`;
     const { error } = await db.from("roofers").update(update).eq("id", me.id);

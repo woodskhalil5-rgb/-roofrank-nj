@@ -3,12 +3,16 @@ import { useCallback, useEffect, useState } from "react";
 import { SITE } from "../../lib/site";
 import { tradeOr } from "../../lib/trades";
 import { sb } from "./sb";
+import PhotoManager from "./PhotoManager";
 
 type Counts = { views: number; request_clicks: number; website_clicks: number; leads: number };
 type Me = {
   company: string; contact: string; email: string; trade: string; status: string;
   slug: string | null; listed: boolean; bio: string; website: string; services: string;
   service_zips: string[]; radius_miles: number; leads_enabled: boolean;
+  year_founded: number | null; hours: string; towns: string; service_list: string[]; highlights: string[];
+  logo: { path: string; url: string | null } | null;
+  gallery: { path: string; url: string | null }[];
 };
 type Lead = {
   id: string; created_at: string; matched_at: string; name: string; phone: string; email: string;
@@ -19,6 +23,7 @@ type Req = { id: string; created_at: string; kind: string; items: string[]; deta
 type Data = {
   me: Me; last30: Counts; months: ({ month: string } & Counts)[]; leads: Lead[]; totalLeads: number;
   requests: Req[]; marketingItems: string[]; leadItems: string[]; areaDemand30: number;
+  serviceOptions: string[]; maxGallery: number;
 };
 
 function when(iso: string) {
@@ -43,6 +48,11 @@ export default function Account() {
   const [bio, setBio] = useState("");
   const [website, setWebsite] = useState("");
   const [listed, setListed] = useState(false);
+  const [yearFounded, setYearFounded] = useState("");
+  const [hours, setHours] = useState("");
+  const [towns, setTowns] = useState("");
+  const [serviceList, setServiceList] = useState<string[]>([]);
+  const [highlights, setHighlights] = useState<string[]>(["", "", "", ""]);
   const [profileNote, setProfileNote] = useState("");
 
   // Service request form
@@ -66,6 +76,11 @@ export default function Account() {
     setUnlinked(false);
     setData(j);
     setBio(j.me.bio);
+    setYearFounded(j.me.year_founded ? String(j.me.year_founded) : "");
+    setHours(j.me.hours);
+    setTowns(j.me.towns);
+    setServiceList(j.me.service_list);
+    setHighlights([...j.me.highlights, "", "", "", ""].slice(0, 4));
     setWebsite(j.me.website);
     setListed(j.me.listed);
   }, []);
@@ -112,7 +127,11 @@ export default function Account() {
   async function saveProfile(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setProfileNote("Saving…");
-    const out = await post({ action: "update_profile", bio, website, listed });
+    const out = await post({
+      action: "update_profile", bio, website, listed,
+      year_founded: yearFounded, hours, towns, service_list: serviceList,
+      highlights: highlights.map((h) => h.trim()).filter(Boolean),
+    });
     setProfileNote(out.ok ? "Saved." : out.error ?? "");
     if (out.ok && token) load(token);
   }
@@ -307,19 +326,49 @@ export default function Account() {
                   ? <>Live at <a href={`/pros/${data.me.slug}`} target="_blank" rel="noopener" style={{ textDecoration: "underline" }}>{SITE.domain}/pros/{data.me.slug}</a>.</>
                   : "Hidden. Homeowners can't find it in the directory until you show it."}
               </p>
-              <form onSubmit={saveProfile}>
+              <PhotoManager token={token} logo={data.me.logo} gallery={data.me.gallery}
+                            maxGallery={data.maxGallery} onChange={() => load(token)} />
+              <form onSubmit={saveProfile} style={{ marginTop: 18 }}>
                 <label>
                   About your company
-                  <textarea rows={4} maxLength={600} value={bio} onChange={(e) => setBio(e.target.value)}
+                  <textarea rows={6} maxLength={1500} value={bio} onChange={(e) => setBio(e.target.value)}
                             placeholder="What you do, how long you've done it, what homeowners should know." />
                 </label>
+                <div className="eyebrow dark" style={{ margin: "12px 0 4px" }}>SERVICES YOU OFFER</div>
+                {data.serviceOptions.map((o) => (
+                  <label className="check" key={o}>
+                    <input type="checkbox" checked={serviceList.includes(o)}
+                           onChange={(e) => setServiceList(e.target.checked ? [...serviceList, o] : serviceList.filter((x) => x !== o))} />
+                    <span>{o}</span>
+                  </label>
+                ))}
+                <label>
+                  Year the business started <span className="optional">(optional)</span>
+                  <input inputMode="numeric" maxLength={4} value={yearFounded} onChange={(e) => setYearFounded(e.target.value.replace(/[^0-9]/g, ""))} placeholder="2012" />
+                </label>
+                <label>
+                  Towns you serve <span className="optional">(optional)</span>
+                  <input maxLength={400} value={towns} onChange={(e) => setTowns(e.target.value)} placeholder="Cherry Hill, Voorhees, Haddonfield…" />
+                </label>
+                <label>
+                  Hours <span className="optional">(optional)</span>
+                  <input maxLength={200} value={hours} onChange={(e) => setHours(e.target.value)} placeholder="Mon–Fri 8am–6pm, Sat 9am–2pm" />
+                </label>
+                <div className="eyebrow dark" style={{ margin: "12px 0 4px" }}>WHY HIRE YOU <span className="optional">(up to 4 short points)</span></div>
+                {highlights.map((h, i) => (
+                  <label key={i} style={{ margin: "6px 0" }}>
+                    <input maxLength={70} value={h} placeholder={["Family owned since 1998", "Free estimates", "Same-week scheduling", "Fully insured"][i]}
+                           onChange={(e) => setHighlights(highlights.map((x, j) => (j === i ? e.target.value : x)))} />
+                  </label>
+                ))}
+                <p className="adminmeta">These are shown on your profile as your own statements. Only include what&rsquo;s true.</p>
                 <label>
                   Website <span className="optional">(optional)</span>
                   <input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="yourcompany.com" />
                 </label>
                 <label className="check">
                   <input type="checkbox" checked={listed} onChange={(e) => setListed(e.target.checked)} />
-                  <span>Show my profile in the {SITE.brand} directory. It shows your company name, trade, services, the area you cover, this description and your website. It never shows your phone or email.</span>
+                  <span>Show my profile in the {SITE.brand} directory. It shows your company name, photos, trade, services, the area you cover, the details above and your website. It never shows your phone or email.</span>
                 </label>
                 <button className="button gold submit" type="submit">Save profile &rarr;</button>
                 <p role="status" className="adminnote">{profileNote}</p>
