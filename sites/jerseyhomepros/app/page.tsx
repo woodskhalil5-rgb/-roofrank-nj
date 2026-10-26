@@ -17,39 +17,37 @@ export default function Home() {
         <a className="navcta" href="#trades">Get an Estimate <span>&#8599;</span></a>
       </nav>
 
-      <section className="hero">
-        <div className="heroShade"></div>
+      {/* The home scan IS the hero: it is the thing no other directory has,
+          so it is the first thing a homeowner sees. */}
+      <section className="hero homehero">
         <div className="wrap heroContent">
-          <div className="eyebrow"><i></i> {SITE.hero.eyebrow}</div>
-          <h1>{SITE.hero.line1}<br /><em>{SITE.hero.lineEm}</em><br />{SITE.hero.line2}</h1>
-          <p>{SITE.hero.sub}</p>
+          <div className="eyebrow"><i></i> INTRODUCING HOME SCAN</div>
+          <h1>Pinpoint the problem.<br /><em>Skip the guesswork.</em></h1>
+          <p>
+            A new way to get help with your home. Tap the part of the house that needs attention,
+            and {SITE.brand} connects your request with participating pros who serve your ZIP code.
+          </p>
           <div className="heroActions">
-            <a className="button gold" href="#trades">Request a Free Estimate <span>&#8594;</span></a>
-            <a className="textlink" href="#how">How it works <span>&#8595;</span></a>
+            <a className="button gold" href="#scan">Start your scan <span>&#8595;</span></a>
+            <a className="textlink" href="#trades">Or pick a service <span>&#8595;</span></a>
           </div>
-          <div className="trustline"><span>&#9670;</span> One request. Local options. Your decision.</div>
         </div>
-        <div className="heroTag">
-          <b>{SITE.wordmark} {SITE.wordmarkBold}</b>
-          <span>BUILT FOR NEW JERSEY HOMEOWNERS</span>
-        </div>
-      </section>
-
-      <section className="proof">
-        <div className="wrap proofgrid">
-          {SITE.proof.map((t, i) => (
-            <div key={t}><strong>{String(i + 1).padStart(2, "0")}</strong><span>{t}</span></div>
-          ))}
+        <div className="wrap">
+          <HomeMap hero />
+          <div className="scansteps">
+            <div><strong>01</strong><span><b>Tap the problem.</b> Roof, AC, yard, pests — point at it.</span></div>
+            <div><strong>02</strong><span><b>Share a few details.</b> Two minutes, no account needed.</span></div>
+            <div><strong>03</strong><span><b>Get connected.</b> Participating pros in your ZIP reach out.</span></div>
+          </div>
         </div>
       </section>
 
       <section className="section wrap" id="trades">
         <div className="sectionhead">
-          <div className="eyebrow dark">WHAT DO YOU NEED?</div>
+          <div className="eyebrow dark">OR CHOOSE A SERVICE</div>
           <h2>{SITE.how.h2a}<br /><em>{SITE.how.h2em}</em></h2>
           <p>{SITE.how.p}</p>
         </div>
-        <HomeMap />
 
         <div className="tradegrid">
           {trades.map((t) => (

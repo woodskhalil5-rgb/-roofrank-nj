@@ -86,11 +86,17 @@ export async function POST(req: Request) {
   const timestamp = req.headers.get("svix-timestamp") ?? "";
   const signature = req.headers.get("svix-signature") ?? "";
 
+  // Every arrival is logged (no body, no secrets), so "is Resend calling us
+  // at all?" can be answered from the runtime logs.
+  console.log(`[resend-webhook] received id=${id || "-"} signed=${Boolean(signature)}`);
+
   if (!id || !timestamp || !signature) {
+    console.error("[resend-webhook] missing signature headers");
     return NextResponse.json({ error: "Missing signature headers." }, { status: 400 });
   }
   const age = Math.abs(Date.now() / 1000 - Number(timestamp));
   if (!Number.isFinite(age) || age > TOLERANCE_SECONDS) {
+    console.error(`[resend-webhook] stale signature age=${Math.round(age)}s`);
     return NextResponse.json({ error: "Stale signature." }, { status: 400 });
   }
   if (!verify(secret, id, timestamp, body, signature)) {

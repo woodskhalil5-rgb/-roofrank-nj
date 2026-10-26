@@ -44,18 +44,21 @@ function Bracket({ x, y, w, h }: { x: number; y: number; w: number; h: number })
   );
 }
 
-export default function HomeMap() {
+export default function HomeMap({ hero = false }: { hero?: boolean }) {
   return (
-    <div className="homemap">
-      <div className="homemaphead">
-        <div className="eyebrow"><i></i> TAP THE PROBLEM</div>
-        <p>Not sure who to call? Tap the part of the home that needs help.</p>
-      </div>
+    <div className={hero ? "homemap homemaphero" : "homemap"} id="scan">
+      {!hero && (
+        <div className="homemaphead">
+          <div className="eyebrow"><i></i> TAP THE PROBLEM</div>
+          <p>Not sure who to call? Tap the part of the home that needs help.</p>
+        </div>
+      )}
 
       <div className="hud">
         <picture>
           <source srcSet="/home-hud.webp" type="image/webp" />
-          <img src="/home-hud.jpg" width={1600} height={1062} loading="lazy" decoding="async"
+          <img src="/home-hud.jpg" width={1600} height={1062} loading={hero ? "eager" : "lazy"} decoding="async"
+               fetchPriority={hero ? "high" : "auto"}
                alt="A modern two-story home with a lawn, shrubs, an AC unit, a garage and a driveway" />
         </picture>
 

@@ -215,3 +215,16 @@
   .homemaplegend a{display:inline-flex;align-items:center;gap:9px;padding:10px 13px;border:1px solid #3a3b37;background:#121312;color:#fff;font-size:13px;font-weight:700}
   .homemaplegend b{color:#d6ad58;font-size:12px}
 }
+
+/* ---- Homepage hero = home scan ---- */
+.homehero{min-height:0;padding-bottom:64px}
+.homehero:after{display:none}
+.homehero .heroContent{padding:64px 0 6px}
+.homehero h1{font-size:clamp(44px,6.2vw,80px)}
+.homehero .heroContent>p{max-width:600px}
+.homemaphero{margin-top:36px;border:1px solid #d6ad5866;box-shadow:0 30px 90px rgba(0,0,0,.55),0 0 40px rgba(214,173,88,.12)}
+.scansteps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:26px}
+.scansteps div{display:flex;gap:14px;align-items:baseline;color:#c9c9c3;font-size:13px;line-height:1.6;border-top:1px solid #2f302c;padding-top:14px}
+.scansteps strong{font:400 26px Georgia,serif;color:var(--gold)}
+.scansteps b{color:#fff}
+@media(max-width:800px){.scansteps{grid-template-columns:1fr;gap:4px}.homehero .heroContent{padding-top:40px}}
