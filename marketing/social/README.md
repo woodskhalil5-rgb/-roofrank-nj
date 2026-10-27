@@ -66,3 +66,16 @@ wrong ___ … again? 😩"; end card "Wrong contractor again? / Tap the problem.
 Compare local pros. You choose." Never imply our pros are vetted,
 background-checked, guaranteed or "the right one" — none of that is done.
 The true promise is comparing and choosing.
+
+### TV-ad style (v3, Oct 26): the current template
+Khalil wants reels to feel like funny TV ads: native-style outlined caption
+(white, black stroke, y≈300, never in the top 250px), then at ~3s an animated
+Home Scan (dim + grid, gold sweep line, brackets lock on, typed joke
+readouts, "TAP ▸ MOVING" tag) with synthesized computer SFX (power-up, sweep,
+lock beeps, data chatter, confirm chime, whoosh), then a 6s end card with the
+tagline "Because 'my cousin can do it' isn't a plan." Files: reels/scan.js
+(HUD frames), reels/cards.js (captions + end cards), SFX via numpy (see the
+couch reel build), reels/voiceover-script.md. Readouts must NARRATE the joke
+("PROBLEM ... THIS COUCH"), never pretend the site analyses a room — Home Scan
+is a tap, not a camera. No TTS engine exists in the sandbox; the female
+announcer VO comes from Khalil (ElevenLabs/CapCut) and is mixed in with ducking.
