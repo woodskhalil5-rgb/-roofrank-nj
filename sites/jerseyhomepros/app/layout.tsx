@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { SITE } from "../lib/site";
 import "./globals.css";
+import { RegisterSW } from "./AppInstall";
 
 export const metadata: Metadata = {
   title: SITE.meta.title,
@@ -9,7 +10,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   alternates: { canonical: "/" },
   openGraph: { title: SITE.brand, description: SITE.meta.ogDescription, type: "website" },
+  // Installable app (PWA). /estimator overrides `manifest` with its own.
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "JHP", statusBarStyle: "black" },
 };
+
+export const viewport: Viewport = { themeColor: "#0a0b0c" };
 
 /**
  * Analytics is opt-in by environment variable. With neither set, no third-party
@@ -68,6 +74,7 @@ gtag('config','${GA_ID}');`}
           </noscript>
         )}
         {children}
+        <RegisterSW />
       </body>
     </html>
   );

@@ -1,0 +1,16 @@
+{
+  "name": "JHP Estimator",
+  "short_name": "JHP Estimator",
+  "description": "Jersey Home Pros estimator: scope jobs on site, price them from the price book, send to a partner contractor.",
+  "id": "/estimator",
+  "start_url": "/estimator",
+  "scope": "/estimator",
+  "display": "standalone",
+  "background_color": "#f4f0e7",
+  "theme_color": "#0a0b0c",
+  "icons": [
+    { "src": "/estimator-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/estimator-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/estimator-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

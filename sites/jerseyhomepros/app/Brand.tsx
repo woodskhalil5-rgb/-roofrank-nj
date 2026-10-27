@@ -1,5 +1,6 @@
 import { SITE } from "../lib/site";
 import { TRADES, TRADE_SLUGS } from "../lib/trades";
+import { GetTheApp } from "./AppInstall";
 
 /** Shared wordmark used in the nav and the footer. */
 export function Brand({ href = "/" }: { href?: string }) {
@@ -26,6 +27,7 @@ export function SiteFooter() {
           ))}
           <a href="/pros">Find a Pro</a>
           <a href="/home">My Home Board</a>
+          <GetTheApp />
           <a href="/guides">Guides</a>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>

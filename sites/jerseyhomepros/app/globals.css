@@ -313,3 +313,68 @@
 .scanpick button{border:1px solid #3a3b37;background:#18191a;color:#fff;padding:13px 10px;font:700 15px Arial;cursor:pointer;text-align:left}
 .scanpick button:hover{border-color:#d6ad58}
 @media(max-width:480px){.scanlist{display:block;margin:14px 0 0}}
+.installsteps{margin:10px 0 14px;padding-left:22px;line-height:1.7;font-size:16px}.installsteps b{color:inherit}
+/* ── Estimator app (/estimator) ── phone-first; 16px inputs stop iOS zooming */
+.estpage{min-height:100vh;background:var(--cream);color:#171817;max-width:680px;margin:0 auto;padding:0 16px 120px;font-size:16px}
+.estbar{display:flex;align-items:center;justify-content:space-between;height:68px}
+.estbar .brand{font-size:15px}
+.estcard{background:#fff;border:1px solid #e4dfd4;padding:18px;margin:0 0 14px}
+.estcard h1,.esteditor h1{font:400 28px Georgia,serif;margin:4px 0 16px}
+.estcard h2{font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:#97702a;margin:0 0 14px}
+.estpage label{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:700;margin-bottom:14px}
+.estpage input:not([type=checkbox]):not([type=radio]),.estpage select,.estpage textarea{width:100%;border:1px solid #d8d4ca;background:#fff;padding:12px;font:16px Arial,sans-serif;color:#1d1e1b;border-radius:0}
+.estpage textarea{resize:vertical}
+.estpage .button{font-size:15px;padding:15px 18px}
+.estnote{color:#6c6d66;font-size:14px;line-height:1.5;margin:6px 0}
+.esterr{color:#a8321f;font-size:14px;margin:6px 0}
+.estsignin{margin-top:30px}
+.estsignin .button{width:100%}
+.esttabs{display:flex;gap:8px;margin:4px 0 16px}
+.esttabs button{flex:1;padding:12px;border:1px solid #d8d4ca;background:#fff;font:700 15px Arial;cursor:pointer;color:#45463f}
+.esttabs button.on{background:#121312;color:#fff;border-color:#121312}
+.esttabs.small button{padding:8px;font-size:13px}
+.eststats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.eststats div{background:#121312;color:#fff;padding:14px;display:flex;flex-direction:column;gap:4px}
+.eststats b{font:400 26px Georgia,serif;color:var(--gold)}
+.eststats span{font-size:12px;color:#b9bab4}
+.estnew{width:100%;margin-bottom:14px}
+.estlist{display:flex;flex-direction:column;gap:10px}
+.estjob{display:flex;flex-direction:column;gap:5px;text-align:left;background:#fff;border:1px solid #e4dfd4;padding:16px;font:15px Arial;color:#3c3d37;cursor:pointer}
+.estjob b{font-size:18px;color:#151614}
+.estearn{color:#5b4415;font-weight:700}
+.estpill{align-self:flex-start;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:4px 8px;background:#eee9dc;color:#6b5420}
+.estpill.sent{background:#e2ecf5;color:#24496b}.estpill.signed{background:#dcefdc;color:#1f5a26}.estpill.lost{background:#eee;color:#777}
+.estrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.estback{justify-content:space-between;margin:6px 0 4px}
+.estlink{background:none;border:0;padding:6px 0;color:#7a5a1d;font:700 15px Arial;cursor:pointer;text-decoration:underline}
+.estdanger{color:#a8321f;margin-top:10px}
+.esttrade{margin-bottom:10px}
+.estprice{display:flex;flex-direction:column;gap:4px;margin:0}
+.estgrid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.estgrid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.estline{display:grid;grid-template-columns:1fr 96px auto 28px;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #eee9de}
+.estline>div{display:flex;flex-direction:column;gap:3px;font-size:13px;color:#6c6d66}
+.estline>div b{font-size:15px;color:#1b1c19}
+.estqty{margin:0!important;gap:2px!important;font-size:11px!important;font-weight:400!important;color:#777}
+.estqty input{padding:9px!important}
+.estlinetotal{font-size:13px;color:#4a4b45;white-space:nowrap}
+.estx{background:none;border:0;font-size:24px;line-height:1;color:#99978e;cursor:pointer;padding:0}
+.estcustom{margin:12px 0}
+.estcustom summary{cursor:pointer;font-weight:700;color:#7a5a1d;margin-bottom:10px}
+.esttotal{display:flex;justify-content:space-between;align-items:baseline;background:#121312;color:#fff;padding:14px;margin:14px 0}
+.esttotal span{font-size:13px;color:#b9bab4}
+.esttotal b{font:400 24px Georgia,serif;color:var(--gold)}
+.estphotos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.estphoto{position:relative;aspect-ratio:1;background:#eee9de;overflow:hidden}
+.estphoto img{width:100%;height:100%;object-fit:cover;display:block}
+.estphoto .estx{position:absolute;top:4px;right:4px;background:#000a;color:#fff;width:28px;height:28px;font-size:20px}
+.estupload{width:100%;cursor:pointer;margin:0!important;flex-direction:row!important}
+.estcheck{display:grid!important;grid-template-columns:22px 1fr;gap:10px!important;font-weight:400!important;line-height:1.5}
+.estcheck input{width:20px;height:20px;margin:2px 0 0;accent-color:#a47a2d}
+.estradio{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.estradio label{flex-direction:row!important;align-items:center;gap:10px!important;font-weight:400!important;margin:0!important;padding:6px 0}
+.estradio input{width:20px;height:20px;accent-color:#a47a2d}
+.estsave{position:sticky;bottom:0;background:var(--cream);padding:12px 0;margin-bottom:14px;border-top:1px solid #e4dfd4;z-index:2}
+.estsave .button{width:100%}
+.estsend .button,.estcard .estrow .button{flex:1}
+@media(max-width:420px){.estline{grid-template-columns:1fr 84px 28px}.estlinetotal{grid-column:1/-1;order:5}.estgrid3{grid-template-columns:1fr 1fr}.estgrid3 label:first-child{grid-column:1/-1}}

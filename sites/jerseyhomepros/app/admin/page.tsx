@@ -292,6 +292,8 @@ export default function Admin() {
           <span>{SITE.wordmark} <b>{SITE.wordmarkBold}</b><small>ADMIN</small></span>
         </a>
         <span className="adminsignout">
+          <a className="textlink" href="/estimator">Estimator</a>
+          {' · '}
           <button className="textlink" onClick={setOwnPassword}>Set password</button>
           {' · '}
           <button className="textlink" onClick={signOut}>Sign out</button>
