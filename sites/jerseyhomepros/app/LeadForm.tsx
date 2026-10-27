@@ -20,8 +20,13 @@ export default function LeadForm({ trade }: { trade: Trade }) {
   // after mount because the trade pages are statically rendered. The server
   // re-checks the slug; the name here is display only.
   const [pro, setPro] = useState<{ slug: string; name: string; unclaimed: boolean } | null>(null);
+  // Carried over from the Home Scan availability check, so the homeowner
+  // doesn't type their ZIP twice.
+  const [zipPrefill, setZipPrefill] = useState("");
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
+    const z = q.get("zip") ?? "";
+    if (/^[0-9]{5}$/.test(z)) setZipPrefill(z);
     const slug = q.get("pro") ?? "";
     if (/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) {
       setPro({ slug, name: (q.get("pro_name") ?? "").slice(0, 120), unclaimed: q.get("pro_unclaimed") === "1" });
@@ -120,7 +125,7 @@ export default function LeadForm({ trade }: { trade: Trade }) {
           </div>
           <label>Email address<input name="email" required type="email" autoComplete="email" placeholder="you@example.com" /></label>
           <div className="formrow">
-            <label>New Jersey ZIP code<input name="zip" required inputMode="numeric" pattern="[0-9]{5}" placeholder="07001" /></label>
+            <label>New Jersey ZIP code<input key={zipPrefill} name="zip" required inputMode="numeric" pattern="[0-9]{5}" placeholder="07001" defaultValue={zipPrefill} /></label>
             <label>Property type
               <select name="property_type" required defaultValue="">
                 <option value="" disabled>Select type</option>

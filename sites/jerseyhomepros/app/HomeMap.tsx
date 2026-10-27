@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { TradeSlug } from "../lib/trades";
+import { TRADES, type TradeSlug } from "../lib/trades";
 
 /**
  * The clickable house: a photo with a heads-up-display layer on top. A scan
@@ -70,7 +70,7 @@ function Bracket({ x, y, w, h }: { x: number; y: number; w: number; h: number })
   );
 }
 
-function ZoneLink({ z, i }: { z: Zone; i: number }) {
+function ZoneLink({ z, i, onPick }: { z: Zone; i: number; onPick: (z: Zone) => void }) {
   const tw = tagWidth(z.label);
   const ty =
     z.tag === "above" ? z.y - TAG_H - 10
@@ -81,7 +81,8 @@ function ZoneLink({ z, i }: { z: Zone; i: number }) {
   return (
     <a href={`/${z.slug}#estimate`} className="hudzone"
        style={{ ["--d" as string]: `${0.9 + i * 0.16}s` }}
-       aria-label={`${z.label}: ${z.hint}`}>
+       aria-label={`${z.label}: ${z.hint}`}
+       onClick={(e) => { e.preventDefault(); onPick(z); }}>
       <rect className="hudarea" x={z.x} y={z.y} width={z.w} height={z.h} />
       <Bracket x={z.x} y={z.y} w={z.w} h={z.h} />
       <circle className="hudpulse" cx={z.x + z.w / 2} cy={z.y + z.h / 2} r="16" />
@@ -99,6 +100,7 @@ export default function HomeMap({ hero = false }: { hero?: boolean }) {
   const [scene, setScene] = useState<Scene>("outside");
   const [moving, setMoving] = useState(false);
   const [visited, setVisited] = useState(false);
+  const [pick, setPick] = useState<Zone | null>(null);
   const zones = scene === "outside" ? OUTSIDE : INSIDE;
 
   // Fetch the inside photo once the page is idle, so the walk-in is instant.
@@ -167,7 +169,7 @@ export default function HomeMap({ hero = false }: { hero?: boolean }) {
             <text x="92" y="72">{scene === "outside" ? "OUTSIDE" : "INSIDE"} · {zones.length} AREAS · TAP ONE</text>
           </g>
 
-          {zones.map((z, i) => <ZoneLink key={z.slug} z={z} i={i} />)}
+          {zones.map((z, i) => <ZoneLink key={z.slug} z={z} i={i} onPick={setPick} />)}
 
           {scene === "outside" ? (
             <a href="#scan" className="hudzone huddoor" style={{ ["--d" as string]: "2.1s" }}
@@ -197,11 +199,106 @@ export default function HomeMap({ hero = false }: { hero?: boolean }) {
           numbered buttons under the photo. */}
       <div className="homemaplegend">
         {zones.map((z, i) => (
-          <a key={z.slug} href={`/${z.slug}#estimate`}><b>{String(i + 1).padStart(2, "0")}</b>{z.label}</a>
+          <a key={z.slug} href={`/${z.slug}#estimate`} onClick={(e) => { e.preventDefault(); setPick(z); }}><b>{String(i + 1).padStart(2, "0")}</b>{z.label}</a>
         ))}
         <button type="button" className="legenddoor" onClick={() => go(scene === "outside" ? "inside" : "outside")}>
           {scene === "outside" ? "Go inside the house →" : "← Back outside"}
         </button>
+      </div>
+
+      {pick && <ScanPanel zone={pick} onClose={() => setPick(null)} />}
+    </div>
+  );
+}
+
+/**
+ * The Home Scan moment from the reels: tap an area, enter a ZIP, the scan
+ * "loads", then shows how many companies would actually receive the request.
+ * The count is live from /api/availability (same test as match_lead), so the
+ * ad, the reel and the site all say the same true thing. Zero is said plainly.
+ */
+type Phase = "zip" | "loading" | "done";
+type Result = { valid: false } | { valid: true; count: number } | { error: true };
+
+function ScanPanel({ zone, onClose }: { zone: Zone; onClose: () => void }) {
+  const t = TRADES[zone.slug];
+  const [zip, setZip] = useState("");
+  const [phase, setPhase] = useState<Phase>("zip");
+  const [res, setRes] = useState<Result | null>(null);
+
+  useEffect(() => {
+    try { const z = localStorage.getItem("jhp_zip"); if (z && /^[0-9]{5}$/.test(z)) setZip(z); } catch { /* storage off */ }
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+
+  async function check(e: React.FormEvent) {
+    e.preventDefault();
+    if (!/^[0-9]{5}$/.test(zip)) return;
+    try { localStorage.setItem("jhp_zip", zip); } catch { /* storage off */ }
+    setPhase("loading");
+    const minWait = new Promise((r) => setTimeout(r, 1100));
+    let out: Result;
+    try {
+      const r = await fetch(`/api/availability?trade=${zone.slug}&zip=${zip}`);
+      out = r.ok ? ((await r.json()) as Result) : { error: true };
+    } catch { out = { error: true }; }
+    await minWait;
+    setRes(out);
+    setPhase("done");
+  }
+
+  const formUrl = `/${zone.slug}?zip=${zip}#estimate`;
+
+  return (
+    <div className="scanpanelwrap" role="dialog" aria-modal="true" aria-label={`Home Scan: ${t.label}`}
+         onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="scanpanel">
+        <button type="button" className="scanclose" onClick={onClose} aria-label="Close">×</button>
+        <div className="scanhead">HOME SCAN · {t.label.toUpperCase()}</div>
+
+        {phase === "zip" && (
+          <form onSubmit={check}>
+            <h3>Need {t.work}?</h3>
+            <p>Enter your ZIP code to see who&rsquo;s available near you.</p>
+            <div className="scanrow">
+              <input autoFocus inputMode="numeric" pattern="[0-9]{5}" maxLength={5} placeholder="ZIP code"
+                     aria-label="ZIP code" value={zip} onChange={(e) => setZip(e.target.value.replace(/\D/g, ""))} />
+              <button className="button gold" type="submit" disabled={zip.length !== 5}>Check <span>&#8594;</span></button>
+            </div>
+          </form>
+        )}
+
+        {phase === "loading" && (
+          <div className="scanloading">
+            <h3>Finding {t.companies} near you&hellip;</h3>
+            <div className="scanbar"><i /></div>
+          </div>
+        )}
+
+        {phase === "done" && res && (
+          "error" in res ? (
+            <div><h3>Let&rsquo;s get your request in.</h3>
+              <a className="button gold" href={formUrl}>Continue <span>&#8594;</span></a></div>
+          ) : !res.valid ? (
+            <div><h3>That ZIP isn&rsquo;t in New Jersey.</h3>
+              <p>Jersey Home Pros serves New Jersey only.</p>
+              <button type="button" className="textlink" onClick={() => setPhase("zip")}>Try another ZIP</button></div>
+          ) : res.count > 0 ? (
+            <div className="scanok">
+              <div className="scancheck">&#10003; {t.label}</div>
+              <h3>{res.count} {res.count === 1 ? t.company : t.companies} available in {zip}</h3>
+              <a className="button gold" href={formUrl}>Continue to my request <span>&#8594;</span></a>
+            </div>
+          ) : (
+            <div>
+              <h3>No {t.companies} in our network cover {zip} yet.</h3>
+              <p>You can still send your request. Jersey Home Pros reviews it and follows up by email.</p>
+              <a className="button gold" href={formUrl}>Send my request <span>&#8594;</span></a>
+            </div>
+          )
+        )}
       </div>
     </div>
   );
