@@ -246,6 +246,12 @@ toward the door and swaps to `public/home-inside.*` (Khalil's AI interior,
 cropped 2048x1360 from y=280) with its own zones; "← Outside" goes back.
 The left exterior window is Windows & Doors, not Cleaning; cleaning lives
 inside on the kitchen. HomeMap is a client component for the scene state.
+Tapping any area (or a phone legend button) opens the availability panel:
+ZIP → ~1s loading bar → "N <companies> available in <ZIP>" from
+`/api/availability` → `available_providers()` (same test as `match_lead`, so
+unclaimed listings never count). Zero is said plainly and the request still
+goes in; the ZIP carries to the form via `?zip=`. This is THE hook for reels
+and ads (Khalil, Oct 26): ads may only quote counts this function returns.
 Khalil asked for an "Iron Man / Jarvis"
 feel: keep the style, never use Marvel names or marks.
 
