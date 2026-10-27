@@ -269,3 +269,26 @@
 .scanpanel .button{font-size:16px;padding:16px 20px}
 .scanpanel .textlink{background:none;border:0;padding:0;cursor:pointer;font-size:16px}
 @media(prefers-reduced-motion:reduce){.scanbar i{animation:none;width:100%}}
+
+/* ---- Home Board ---- */
+.boardh1{font:400 clamp(30px,4.4vw,48px)/1.1 Georgia,serif;margin:14px 0 20px}
+.boardhouse{position:relative;line-height:0;border:1px solid #d6ad5866;box-shadow:0 20px 60px rgba(0,0,0,.18);margin-bottom:22px;overflow:hidden}
+.boardhouse img{width:100%;height:auto;display:block}
+.boardhouse svg{position:absolute;inset:0;width:100%;height:100%}
+.boardpin circle{fill:#f2c86a;stroke:#0a0b0c;stroke-width:5;filter:drop-shadow(0 0 10px rgba(214,173,88,.9))}
+.boardpin rect{fill:rgba(10,11,12,.85);stroke:#d6ad58;stroke-width:2}
+.boardpinn{font:800 32px Arial,sans-serif;fill:#10100e}
+.boardpinl{font:800 28px Arial,sans-serif;fill:#fff;letter-spacing:1px}
+.boarditem{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid #f0ece2;font-size:15px;line-height:1.5}
+.boarditem .adminmeta{font-size:12px;margin-top:3px}
+.boardbtns{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.boardbtns button{border:1px solid #d8d2c4;background:#fff;padding:9px 12px;font:700 13px Arial;cursor:pointer}
+.boardbtns .button{padding:9px 14px;font-size:13px}
+.boardbtns .boardx{border:0;background:none;font-size:22px;color:#999;padding:2px 6px}
+.boarddone b{color:#888;text-decoration:line-through}
+.boardadd{margin-top:16px}
+.boardadd .formrow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.boardsuggest{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;text-align:left;border:1px dashed #cdbf9d;background:#fffdf7;padding:11px 13px;margin:8px 0;cursor:pointer;font:700 14px Arial;color:#171817}
+.boardsuggest small{font-weight:400;color:#80817a;font-size:12px}
+.acctcard .scanrow input{color:#171817;background:#fff;font-size:15px}
+@media(max-width:640px){.boarditem{flex-direction:column;align-items:flex-start}.boardbtns{justify-content:flex-start}.boardadd .formrow{grid-template-columns:1fr}.boardpinl{font-size:34px}}

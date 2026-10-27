@@ -208,7 +208,8 @@ export async function notifyProvider(
   trade: Trade,
   distanceMiles: number | null,
   phoneConsent: boolean,
-  otherRecipients: number
+  otherRecipients: number,
+  emailVerified = false
 ): Promise<SendResult> {
   // The contractor, not the operator, places the call. They must be told in the
   // notification itself whether calling or texting this homeowner is permitted.
@@ -269,6 +270,9 @@ export async function notifyProvider(
     ...(lead.details ? [`Details:        ${lead.details}`] : []),
     ``,
     `Contact`,
+    ...(emailVerified
+      ? [`✓ Email verified: this homeowner signed in to a ${SITE.brand} account with this address.`]
+      : []),
     `Name:  ${lead.name}`,
     // Omitted entirely when blank. A homeowner who declined calls may leave no
     // number at all, and an empty "Phone:" line reads as a broken email.

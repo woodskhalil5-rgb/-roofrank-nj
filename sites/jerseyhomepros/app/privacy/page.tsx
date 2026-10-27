@@ -65,6 +65,15 @@ export default function Privacy() {
           receives your request only if it serves your ZIP code.
         </p>
         <p>
+          <b>If you use a Home Board:</b> your email address, an optional home ZIP code, the to-dos
+          you add and their status, and whether you turned on reminder emails. Requests you send
+          with the same email address appear on your board. Signing in works by a one-time link we
+          email you; we keep only a scrambled copy of that link and of your sign-in session. When you
+          send a request while signed in with the same address, we tell the receiving companies that
+          your email was verified by sign-in. Reminder emails are sent only if you turn them on, and
+          every one has an unsubscribe link. To delete your board, email us from that address.
+        </p>
+        <p>
           <b>We do not ask for sensitive information.</b> Please do not send health details,
           financial account numbers, government identifiers or precise location through our forms.
         </p>

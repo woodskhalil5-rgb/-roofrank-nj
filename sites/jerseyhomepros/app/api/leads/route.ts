@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { addRequestItem, currentHomeowner } from "../../../lib/homeowner";
 import {
   adminDb,
   notifyProvider,
@@ -201,6 +202,11 @@ export async function POST(req: Request) {
       requested = (proRow as { id: string; company: string; status: string; leads_enabled: boolean } | null) ?? null;
     }
 
+    // Signed in to a Home Board with the same address = the email is verified
+    // (the sign-in link proved they control it). Only then is it marked so.
+    const homeowner = await currentHomeowner(req);
+    const emailVerified = Boolean(homeowner && homeowner.email === email.trim().toLowerCase());
+
     const shown = `${sharingConsentText(trade)} ${TERMS_ACK}`;
     const consentText = phoneConsent ? `${shown}\n\n${phoneConsentText(trade)}` : shown;
 
@@ -218,6 +224,8 @@ export async function POST(req: Request) {
         consent_at: new Date().toISOString(),
         status: "new",
         requested_roofer_id: requested?.id ?? null,
+        homeowner_id: emailVerified && homeowner ? homeowner.id : null,
+        email_verified: emailVerified,
       })
       .select("id")
       .single();
@@ -232,6 +240,9 @@ export async function POST(req: Request) {
     }
 
     const leadId = inserted.id as string;
+    if (emailVerified && homeowner) {
+      try { await addRequestItem(homeowner.id, leadId, trade.slug); } catch { /* board item is best-effort */ }
+    }
 
     // The homeowner is already safely saved. Everything below is best-effort:
     // a matching or email failure must never surface as a submission failure.
@@ -262,7 +273,8 @@ export async function POST(req: Request) {
             trade,
             dist,
             phoneConsent,
-            Math.max(0, matched - 1)
+            Math.max(0, matched - 1),
+            emailVerified
           );
           if (!sent.ok) {
             console.error(

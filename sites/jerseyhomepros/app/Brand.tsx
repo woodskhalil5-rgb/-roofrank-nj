@@ -25,6 +25,7 @@ export function SiteFooter() {
             <a key={s} href={`/${s}`}>{TRADES[s].label}</a>
           ))}
           <a href="/pros">Find a Pro</a>
+          <a href="/home">My Home Board</a>
           <a href="/guides">Guides</a>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>

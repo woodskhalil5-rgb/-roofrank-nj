@@ -20,7 +20,7 @@ import { TRADES, type TradeSlug } from "../lib/trades";
  * SVG <a> links, so they work with a keyboard; the trade cards below the
  * scan stay as the plain way in.
  */
-type Zone = {
+export type Zone = {
   slug: TradeSlug;
   label: string;
   hint: string;
@@ -32,7 +32,7 @@ type Zone = {
 
 type Scene = "outside" | "inside";
 
-const OUTSIDE: Zone[] = [
+export const OUTSIDE: Zone[] = [
   { slug: "roofing", label: "Roofing", hint: "Leaks, storm damage, replacement", x: 551, y: 316, w: 901, h: 196, tag: "above" },
   { slug: "windows", label: "Windows & Doors", hint: "Window and door repair or replacement", x: 337, y: 501, w: 185, h: 490, tag: "above", tagX: 40 },
   { slug: "hvac", label: "Heating & Cooling", hint: "No heat, no AC, tune-ups", x: 629, y: 1001, w: 134, h: 122, tag: "above" },
@@ -51,7 +51,7 @@ const INSIDE: Zone[] = [
 ];
 
 /** The front door in the outside photo, and the point the zoom pushes toward. */
-const DOOR = { x: 915, y: 780, w: 125, h: 240 };
+export const DOOR = { x: 915, y: 780, w: 125, h: 240 };
 const DOOR_ORIGIN = `${((DOOR.x + DOOR.w / 2) / 2048) * 100}% ${((DOOR.y + DOOR.h / 2) / 1360) * 100}%`;
 
 /** Tags are sized to stay readable on a laptop (about 16px on screen). */

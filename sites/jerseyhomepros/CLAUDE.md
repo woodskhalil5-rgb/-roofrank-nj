@@ -255,6 +255,31 @@ and ads (Khalil, Oct 26): ads may only quote counts this function returns.
 Khalil asked for an "Iron Man / Jarvis"
 feel: keep the style, never use Marvel names or marks.
 
+### Homeowner accounts — the Home Board (2026-10-26)
+
+Khalil's idea: homeowners get a board for to-dos and what JHP already helped
+with; he also wants it to "tighten leads". Decisions: sign-in by emailed
+one-time link (no password), reminder emails opt-in only, house-with-pins look.
+
+- `/home`: sign-in (email → `/api/home/login`, 30-min link via Resend) or the
+  board. `/home/verify?t=` spends the token only on a button POST
+  (`/api/home/verify`) because mail scanners open links first. Session =
+  random cookie `jhp_home` (HttpOnly, 60 days); only SHA-256 hashes of link and
+  session tokens are stored (`homeowner_login_tokens`, `homeowner_sessions`).
+- Board data `/api/home` (GET + POST actions), every write scoped to the
+  signed-in homeowner. `home_todos.source` = custom | seasonal | request;
+  status open | hired | done, set by the HOMEOWNER — the site never claims to
+  know whether a job was hired or finished. Seasonal suggestions: `lib/seasonal.ts`.
+- Sign-in links past requests with the same email (`linkPastRequests`). A
+  lead sent while signed in with the same address sets `leads.homeowner_id`,
+  `email_verified = true`, and the contractor email gets "✓ Email verified".
+  That is the only "tighter lead" claim, and it is exactly what was checked.
+- Reminders: `/api/cron/home-reminders` daily 14:00 UTC (vercel.json), open
+  to-dos due within 3 days, once per to-do, only when `homeowners.reminders`;
+  unsubscribe `/api/home/unsubscribe?t=<unsub_token>` + POSTAL_ADDRESS.
+- After a successful request the form links to the board and prefills the
+  email via sessionStorage (never in a URL). Privacy notice covers boards.
+
 ### Operator alert — how to check it
 
 The alert had never run in production until 2026-10-17: every lead row had

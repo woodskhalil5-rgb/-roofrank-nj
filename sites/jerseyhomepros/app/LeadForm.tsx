@@ -40,6 +40,8 @@ export default function LeadForm({ trade }: { trade: Trade }) {
     setStatus("Sending your request…");
     const form = e.currentTarget;
     const data = Object.fromEntries(new FormData(form).entries());
+    // Lets the Home Board sign-in prefill this address without putting it in a URL.
+    try { sessionStorage.setItem("jhp_board_email", String(data.email ?? "")); } catch { /* storage off */ }
     try {
       const r = await fetch("/api/leads", {
         method: "POST",
@@ -181,6 +183,11 @@ export default function LeadForm({ trade }: { trade: Trade }) {
       )}
 
       <p className={done ? "formstatus joinok" : "formstatus"} role="status">{status}</p>
+      {done && (
+        <p className="formstatus">
+          <a className="textlink" href="/home">Track this on your free Home Board <span>&#8594;</span></a>
+        </p>
+      )}
 
       {!done && (
         <small className="formfine">
