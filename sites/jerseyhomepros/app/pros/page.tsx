@@ -172,7 +172,9 @@ export default async function ProsPage({
                   <h3>{p.company}</h3>
                   <p>
                     {t.label}
-                    {p.distance_miles !== null ? ` · about ${p.distance_miles} mi away` : p.city ? ` · ${p.city}` : ""}
+                    {p.distance_miles !== null && p.distance_miles >= 1
+                      ? ` · about ${p.distance_miles} mi away`
+                      : p.city ? ` · ${p.city}` : p.distance_miles !== null ? " · in your ZIP" : ""}
                   </p>
                   <p className="procardtags">
                     {receivesRequests(p)
