@@ -292,3 +292,18 @@
 .boardsuggest small{font-weight:400;color:#80817a;font-size:12px}
 .acctcard .scanrow input{color:#171817;background:#fff;font-size:15px}
 @media(max-width:640px){.boarditem{flex-direction:column;align-items:flex-start}.boardbtns{justify-content:flex-start}.boardadd .formrow{grid-template-columns:1fr}.boardpinl{font-size:34px}}
+
+/* ---- Problem search ---- */
+.herosearch{display:flex;gap:10px;margin-top:22px;max-width:720px}
+.herosearch input{padding:16px;font-size:17px;border:1px solid #3a3b37;background:#121312;color:#fff;min-width:0}
+.herosearch input[name=q]{flex:1}
+.herosearch input[name=zip]{width:110px}
+.herosearch .button{font-size:16px;white-space:nowrap}
+.prosearchq input[name=q]{flex:2;min-width:0}
+.qnote{margin-top:16px;font-size:15px;line-height:1.6;color:#4d4e48}
+.qnote p{margin:0 0 8px}
+.qchips{display:flex;flex-wrap:wrap;gap:8px}
+.qchips a{border:1px solid #d6cdb8;background:#fff;padding:8px 12px;font-size:14px;font-weight:700}
+.qavail{margin-top:16px;padding:16px 18px;background:#fff;border:1px solid #d6ad58;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.qavail p{margin:0;font-size:16px;line-height:1.5;color:#26271f}
+@media(max-width:640px){.herosearch{flex-wrap:wrap}.herosearch input[name=q]{flex:1 1 100%}.herosearch input[name=zip]{flex:1}}

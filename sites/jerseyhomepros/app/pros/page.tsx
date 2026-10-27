@@ -3,6 +3,7 @@ import { SITE } from "../../lib/site";
 import { TRADES, TRADE_SLUGS, isTradeSlug, tradeOr } from "../../lib/trades";
 import { adminDb } from "../../lib/server";
 import { PUBLIC_PRO_COLUMNS, receivesRequests, type PublicPro } from "../../lib/pros";
+import { guessTrades } from "../../lib/problems";
 import { Brand, SiteFooter } from "../Brand";
 
 export const dynamic = "force-dynamic";
@@ -52,12 +53,32 @@ async function search(zip: string | null, trade: string | null): Promise<{ hits:
 export default async function ProsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ trade?: string; zip?: string }>;
+  searchParams: Promise<{ trade?: string; zip?: string; q?: string }>;
 }) {
   const sp = await searchParams;
-  const trade = sp.trade && isTradeSlug(sp.trade) ? sp.trade : null;
+  const q = (sp.q ?? "").trim().slice(0, 120);
+  // Typed problem → likely trades (keyword list in lib/problems.ts). An
+  // explicit trade in the URL always wins, so "Not right?" chips can switch.
+  const guesses = q ? guessTrades(q) : [];
+  const trade = sp.trade && isTradeSlug(sp.trade) ? sp.trade : guesses[0]?.trade ?? null;
   const zip = sp.zip && /^[0-9]{5}$/.test(sp.zip) ? sp.zip : null;
   const found = await search(zip, trade);
+
+  // The same live count as Home Scan: companies that would actually receive a
+  // request for this trade + ZIP (unclaimed listings never count).
+  let available: number | null = null;
+  if (trade && zip && !found.badZip) {
+    const db = adminDb();
+    const { data } = db ? await db.rpc("available_providers", { p_zip: zip, p_trade: trade }) : { data: null };
+    available = data === null || data === undefined ? null : Number(data);
+  }
+  const link = (t: string | null) => {
+    const u = new URLSearchParams();
+    if (q) u.set("q", q);
+    if (t) u.set("trade", t);
+    if (zip) u.set("zip", zip);
+    return `/pros?${u.toString()}`;
+  };
   const badZip = found.badZip;
   // Network members first, then unclaimed listings; distance order within each.
   const hits = [...found.hits].sort(
@@ -81,8 +102,10 @@ export default async function ProsPage({
             public records and haven&rsquo;t joined yet. Requests go through {SITE.brand}, and your
             details are only shared with member companies that cover your address.
           </p>
-          <form className="prosearch" action="/pros" method="get">
-            <select name="trade" defaultValue={trade ?? ""} aria-label="Trade">
+          <form className="prosearch prosearchq" action="/pros" method="get">
+            <input name="q" defaultValue={q} maxLength={120} placeholder="What's the problem? e.g. roof leak, no heat"
+                   aria-label="Describe the problem" />
+            <select name="trade" defaultValue={q ? "" : trade ?? ""} aria-label="Trade">
               <option value="">All trades</option>
               {TRADE_SLUGS.map((s) => <option key={s} value={s}>{TRADES[s].label}</option>)}
             </select>
@@ -96,12 +119,40 @@ export default async function ProsPage({
       <section className="section wrap">
         <div className="sectionhead">
           <div className="eyebrow dark">
-            {zip ? `SERVING ${zip}` : trade ? TRADES[trade].label.toUpperCase() : "PARTICIPATING COMPANIES"}
+            {zip && trade ? `${TRADES[trade].label.toUpperCase()} · SERVING ${zip}` : zip ? `SERVING ${zip}` : trade ? TRADES[trade].label.toUpperCase() : "PARTICIPATING COMPANIES"}
           </div>
           <h2>
             {hits.length} {hits.length === 1 ? "company" : "companies"}<br />
             <em>{zip ? "cover this ZIP code." : "in the directory."}</em>
           </h2>
+          {q && (
+            <div className="qnote">
+              {trade ? (
+                <p>
+                  Showing <b>{TRADES[trade].label}</b> for &ldquo;{q}&rdquo;. Not right?
+                </p>
+              ) : (
+                <p>We couldn&rsquo;t tell which kind of pro &ldquo;{q}&rdquo; needs. Which is it?</p>
+              )}
+              <p className="qchips">
+                {(trade ? TRADE_SLUGS.filter((s) => s !== trade) : TRADE_SLUGS)
+                  .sort((a, b) => Number(!guesses.some((g) => g.trade === b)) - Number(!guesses.some((g) => g.trade === a)))
+                  .map((s) => <a key={s} href={link(s)}>{TRADES[s].label}</a>)}
+              </p>
+            </div>
+          )}
+          {trade && zip && available !== null && (
+            <div className="qavail">
+              {available > 0 ? (
+                <p>&#10003; <b>{available} {available === 1 ? TRADES[trade].company : TRADES[trade].companies} available in {zip}</b>, taking requests through {SITE.brand} now.</p>
+              ) : (
+                <p>No {TRADES[trade].companies} in our network take requests in {zip} yet. You can still send one and {SITE.brand} reviews it.</p>
+              )}
+              <a className="button gold" href={`/${trade}?zip=${zip}#estimate`}>
+                {available > 0 ? "Send one request" : "Send my request"} <span>&#8594;</span>
+              </a>
+            </div>
+          )}
           {badZip && <p>That ZIP code isn&rsquo;t in New Jersey. {SITE.brand} serves New Jersey only.</p>}
           {!badZip && hits.length === 0 && (
             <p>

@@ -255,6 +255,16 @@ and ads (Khalil, Oct 26): ads may only quote counts this function returns.
 Khalil asked for an "Iron Man / Jarvis"
 feel: keep the style, never use Marvel names or marks.
 
+### Problem search (2026-10-27)
+
+Khalil wanted a search bar where people type the problem and see contractors.
+Homepage hero form and `/pros?q=` map the words to a trade with a fixed
+keyword list (`lib/problems.ts`, add words freely) — deliberately not AI, so
+it can't invent a diagnosis. The results page says what it matched ("Showing
+Roofing for …"), offers every other trade as one-tap chips, lists members
+first, and with a ZIP shows the same live `available_providers` count as
+Home Scan plus a "Send one request" button to the trade form.
+
 ### Homeowner accounts — the Home Board (2026-10-26)
 
 Khalil's idea: homeowners get a board for to-dos and what JHP already helped
