@@ -67,15 +67,15 @@ Compare local pros. You choose." Never imply our pros are vetted,
 background-checked, guaranteed or "the right one" — none of that is done.
 The true promise is comparing and choosing.
 
-### TV-ad style (v3, Oct 26): the current template
-Khalil wants reels to feel like funny TV ads: native-style outlined caption
-(white, black stroke, y≈300, never in the top 250px), then at ~3s an animated
-Home Scan (dim + grid, gold sweep line, brackets lock on, typed joke
-readouts, "TAP ▸ MOVING" tag) with synthesized computer SFX (power-up, sweep,
-lock beeps, data chatter, confirm chime, whoosh), then a 6s end card with the
-tagline "Because 'my cousin can do it' isn't a plan." Files: reels/scan.js
-(HUD frames), reels/cards.js (captions + end cards), SFX via numpy (see the
-couch reel build), reels/voiceover-script.md. Readouts must NARRATE the joke
-("PROBLEM ... THIS COUCH"), never pretend the site analyses a room — Home Scan
-is a tap, not a camera. No TTS engine exists in the sandbox; the female
-announcer VO comes from Khalil (ElevenLabs/CapCut) and is mixed in with ducking.
+### Current reel template (v4, Oct 26)
+Outlined native-style caption (white, black stroke, y≈300) for the first 3s;
+then gold brackets lock onto the subject and a small dark panel (kept above
+the bottom 330px Instagram covers) loads "Finding movers near you…" and
+confirms "✓ Moving / Movers available in your ZIP"; soft SFX only (lock blips,
+low hum + ticks, confirm chime, whoosh); 4s end card "Wrong contractor again?
+/ Tap the problem · Compare local pros / You choose / jerseyhomepros.com".
+Files: reels/scan.js, reels/cards.js.
+Khalil REJECTED (don't bring back): fake computer readouts, too much AI/HUD
+clutter, and the "my cousin can do it" tagline. Availability text must be
+true: only say "N contractors available" if N real paying providers cover it
+(check roofers: approved + leads_enabled, radius). Moving = 1 (Adams) today.
