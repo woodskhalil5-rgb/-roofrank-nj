@@ -325,3 +325,35 @@ not needed for alerts any more); Supabase Site URL still points at the
 retired domain; three superseded Vercel projects not deleted; an "emailed ✓"
 marker for the admin dashboard is deferred until there is real lead volume
 (the API already returns `welcomed`); no GA4 property yet.
+
+### Estimator + installable app (2026-10-27)
+
+Khalil's model (his words, Oct 27): JHP or Khalil acts as the estimator for
+partner contractors and is "in the deal". Two lanes: **A referral** (the
+contractor signs the homeowner and pays JHP a % of the signed price, per a
+written partner agreement) and **B JHP job** (JHP signs the homeowner and
+subs the work, so JHP IS the contractor: HIC registration, $500k liability
+insurance and NJ written-contract rules apply). Advice given: estimates only
+on big-ticket jobs; one contractor per scoped job; never negotiate insurance
+claims (public adjuster licence); no "vetted" claim: say what was checked.
+He has NOT yet decided free vs paid estimates, nor the fee %.
+
+- `/estimator` (admin accounts, same sign-in as /admin; installs as its own
+  app "JHP Estimator" via `public/estimator.webmanifest`, gold icon). Jobs
+  list with money summary, scope sheet (homeowner, trade, problem, measured
+  lines × price book, adjustable range, photos, notes), homeowner's OK,
+  send to ONE contractor, outcome (signed price, fee % or sub price, paid).
+- Tables `price_book` (every price carries a `source`), `estimates`,
+  `estimate_photos`; PRIVATE bucket `estimate-photos` (signed URLs only:
+  1h in the app, 14 days in the contractor email). `provider_distances(zip,
+  trade)` feeds the contractor picker.
+- Sending is refused without `share_consent_at` (homeowner agreed to share
+  with one contractor) and respects `contact_method` (EMAIL ONLY block, same
+  pattern as leads). Estimate lines are copied at the time, so later price
+  book edits never rewrite a given estimate. Local pricing = his price book +
+  what signed jobs actually sold for (shown per trade). Never seed invented
+  prices.
+- PWA: `public/manifest.webmanifest`, icons, `public/sw.js` (no caching of
+  pages or API, only an offline page), "Get the app" in the footer (real
+  prompt on Android, Share → Add to Home Screen steps on iPhone). App Store /
+  Play listing is a later step (Apple $99/yr, Google $25, in his name).
