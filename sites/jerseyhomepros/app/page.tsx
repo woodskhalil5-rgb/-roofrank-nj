@@ -2,6 +2,7 @@ import { SITE } from "../lib/site";
 import { TRADES, TRADE_SLUGS } from "../lib/trades";
 import { Brand, SiteFooter } from "./Brand";
 import HomeMap from "./HomeMap";
+import HeroSearch from "./HeroSearch";
 
 /**
  * Homepage. Its job is to route a homeowner to the right trade quickly;
@@ -32,11 +33,7 @@ export default function Home() {
             <a className="textlink" href="#trades">Or pick a service <span>&#8595;</span></a>
           </div>
           <p className="nocam">No app or camera needed — just tap the picture.</p>
-          <form className="herosearch" action="/pros" method="get">
-            <input name="q" maxLength={120} placeholder="Or type the problem: roof leak, no heat, mice…" aria-label="Describe the problem" required />
-            <input name="zip" inputMode="numeric" pattern="[0-9]{5}" maxLength={5} placeholder="ZIP" aria-label="ZIP code" />
-            <button className="button gold" type="submit">Find pros <span>&#8594;</span></button>
-          </form>
+          <HeroSearch />
         </div>
         <div className="wrap">
           <HomeMap hero />

@@ -307,3 +307,9 @@
 .qavail{margin-top:16px;padding:16px 18px;background:#fff;border:1px solid #d6ad58;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
 .qavail p{margin:0;font-size:16px;line-height:1.5;color:#26271f}
 @media(max-width:640px){.herosearch{flex-wrap:wrap}.herosearch input[name=q]{flex:1 1 100%}.herosearch input[name=zip]{flex:1}}
+.scanquery{color:#d6ad58 !important;font-size:14px !important;font-weight:700;margin:10px 0 0 !important}
+.scanlist{display:inline-block;margin-left:16px;color:#ddd;font-size:15px}
+.scanpick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.scanpick button{border:1px solid #3a3b37;background:#18191a;color:#fff;padding:13px 10px;font:700 15px Arial;cursor:pointer;text-align:left}
+.scanpick button:hover{border-color:#d6ad58}
+@media(max-width:480px){.scanlist{display:block;margin:14px 0 0}}

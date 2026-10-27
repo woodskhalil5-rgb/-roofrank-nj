@@ -206,7 +206,7 @@ export default function HomeMap({ hero = false }: { hero?: boolean }) {
         </button>
       </div>
 
-      {pick && <ScanPanel zone={pick} onClose={() => setPick(null)} />}
+      {pick && <ScanPanel slug={pick.slug} onClose={() => setPick(null)} />}
     </div>
   );
 }
@@ -220,14 +220,29 @@ export default function HomeMap({ hero = false }: { hero?: boolean }) {
 type Phase = "zip" | "loading" | "done";
 type Result = { valid: false } | { valid: true; count: number } | { error: true };
 
-function ScanPanel({ zone, onClose }: { zone: Zone; onClose: () => void }) {
-  const t = TRADES[zone.slug];
-  const [zip, setZip] = useState("");
+/**
+ * Shared by the house (tap an area) and the hero search bar (type the
+ * problem). With `initialZip` it skips the ZIP step and starts loading at once.
+ */
+export function ScanPanel({ slug, onClose, initialZip, query }: {
+  slug: TradeSlug; onClose: () => void; initialZip?: string; query?: string;
+}) {
+  const t = TRADES[slug];
+  const zone = { slug };
+  const [zip, setZip] = useState(initialZip && /^[0-9]{5}$/.test(initialZip) ? initialZip : "");
   const [phase, setPhase] = useState<Phase>("zip");
   const [res, setRes] = useState<Result | null>(null);
 
   useEffect(() => {
-    try { const z = localStorage.getItem("jhp_zip"); if (z && /^[0-9]{5}$/.test(z)) setZip(z); } catch { /* storage off */ }
+    if (initialZip && /^[0-9]{5}$/.test(initialZip)) {
+      run(initialZip);
+    } else {
+      try { const z = localStorage.getItem("jhp_zip"); if (z && /^[0-9]{5}$/.test(z)) setZip(z); } catch { /* storage off */ }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", esc);
     return () => window.removeEventListener("keydown", esc);
@@ -235,6 +250,10 @@ function ScanPanel({ zone, onClose }: { zone: Zone; onClose: () => void }) {
 
   async function check(e: React.FormEvent) {
     e.preventDefault();
+    run(zip);
+  }
+
+  async function run(zip: string) {
     if (!/^[0-9]{5}$/.test(zip)) return;
     try { localStorage.setItem("jhp_zip", zip); } catch { /* storage off */ }
     setPhase("loading");
@@ -250,6 +269,8 @@ function ScanPanel({ zone, onClose }: { zone: Zone; onClose: () => void }) {
   }
 
   const formUrl = `/${zone.slug}?zip=${zip}#estimate`;
+  const listUrl = `/pros?trade=${zone.slug}&zip=${zip}${query ? `&q=${encodeURIComponent(query)}` : ""}`;
+  const seeList = <a className="textlink scanlist" href={listUrl}>See the companies <span>&#8594;</span></a>;
 
   return (
     <div className="scanpanelwrap" role="dialog" aria-modal="true" aria-label={`Home Scan: ${t.label}`}
@@ -260,6 +281,7 @@ function ScanPanel({ zone, onClose }: { zone: Zone; onClose: () => void }) {
 
         {phase === "zip" && (
           <form onSubmit={check}>
+            {query && <p className="scanquery">&ldquo;{query}&rdquo; &rarr; {t.label}</p>}
             <h3>Need {t.work}?</h3>
             <p>Enter your ZIP code to see who&rsquo;s available near you.</p>
             <div className="scanrow">
@@ -272,6 +294,7 @@ function ScanPanel({ zone, onClose }: { zone: Zone; onClose: () => void }) {
 
         {phase === "loading" && (
           <div className="scanloading">
+            {query && <p className="scanquery">&ldquo;{query}&rdquo; &rarr; {t.label}</p>}
             <h3>Finding {t.companies} near you&hellip;</h3>
             <div className="scanbar"><i /></div>
           </div>
@@ -290,12 +313,14 @@ function ScanPanel({ zone, onClose }: { zone: Zone; onClose: () => void }) {
               <div className="scancheck">&#10003; {t.label}</div>
               <h3>{res.count} {res.count === 1 ? t.company : t.companies} available in {zip}</h3>
               <a className="button gold" href={formUrl}>Continue to my request <span>&#8594;</span></a>
+              {seeList}
             </div>
           ) : (
             <div>
               <h3>No {t.companies} in our network cover {zip} yet.</h3>
               <p>You can still send your request. Jersey Home Pros reviews it and follows up by email.</p>
               <a className="button gold" href={formUrl}>Send my request <span>&#8594;</span></a>
+              {seeList}
             </div>
           )
         )}
