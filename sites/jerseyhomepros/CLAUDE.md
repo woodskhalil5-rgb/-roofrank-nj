@@ -392,3 +392,35 @@ contract signed at the home.
   % of `jhpEarnings()`; "due" once `fee_paid_at` is set; `rep_paid_at`.
 - Ad line "Every Road Pro is background-checked" is only true while every
   active rep who does visits is `clear` — the assign gate enforces it.
+
+### Hands-off automations (2026-10-28)
+
+Khalil wants to spend his time recruiting Road Pros and calling contractors.
+
+- **One daily cron, `/api/cron/daily` at 11:30 UTC** (replaced the
+  home-reminders entry in BOTH vercel.json files to stay within cron limits;
+  it still runs home reminders first). Then `lib/ops.ts`:
+  `runChasers` — referral jobs (`lane A`, `sent`) get "did it sign? reply
+  SIGNED/NOT YET/LOST" on day 3 and day 7 (`chase_count`, max 2); signed
+  referral jobs with `fee_paid_at` null get a fee notice when signed then
+  weekly (`fee_notice_count`, max 4). `sendBriefing` — one email to
+  `alertEmails()`: NEEDS YOU (help, unassigned bookings, visits to price,
+  silent contractors, unpaid after max notices, Road Pro commission to pay,
+  unalerted leads), last 24h, DONE FOR YOU, CALL LIST (new applicants, new
+  claims, pending contractor applications, 5 unclaimed roofing/hvac/
+  hardscaping/windows rotated by `roofers.call_suggested_at` — unclaimed rows
+  have no phone, he finds it on their site/registration).
+- `sendEmail(to, subject, text, replyTo?)`: the From (leads@) has no inbox,
+  so anything asking for a reply sets replyTo = `alertEmails()[0]`.
+- Auto-assign: `estimator_settings.auto_assign` (default on),
+  `max_assign_miles` 40; `nearest_rep(zip)` = active + clear + `home_zip`
+  within range, fewest open visits then closest. `lib/assign.ts assignRep()`
+  is the only assign path (gate + commission copy + rep email). Booking
+  emails the homeowner a confirmation naming the Road Pro's first name.
+- `/road-pros` recruiting page (footer + sitemap) → `/api/road-pros` →
+  `road_pro_applications`; applicant gets next steps (call → screening
+  company disclosure/consent → agreement + app invite), Khalil alerted;
+  Estimator → Road Pros shows applicants with Add (creates rep, bg pending)
+  / Decline (no email). Page promises no earnings figures.
+- Not automated (his): calls, agreements, buying background checks, town
+  solicitor permits, invoicing/payment (no Stripe), SMS (no provider).
