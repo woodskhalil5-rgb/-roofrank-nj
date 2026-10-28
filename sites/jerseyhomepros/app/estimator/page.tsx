@@ -23,16 +23,21 @@ type Contractor = {
   leads_enabled: boolean; license_number: string | null; license_checked_at: string | null; license_status: string | null;
 };
 type Rep = {
-  id: string; name: string; email: string; phone: string; active: boolean;
+  id: string; name: string; email: string; phone: string; home_zip?: string; active: boolean;
   bg_status: "pending" | "clear" | "not_clear"; bg_checked_at?: string | null; bg_provider?: string;
   commission_pct: number | null; auth_user_id?: string | null; setup_token_expires?: string | null;
 };
 type Settings = {
   visits_on: boolean; base_zip: string; radius_miles: number; visit_trades: string[]; rep_commission_pct: number | null;
+  auto_assign?: boolean; max_assign_miles?: number;
+};
+type Applicant = {
+  id: string; created_at: string; name: string; email: string; phone: string; home_zip: string;
+  has_car: boolean; availability: string; experience: string;
 };
 type Data = {
   role: "admin" | "rep"; me?: Rep; priceBook: PriceItem[]; estimates: Estimate[];
-  contractors?: Contractor[]; reps?: Rep[]; settings?: Settings | null;
+  contractors?: Contractor[]; reps?: Rep[]; settings?: Settings | null; applications?: Applicant[];
 };
 type Api = (p: string, i?: RequestInit) => Promise<Record<string, unknown>>;
 
@@ -368,7 +373,7 @@ function PriceBook({ data, api, reload }: { data: Data; api: Api; reload: () => 
 /* ───────────────────────── Road Pros (admin) ───────────────────────── */
 
 function RoadPros({ data, api, reload }: { data: Data; api: Api; reload: () => void }) {
-  const empty = { id: "", name: "", email: "", phone: "", bg_status: "pending", bg_provider: "", commission_pct: "", active: true };
+  const empty = { id: "", name: "", email: "", phone: "", home_zip: "", bg_status: "pending", bg_provider: "", commission_pct: "", active: true };
   const [form, setForm] = useState(empty);
   const [msg, setMsg] = useState("");
   const reps = data.reps ?? [];
@@ -387,9 +392,35 @@ function RoadPros({ data, api, reload }: { data: Data; api: Api; reload: () => v
   }
 
   const BG: Record<string, string> = { pending: "Background check pending", clear: "Background check clear", not_clear: "Did not pass" };
+  const apps = data.applications ?? [];
+  async function appAction(action: "app_add" | "app_decline", a: Applicant) {
+    if (action === "app_decline" && !window.confirm(`Decline ${a.name}? (No email is sent.)`)) return;
+    setMsg("Saving…");
+    try { await post(api, { action, id: a.id }); setMsg(action === "app_add" ? `${a.name} added. Run their background check, then mark it clear.` : "Declined."); reload(); }
+    catch (err) { setMsg((err as Error).message); }
+  }
 
   return (
     <>
+      {apps.length > 0 && (
+        <section className="estcard estbooked">
+          <h2>New applicants · {apps.length}</h2>
+          <p className="estnote">From jerseyhomepros.com/road-pros. They&rsquo;ve been emailed the next steps. Call them, then add the ones you want.</p>
+          {apps.map((a) => (
+            <div key={a.id} className="estapp">
+              <b>{a.name}</b>
+              <span>{a.phone} · {a.email} · {a.home_zip}{a.has_car ? " · has a car" : " · no car listed"} · applied {when(a.created_at)}</span>
+              {a.availability && <span className="estnote">Available: {a.availability}</span>}
+              {a.experience && <span className="estnote">{a.experience}</span>}
+              <div className="estrow">
+                <button className="estlink" onClick={() => appAction("app_add", a)}>Add as Road Pro</button>
+                <button className="estlink" onClick={() => appAction("app_decline", a)}>Decline</button>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+      <p className="estnote">Recruiting link to post on Indeed, Craigslist and social: <b>jerseyhomepros.com/road-pros</b></p>
       <p className="estnote">
         Visits can only be assigned to a Road Pro whose background check is marked <b>clear</b>. Run checks through a screening
         company (written disclosure and the person&rsquo;s signed OK first). Commission is their cut of what JHP earns
@@ -400,14 +431,14 @@ function RoadPros({ data, api, reload }: { data: Data; api: Api; reload: () => v
         {reps.map((r) => (
           <div key={r.id} className="estcard estprice">
             <b>{r.name}{!r.active && " (inactive)"}</b>
-            <span>{r.email}{r.phone ? ` · ${r.phone}` : ""}</span>
+            <span>{r.email}{r.phone ? ` · ${r.phone}` : ""}{r.home_zip ? ` · lives in ${r.home_zip}` : " · no home ZIP (won't be auto-assigned)"}</span>
             <span className={r.bg_status === "clear" ? "estok" : "esterr"}>
               {BG[r.bg_status]}{r.bg_checked_at ? ` · ${when(r.bg_checked_at)}` : ""}{r.bg_provider ? ` · ${r.bg_provider}` : ""}
             </span>
             <span className="estnote">Commission: {r.commission_pct != null ? `${r.commission_pct}%` : def != null ? `${def}% (default)` : "not set"}
               {" · "}{r.auth_user_id ? "App set up ✓" : r.setup_token_expires ? "Invite sent" : "Not invited yet"}</span>
             <div className="estrow">
-              <button className="estlink" onClick={() => setForm({ id: r.id, name: r.name, email: r.email, phone: r.phone, bg_status: r.bg_status, bg_provider: r.bg_provider ?? "", commission_pct: r.commission_pct != null ? String(r.commission_pct) : "", active: r.active })}>Edit</button>
+              <button className="estlink" onClick={() => setForm({ id: r.id, name: r.name, email: r.email, phone: r.phone, home_zip: r.home_zip ?? "", bg_status: r.bg_status, bg_provider: r.bg_provider ?? "", commission_pct: r.commission_pct != null ? String(r.commission_pct) : "", active: r.active })}>Edit</button>
               {r.active && <button className="estlink" onClick={() => invite(r)}>{r.auth_user_id ? "Send password reset" : "Send app invite"}</button>}
             </div>
           </div>
@@ -420,6 +451,7 @@ function RoadPros({ data, api, reload }: { data: Data; api: Api; reload: () => v
           <label>Email<input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></label>
           <label>Phone<input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></label>
         </div>
+        <label>Home ZIP (for auto-assigning nearby visits)<input inputMode="numeric" maxLength={5} value={form.home_zip} onChange={(e) => setForm({ ...form, home_zip: e.target.value.replace(/\D/g, "") })} /></label>
         <label>Background check
           <select value={form.bg_status} onChange={(e) => setForm({ ...form, bg_status: e.target.value })}>
             <option value="pending">Pending</option><option value="clear">Clear</option><option value="not_clear">Did not pass</option>
@@ -447,6 +479,7 @@ function SettingsView({ data, api, reload }: { data: Data; api: Api; reload: () 
   const [f, setF] = useState({
     visits_on: s?.visits_on ?? false, base_zip: s?.base_zip ?? "08034", radius_miles: String(s?.radius_miles ?? 25),
     visit_trades: s?.visit_trades ?? [], rep_commission_pct: s?.rep_commission_pct != null ? String(s.rep_commission_pct) : "",
+    auto_assign: s?.auto_assign ?? true, max_assign_miles: String(s?.max_assign_miles ?? 40),
   });
   const [msg, setMsg] = useState("");
   const cleared = (data.reps ?? []).filter((r) => r.active && r.bg_status === "clear").length;
@@ -478,6 +511,11 @@ function SettingsView({ data, api, reload }: { data: Data; api: Api; reload: () 
           <label key={t} className="estcheck"><input type="checkbox" checked={f.visit_trades.includes(t)} onChange={() => toggle(t)} /><span>{TRADES[t].label}</span></label>
         ))}
       </div>
+      <h2>Auto-assign</h2>
+      <label className="estcheck"><input type="checkbox" checked={f.auto_assign} onChange={(e) => setF({ ...f, auto_assign: e.target.checked })} />
+        <span>Give each new booking to the nearest cleared Road Pro with the fewest open visits, email them, and tell the homeowner who&rsquo;s coming.</span></label>
+      <label>Only if they live within (miles)<input inputMode="numeric" value={f.max_assign_miles} onChange={(e) => setF({ ...f, max_assign_miles: e.target.value })} /></label>
+      <p className="estnote">Nobody close enough? The booking waits for you to assign, and your morning briefing flags it.</p>
       <h2>Road Pro commission</h2>
       <label>Default % of what JHP earns<input inputMode="decimal" value={f.rep_commission_pct} onChange={(e) => setF({ ...f, rep_commission_pct: e.target.value })} placeholder="e.g. 30" /></label>
       <p className="estnote">Copied onto each job when it&rsquo;s assigned, so changing it later never rewrites a deal already made.</p>

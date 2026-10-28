@@ -93,13 +93,14 @@ async function sendOne(
   from: string,
   to: string,
   subject: string,
-  text: string
+  text: string,
+  replyTo?: string
 ): Promise<{ to: string; ok: boolean; id?: string; error?: string }> {
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from, to: [to], subject, text }),
+      body: JSON.stringify({ from, to: [to], subject, text, ...(replyTo ? { reply_to: replyTo } : {}) }),
     });
     if (!res.ok) {
       // Resend's body says *why* a 4xx happened — which address was rejected,
@@ -136,7 +137,10 @@ async function sendOne(
 export async function sendEmail(
   to: string | string[],
   subject: string,
-  text: string
+  text: string,
+  /** Where replies go. The From address (leads@) has no inbox, so anything
+   *  that asks the recipient to reply must set this. */
+  replyTo?: string
 ): Promise<SendResult> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.LEAD_FROM_EMAIL;
@@ -153,7 +157,7 @@ export async function sendEmail(
   if (recipients.length === 0) return { ok: false, error: "no_recipients" };
 
   const perRecipient = await Promise.all(
-    recipients.map((r) => sendOne(key, from, r, subject, text))
+    recipients.map((r) => sendOne(key, from, r, subject, text, replyTo))
   );
 
   const failed = perRecipient.filter((r) => !r.ok);

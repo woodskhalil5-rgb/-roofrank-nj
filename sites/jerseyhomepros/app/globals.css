@@ -408,3 +408,5 @@
 .estul{margin:0;padding-left:20px;line-height:1.6}
 .estchips{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-bottom:14px}
 .estchips .estcheck{margin:0!important}
+.rppage h2{font:400 22px Georgia,serif;margin:26px 0 8px}.rppage ul{padding-left:20px;line-height:1.8;font-size:14px;color:#60615a}.rppage .consent{flex-direction:row;font-weight:400}
+.estapp{display:flex;flex-direction:column;gap:3px;padding:10px 0;border-top:1px solid #eee2c6}

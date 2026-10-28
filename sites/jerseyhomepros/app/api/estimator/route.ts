@@ -4,6 +4,7 @@ import { SITE } from "../../../lib/site";
 import { TRADE_SLUGS, tradeOr } from "../../../lib/trades";
 import { newSetupToken } from "../../../lib/pros";
 import { requireEstimator, type EstimatorUser } from "../../../lib/estimator-auth";
+import { assignRep } from "../../../lib/assign";
 import {
   cleanLines, lineTotals, money, repCommission, toNum, ESTIMATE_BUCKET, type Line,
 } from "../../../lib/estimator";
@@ -21,7 +22,7 @@ const pctOrNull = (v: unknown) => { const n = toNum(v); return n >= 0 && n <= 10
 
 const EST_COLS =
   "id, created_at, updated_at, created_by, trade, status, lane, homeowner_name, homeowner_phone, homeowner_email, address, zip, problem, notes, items, range_low, range_high, share_consent_at, contact_method, roofer_id, sent_at, send_error, fee_pct, signed_price, sub_price, signed_at, fee_paid_at, source, visit_times, consent_text, rep_id, assigned_at, visited_at, help_requested_at, checklist, rep_commission_pct, rep_paid_at, estimate_photos(id, path, created_at)";
-const REP_COLS = "id, created_at, name, email, phone, active, bg_status, bg_checked_at, bg_provider, commission_pct, auth_user_id, setup_token_expires";
+const REP_COLS = "id, created_at, name, email, phone, home_zip, active, bg_status, bg_checked_at, bg_provider, commission_pct, auth_user_id, setup_token_expires";
 
 /**
  * The estimator app's data. Two roles:
@@ -79,16 +80,18 @@ export async function GET(req: Request) {
     return NextResponse.json({ role: "rep", me: who.rep, priceBook: book.data ?? [], estimates });
   }
 
-  const [pros, reps, settings] = await Promise.all([
+  const [pros, reps, settings, apps] = await Promise.all([
     db.from("roofers")
       .select("id, company, trade, email, phone, leads_enabled, license_number, license_checked_at, license_status")
       .eq("status", "approved").order("company"),
     db.from("road_pros").select(REP_COLS).order("name"),
     db.from("estimator_settings").select("*").eq("id", 1).single(),
+    db.from("road_pro_applications").select("id, created_at, name, email, phone, home_zip, has_car, availability, experience, status")
+      .eq("status", "new").order("created_at", { ascending: false }).limit(100),
   ]);
   return NextResponse.json({
     role: "admin", who: who.email, priceBook: book.data ?? [], estimates,
-    contractors: pros.data ?? [], reps: reps.data ?? [], settings: settings.data ?? null,
+    contractors: pros.data ?? [], reps: reps.data ?? [], settings: settings.data ?? null, applications: apps.data ?? [],
   });
 }
 
@@ -202,27 +205,8 @@ export async function POST(req: Request) {
         const { error } = await db.from("estimates").update({ rep_id: null, assigned_at: null, updated_at: now }).eq("id", id);
         return error ? bad("Couldn't unassign.", 500) : ok();
       }
-      const { data: rep } = await db.from("road_pros").select("id, name, email, active, bg_status, commission_pct").eq("id", repId).single();
-      if (!rep || !rep.active) return bad("Pick an active Road Pro.");
-      if (rep.bg_status !== "clear") return bad(`${rep.name}'s background check isn't marked clear yet. Visits can't be assigned until it is.`);
-      const { data: e } = await db.from("estimates").select("id, trade, zip, homeowner_name, homeowner_phone, address, visit_times, rep_id").eq("id", id).single();
-      if (!e) return bad("Job not found.", 404);
-      const { data: s } = await db.from("estimator_settings").select("rep_commission_pct").eq("id", 1).single();
-      const { error } = await db.from("estimates").update({
-        rep_id: rep.id, assigned_at: now, updated_at: now,
-        rep_commission_pct: rep.commission_pct ?? s?.rep_commission_pct ?? null,
-      }).eq("id", id);
-      if (error) return bad("Couldn't assign.", 500);
-      const mail = await sendEmail(rep.email, `New JHP site visit: ${tradeOr(e.trade).label} in ${e.zip || "NJ"}`, [
-        `${rep.name},`, "",
-        `You have a new free site visit.`, "",
-        `Homeowner: ${e.homeowner_name || "—"}`,
-        ...(e.homeowner_phone ? [`Phone: ${e.homeowner_phone} (call or text to confirm the time)`] : []),
-        ...(e.address ? [`Address: ${e.address}`] : []),
-        ...(e.visit_times ? [`Best times: ${e.visit_times}`] : []),
-        "", `Open it in the JHP Estimator app: ${SITE.url}/estimator`, "", `— ${SITE.brand}`,
-      ].join("\n"));
-      return ok({ emailed: mail.ok, emailError: mail.ok ? undefined : mail.error });
+      const r = await assignRep(db, id, repId);
+      return r.ok ? ok({ emailed: r.emailed, emailError: r.emailError }) : bad(r.error);
     }
     case "settings_save": {
       const base_zip = str(b.base_zip, 5);
@@ -233,6 +217,8 @@ export async function POST(req: Request) {
       const { error } = await db.from("estimator_settings").update({
         visits_on: b.visits_on === true, base_zip, radius_miles: radius, visit_trades: trades,
         rep_commission_pct: pctOrNull(b.rep_commission_pct), updated_at: now,
+        auto_assign: b.auto_assign !== false,
+        max_assign_miles: Math.min(150, Math.max(1, Math.round(toNum(b.max_assign_miles)) || 40)),
       }).eq("id", 1);
       return error ? bad("Couldn't save settings.", 500) : ok();
     }
@@ -242,6 +228,7 @@ export async function POST(req: Request) {
       const bg = ["pending", "clear", "not_clear"].includes(String(b.bg_status)) ? String(b.bg_status) : "pending";
       const row: Record<string, unknown> = {
         name, email, phone, active: b.active !== false, bg_status: bg, bg_provider: str(b.bg_provider, 120),
+        home_zip: /^[0-9]{5}$/.test(str(b.home_zip, 5)) ? str(b.home_zip, 5) : "",
         commission_pct: pctOrNull(b.commission_pct),
       };
       if (b.id) {
@@ -254,6 +241,20 @@ export async function POST(req: Request) {
       row.bg_checked_at = bg === "pending" ? null : now;
       const { error } = await db.from("road_pros").insert(row);
       return error ? bad(error.code === "23505" ? "That email is already a Road Pro." : "Couldn't save.", 400) : ok();
+    }
+    case "app_add": {
+      // Applicant → Road Pro (background check pending until you mark it clear).
+      const { data: a } = await db.from("road_pro_applications").select("id, name, email, phone, home_zip, status").eq("id", String(b.id ?? "")).single();
+      if (!a || a.status !== "new") return bad("Applicant not found.");
+      const { data: rep, error } = await db.from("road_pros")
+        .insert({ name: a.name, email: a.email, phone: a.phone, home_zip: a.home_zip, bg_status: "pending" }).select("id").single();
+      if (error || !rep) return bad(error?.code === "23505" ? "That email is already a Road Pro." : "Couldn't add them.", 400);
+      await db.from("road_pro_applications").update({ status: "added", road_pro_id: rep.id }).eq("id", a.id);
+      return ok();
+    }
+    case "app_decline": {
+      const { error } = await db.from("road_pro_applications").update({ status: "declined" }).eq("id", String(b.id ?? "")).eq("status", "new");
+      return error ? bad("Couldn't update.", 500) : ok();
     }
     case "rep_invite": {
       const { data: rep } = await db.from("road_pros").select("id, name, email, active").eq("id", String(b.id ?? "")).single();

@@ -32,6 +32,7 @@ export function SiteFooter() {
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
           <a href="/join">For Pros</a>
+          <a href="/road-pros">Become a Road Pro</a>
         </div>
         <span className="copyright">
           &copy; {new Date().getFullYear()} {SITE.brand}

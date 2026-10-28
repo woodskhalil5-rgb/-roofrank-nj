@@ -81,6 +81,11 @@ export default function Privacy() {
           wording you agreed to.
         </p>
         <p>
+          <b>If you apply to be a Road Pro:</b> your name, contact details, home ZIP and what you tell us,
+          used only to consider your application. Any background check is run separately by a screening
+          company, with its own disclosure, and only with your written permission.
+        </p>
+        <p>
           <b>We do not ask for sensitive information.</b> Please do not send health details,
           financial account numbers, government identifiers or precise location through our forms.
         </p>

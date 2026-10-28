@@ -10,7 +10,7 @@ export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const tradePaths = TRADE_SLUGS.map((t) => `/${t}`);
   const guidePaths = GUIDE_SLUGS.map((g) => `/guides/${g}`);
-  const paths = ['', '/start', ...tradePaths, '/pros', '/guides', ...guidePaths, '/join', '/privacy', '/terms'];
+  const paths = ['', '/start', ...tradePaths, '/pros', '/guides', ...guidePaths, '/join', '/road-pros', '/privacy', '/terms'];
 
   // Trade pages convert, so they rank first among the non-home pages; guides
   // exist to be found, which is a different job from being the priority page.

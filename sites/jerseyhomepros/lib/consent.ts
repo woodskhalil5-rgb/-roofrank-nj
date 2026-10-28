@@ -55,3 +55,7 @@ export function visitConsentText(trade: Trade): string {
 export function visitContractorCallsText(trade: Trade): string {
   return `The ${trade.company} may also call or text me about this job. (Leave unticked for email only.)`;
 }
+
+/** Road Pro job application. Shown on /road-pros and stored on the application. */
+export const RP_CONSENT =
+  "I agree that Jersey Home Pros may contact me about this role by phone, text and email. I understand a background check is required before any visit, and that it is done separately, only with my written permission.";

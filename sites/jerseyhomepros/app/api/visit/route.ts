@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminDb, alertEmails, sendEmail } from "../../../lib/server";
 import { SITE } from "../../../lib/site";
 import { isTradeSlug, TRADES } from "../../../lib/trades";
+import { assignRep, firstName } from "../../../lib/assign";
 import { VISIT_CONSENT_VERSION, visitConsentText, visitContractorCallsText } from "../../../lib/consent";
 
 export const runtime = "nodejs";
@@ -58,18 +59,48 @@ export async function POST(req: Request) {
     return bad("Couldn't book that. Please try again.", 500);
   }
 
-  const alert = await sendEmail(alertEmails(), `New free site visit: ${t.label} in ${zip}`, [
+  // Hands-off: the nearest cleared Road Pro with the lightest load gets it.
+  let assigned: string | null = null;
+  const { data: st } = await db.from("estimator_settings").select("auto_assign").eq("id", 1).single();
+  if (st?.auto_assign) {
+    const { data: repId } = await db.rpc("nearest_rep", { p_zip: zip });
+    if (repId) {
+      const a = await assignRep(db, row.id, String(repId));
+      if (a.ok) assigned = a.repName;
+      else console.error(`[visit] auto-assign failed estimate=${row.id} error=${a.error}`);
+    }
+  }
+
+  // The homeowner's own copy, so they know it landed and who to expect.
+  const replyTo = alertEmails()[0];
+  const conf = await sendEmail(email, `Your free ${t.label.toLowerCase()} site visit with ${SITE.brand}`, [
+    `Hi ${firstName(name) || "there"},`, "",
+    `Thanks for booking a free site visit with ${SITE.brand}.`, "",
+    assigned
+      ? `${firstName(assigned)}, your JHP Road Pro, will call or text you at ${phone} to set a time.`
+      : `We'll call or text you at ${phone} to set a time.`,
+    "",
+    `What happens: a Road Pro takes photos and measurements at ${address} (about 15 minutes, ground level). You then get a written estimate range, and we introduce one contractor for the job. The visit is free and you're never obligated to hire anyone.`,
+    "",
+    `Need to change something? Just reply to this email.`, "",
+    `— ${SITE.brand}`,
+  ].join("\n"), replyTo);
+  if (!conf.ok) console.error(`[visit] homeowner confirmation failed estimate=${row.id} error=${conf.error}`);
+
+  const alert = await sendEmail(alertEmails(), `New free site visit: ${t.label} in ${zip}${assigned ? ` → ${assigned}` : " (needs a Road Pro)"}`, [
     `A homeowner booked a free JHP Road Pro site visit.`,
     "",
     `Name: ${name}`, `Phone: ${phone}`, `Email: ${email}`, `Address: ${address}`, `ZIP: ${zip}`,
     `Service: ${t.label}`, ...(times ? [`Best times: ${times}`] : []), ...(problem ? ["", problem] : []),
     "",
-    `Assign a Road Pro: ${SITE.url}/estimator`,
+    assigned ? `Auto-assigned to ${assigned}. Change it: ${SITE.url}/estimator` : `No cleared Road Pro nearby. Assign one: ${SITE.url}/estimator`,
   ].join("\n"));
   if (!alert.ok) console.error(`[visit] operator alert failed estimate=${row.id} error=${alert.error}`);
 
   return NextResponse.json({
     ok: true,
-    message: `Got it. ${SITE.brand} will call or text you at ${phone} to confirm a time for your free site visit.`,
+    message: assigned
+      ? `Got it. ${firstName(assigned)}, your JHP Road Pro, will call or text you at ${phone} to set a time. We've emailed you a copy.`
+      : `Got it. ${SITE.brand} will call or text you at ${phone} to confirm a time for your free site visit.`,
   });
 }
