@@ -14,7 +14,7 @@ export type PriceItem = {
 /** One line on an estimate: copied from the price book (or typed in) at the time. */
 export type Line = { item: string; unit: string; qty: number; low: number; high: number };
 
-export type EstimateStatus = "draft" | "sent" | "signed" | "lost";
+export type EstimateStatus = "requested" | "draft" | "sent" | "signed" | "lost";
 
 export type Estimate = {
   id: string; created_at: string; updated_at: string; created_by: string;
@@ -26,6 +26,12 @@ export type Estimate = {
   roofer_id: string | null; sent_at: string | null; send_error: string | null;
   fee_pct: number | null; signed_price: number | null; sub_price: number | null;
   signed_at: string | null; fee_paid_at: string | null;
+  source?: "estimator" | "booking"; visit_times?: string; consent_text?: string;
+  rep_id?: string | null; assigned_at?: string | null; visited_at?: string | null;
+  help_requested_at?: string | null; checklist?: Record<string, string | boolean>;
+  rep_commission_pct?: number | null; rep_paid_at?: string | null;
+  /** Reps only: their commission on this job, computed server-side. */
+  rep_commission?: number | null;
   photos?: { id: string; path: string; url: string | null }[];
 };
 
@@ -52,6 +58,13 @@ export function jhpEarnings(e: Pick<Estimate, "lane" | "signed_price" | "sub_pri
   if (e.signed_price == null) return null;
   if (e.lane === "B") return e.sub_price == null ? null : Math.round(e.signed_price - e.sub_price);
   return e.fee_pct == null ? null : Math.round((e.signed_price * e.fee_pct) / 100);
+}
+
+/** A Road Pro's cut: their % of what JHP earns (never of the whole job). */
+export function repCommission(e: Pick<Estimate, "lane" | "signed_price" | "sub_price" | "fee_pct" | "status"> & { rep_commission_pct?: number | null }): number | null {
+  if (e.status !== "signed" || e.rep_commission_pct == null) return null;
+  const earned = jhpEarnings(e);
+  return earned == null ? null : Math.round((earned * e.rep_commission_pct) / 100);
 }
 
 export const money = (n: number | null | undefined) =>

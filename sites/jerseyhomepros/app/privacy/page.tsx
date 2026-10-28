@@ -74,6 +74,13 @@ export default function Privacy() {
           every one has an unsubscribe link. To delete your board, email us from that address.
         </p>
         <p>
+          <b>If you book a free site visit:</b> your name, phone, email, address, the times that suit you
+          and what you tell us about the job, plus the photos and measurements a JHP Road Pro takes at your
+          home. We use your number to call or text you about the visit. Photos are stored privately and are
+          shared, by expiring links, only with the one contractor we introduce for that job. We keep the exact
+          wording you agreed to.
+        </p>
+        <p>
           <b>We do not ask for sensitive information.</b> Please do not send health details,
           financial account numbers, government identifiers or precise location through our forms.
         </p>

@@ -24,11 +24,15 @@ export async function GET(req: Request) {
   const db = adminDb();
   if (!db) return NextResponse.json({ error: "Unavailable." }, { status: 503 });
 
-  const { data, error } = await db.rpc("available_providers", { p_zip: zip, p_trade: trade });
+  const [{ data, error }, visit] = await Promise.all([
+    db.rpc("available_providers", { p_zip: zip, p_trade: trade }),
+    // Free Road Pro visit offer: only when it can actually be honoured here.
+    db.rpc("visit_offered", { p_zip: zip, p_trade: trade }),
+  ]);
   if (error) return NextResponse.json({ error: "Unavailable." }, { status: 503 });
 
   return NextResponse.json(
-    data === null ? { valid: false } : { valid: true, count: Number(data) },
+    data === null ? { valid: false } : { valid: true, count: Number(data), visit: visit.data === true },
     { headers: { "Cache-Control": "public, max-age=60" } }
   );
 }

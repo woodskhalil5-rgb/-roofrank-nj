@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { TRADES, type TradeSlug } from "../lib/trades";
+import { visitConsentText, visitContractorCallsText } from "../lib/consent";
 
 /**
  * The clickable house: a photo with a heads-up-display layer on top. A scan
@@ -217,8 +218,8 @@ export default function HomeMap({ hero = false }: { hero?: boolean }) {
  * The count is live from /api/availability (same test as match_lead), so the
  * ad, the reel and the site all say the same true thing. Zero is said plainly.
  */
-type Phase = "zip" | "loading" | "done";
-type Result = { valid: false } | { valid: true; count: number } | { error: true };
+type Phase = "zip" | "loading" | "done" | "book";
+type Result = { valid: false } | { valid: true; count: number; visit?: boolean } | { error: true };
 
 /**
  * Shared by the house (tap an area) and the hero search bar (type the
@@ -271,6 +272,16 @@ export function ScanPanel({ slug, onClose, initialZip, query }: {
   const formUrl = `/${zone.slug}?zip=${zip}#estimate`;
   const listUrl = `/pros?trade=${zone.slug}&zip=${zip}${query ? `&q=${encodeURIComponent(query)}` : ""}`;
   const seeList = <a className="textlink scanlist" href={listUrl}>See the companies <span>&#8594;</span></a>;
+  // Only offered when visit_offered() says a background-cleared Road Pro can
+  // actually come to this ZIP for this trade.
+  const visitOk = Boolean(res && "valid" in res && res.valid && res.visit);
+  const offer = visitOk && (
+    <div className="scanvisit">
+      <b>Want to skip the search?</b>
+      <span>Get a free estimate from a JHP Road Pro. We come to you.</span>
+      <button type="button" className="button gold" onClick={() => setPhase("book")}>Book my free estimate <span>&#8594;</span></button>
+    </div>
+  );
 
   return (
     <div className="scanpanelwrap" role="dialog" aria-modal="true" aria-label={`Home Scan: ${t.label}`}
@@ -314,17 +325,91 @@ export function ScanPanel({ slug, onClose, initialZip, query }: {
               <h3>{res.count} {res.count === 1 ? t.company : t.companies} available in {zip}</h3>
               <a className="button gold" href={formUrl}>Continue to my request <span>&#8594;</span></a>
               {seeList}
+              {offer}
             </div>
           ) : (
-            <div>
-              <h3>No {t.companies} in our network cover {zip} yet.</h3>
-              <p>You can still send your request. Jersey Home Pros reviews it and follows up by email.</p>
-              <a className="button gold" href={formUrl}>Send my request <span>&#8594;</span></a>
-              {seeList}
-            </div>
+            visitOk ? (
+              <div>
+                <h3>No {t.companies} listed for {zip} yet, but a JHP Road Pro can come to you.</h3>
+                {offer}
+                <a className="textlink scanlist" href={formUrl}>Or send a request instead <span>&#8594;</span></a>
+              </div>
+            ) : (
+              <div>
+                <h3>No {t.companies} in our network cover {zip} yet.</h3>
+                <p>You can still send your request. Jersey Home Pros reviews it and follows up by email.</p>
+                <a className="button gold" href={formUrl}>Send my request <span>&#8594;</span></a>
+                {seeList}
+              </div>
+            )
           )
         )}
+
+        {phase === "book" && <VisitForm slug={slug} zip={zip} query={query} onBack={() => setPhase("done")} />}
       </div>
     </div>
+  );
+}
+
+/** Free Road Pro site-visit booking, inside the scan panel. */
+function VisitForm({ slug, zip, query, onBack }: { slug: TradeSlug; zip: string; query?: string; onBack: () => void }) {
+  const t = TRADES[slug];
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [done, setDone] = useState(false);
+
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (busy) return;
+    const f = new FormData(e.currentTarget);
+    setBusy(true); setMsg("Booking…");
+    try {
+      const r = await fetch("/api/visit", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          trade: slug, zip, name: f.get("name"), phone: f.get("phone"), email: f.get("email"),
+          address: f.get("address"), problem: f.get("problem"), times: f.get("times"),
+          consent: f.get("consent") === "yes", contractor_calls: f.get("calls") === "yes",
+          company_site: f.get("company_site"),
+        }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || "Couldn't book that. Please try again.");
+      setDone(true); setMsg(j.message || "Got it. We'll call or text you to confirm a time.");
+      const w = window as unknown as { gtag?: (...a: unknown[]) => void };
+      w.gtag?.("event", "book_visit", { trade: slug });
+    } catch (err) { setMsg(err instanceof Error ? err.message : "Couldn't book that."); }
+    finally { setBusy(false); }
+  }
+
+  if (done) {
+    return (
+      <div className="scanok">
+        <div className="scancheck">&#10003; Free site visit requested</div>
+        <h3>{msg}</h3>
+        <p>A Road Pro takes photos and measurements (about 15 minutes), then you get a written estimate range.</p>
+      </div>
+    );
+  }
+
+  return (
+    <form className="visitform" onSubmit={submit}>
+      <h3>Free estimate from a JHP Road Pro</h3>
+      <p>{t.label} · ZIP {zip}. About 15 minutes at your home, then a written estimate range.</p>
+      <input name="name" required placeholder="Your name" autoComplete="name" aria-label="Your name" />
+      <input name="phone" required type="tel" placeholder="Phone (to confirm the time)" autoComplete="tel" aria-label="Phone" />
+      <input name="email" required type="email" placeholder="Email" autoComplete="email" aria-label="Email" />
+      <input name="address" required placeholder="Street address for the visit" autoComplete="street-address" aria-label="Street address" />
+      <input name="times" placeholder="Best days/times (optional)" aria-label="Best days and times" />
+      <textarea name="problem" rows={2} defaultValue={query ?? ""} placeholder="What's going on? (optional)" aria-label="What's going on" />
+      <input name="company_site" tabIndex={-1} autoComplete="off" className="hp" aria-hidden="true" />
+      <label className="visitconsent"><input type="checkbox" name="consent" value="yes" required />
+        <span>{visitConsentText(t)} <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></span></label>
+      <label className="visitconsent"><input type="checkbox" name="calls" value="yes" />
+        <span>Optional: {visitContractorCallsText(t)}</span></label>
+      <button className="button gold" type="submit" disabled={busy}>{busy ? "Booking…" : "Book my free estimate"} <span>&#8594;</span></button>
+      {msg && <p className="visitmsg" role="status">{msg}</p>}
+      <button type="button" className="textlink" onClick={onBack}>&larr; Back</button>
+    </form>
   );
 }

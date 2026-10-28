@@ -38,3 +38,20 @@ export function phoneConsentText(trade: Trade): string {
     `text to opt out, or tell any caller to stop calling.`
   );
 }
+
+/** Free site-visit booking (Road Pro). Stored verbatim on the estimate. */
+export const VISIT_CONSENT_VERSION = "2026-10-27.v1";
+
+export function visitConsentText(trade: Trade): string {
+  return (
+    `I'm asking ${SITE.brand} for a free site visit. I agree that ${SITE.brand} and its Road Pro may ` +
+    `call or text me at the number I gave to schedule and carry out this visit, and that ${SITE.brand} ` +
+    `may share my name, contact details, address, photos and the job details with one participating ` +
+    `${trade.company} for this job. I understand that contractor pays ${SITE.brand} if I hire them, ` +
+    `that the visit and estimate are free, and that I am under no obligation to hire anyone.`
+  );
+}
+
+export function visitContractorCallsText(trade: Trade): string {
+  return `The ${trade.company} may also call or text me about this job. (Leave unticked for email only.)`;
+}

@@ -378,3 +378,33 @@
 .estsave .button{width:100%}
 .estsend .button,.estcard .estrow .button{flex:1}
 @media(max-width:420px){.estline{grid-template-columns:1fr 84px 28px}.estlinetotal{grid-column:1/-1;order:5}.estgrid3{grid-template-columns:1fr 1fr}.estgrid3 label:first-child{grid-column:1/-1}}
+/* Free Road Pro visit offer + booking (scan panel) */
+.scanpanel{max-height:calc(100vh - 32px);overflow-y:auto}
+.scanvisit{margin-top:18px;padding:16px;border:1px dashed #d6ad58aa;border-radius:10px;background:#16130c;display:flex;flex-direction:column;gap:8px}
+.scanvisit b{font:400 21px Georgia,serif;color:var(--gold)}
+.scanvisit span{color:#d8d6ce;font-size:15px}
+.scanvisit .button{margin-top:4px}
+.visitform{display:flex;flex-direction:column;gap:9px}
+.visitform h3{margin:0}
+.visitform p{margin:0 0 4px;color:#bdbcb5;font-size:14px}
+.visitform input:not([type=checkbox]),.visitform textarea{width:100%;padding:12px;font:16px Arial,sans-serif;border:1px solid #3a3b37;background:#fff;color:#171817;border-radius:6px}
+.visitconsent{display:grid;grid-template-columns:18px 1fr;gap:9px;font-size:12px;line-height:1.5;color:#bdbcb5;align-items:start}
+.visitconsent input{margin-top:3px;accent-color:#d6ad58}
+.visitconsent a{text-decoration:underline}
+.visitmsg{color:#f2c86a!important;font-size:14px!important}
+.hp{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;opacity:0}
+.estpill.requested{background:#f6e7c4;color:#6b4c10}.estpill.help{background:#f6d6cf;color:#8a2a17}
+.estok{color:#1f5a26;font-size:14px}
+.estbar .brand small{display:block;font-size:10px;letter-spacing:1px;color:#8a8b84;margin-top:3px}
+.estbooked{border-color:#d6ad58;background:#fffaf0}
+.esthelp{margin-bottom:14px}.esthelp .button{width:100%}
+.estguide{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:2px}
+.estguide li{padding:10px 0;border-bottom:1px solid #eee9de}
+.estguide li.done{opacity:.6}
+.estguide label{margin:0!important;font-weight:400!important;line-height:1.45}
+.estguide i{font-style:normal;font-size:10px;font-weight:800;letter-spacing:1px;color:#97702a;margin-right:4px}
+.estguide input:not([type=checkbox]){margin-top:4px}
+.estguide small{display:block;color:#7b7c75;font-size:13px;margin-top:4px}
+.estul{margin:0;padding-left:20px;line-height:1.6}
+.estchips{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-bottom:14px}
+.estchips .estcheck{margin:0!important}

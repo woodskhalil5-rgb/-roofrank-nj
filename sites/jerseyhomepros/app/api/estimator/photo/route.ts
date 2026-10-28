@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { adminDb, requireAdmin } from "../../../../lib/server";
+import { adminDb } from "../../../../lib/server";
+import { requireEstimator, type EstimatorUser } from "../../../../lib/estimator-auth";
 import { ESTIMATE_BUCKET } from "../../../../lib/estimator";
 
 export const runtime = "nodejs";
@@ -16,9 +17,17 @@ function sniff(buf: Buffer): { type: string; ext: string } | null {
   return null;
 }
 
+/** Admin: any job. Road Pro: only jobs assigned to them. */
+async function mayEdit(db: NonNullable<ReturnType<typeof adminDb>>, who: EstimatorUser, estimateId: string) {
+  const { data } = await db.from("estimates").select("rep_id").eq("id", estimateId).maybeSingle();
+  if (!data) return false;
+  return who.role === "admin" || data.rep_id === who.rep.id;
+}
+
 /** Adds one site-visit photo to an estimate. The browser shrinks it first. */
 export async function POST(req: Request) {
-  if (!(await requireAdmin(req))) return NextResponse.json({ error: "Not authorised." }, { status: 401 });
+  const who = await requireEstimator(req);
+  if (!who) return NextResponse.json({ error: "Not authorised." }, { status: 401 });
   const db = adminDb();
   if (!db) return NextResponse.json({ error: "Database not connected." }, { status: 503 });
 
@@ -28,6 +37,7 @@ export async function POST(req: Request) {
   const file = form.get("file");
   if (!estimateId || !(file instanceof Blob)) return NextResponse.json({ error: "Invalid upload." }, { status: 400 });
   if (file.size > MAX_BYTES) return NextResponse.json({ error: "That photo is too big." }, { status: 400 });
+  if (!(await mayEdit(db, who, estimateId))) return NextResponse.json({ error: "Job not found." }, { status: 404 });
 
   const { count } = await db.from("estimate_photos").select("id", { count: "exact", head: true }).eq("estimate_id", estimateId);
   if ((count ?? 0) >= MAX_PHOTOS) return NextResponse.json({ error: `Up to ${MAX_PHOTOS} photos per job.` }, { status: 400 });
@@ -51,12 +61,13 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  if (!(await requireAdmin(req))) return NextResponse.json({ error: "Not authorised." }, { status: 401 });
+  const who = await requireEstimator(req);
+  if (!who) return NextResponse.json({ error: "Not authorised." }, { status: 401 });
   const db = adminDb();
   if (!db) return NextResponse.json({ error: "Database not connected." }, { status: 503 });
   const { id } = (await req.json().catch(() => ({}))) as { id?: string };
-  const { data } = await db.from("estimate_photos").select("path").eq("id", String(id ?? "")).single();
-  if (!data) return NextResponse.json({ error: "Photo not found." }, { status: 404 });
+  const { data } = await db.from("estimate_photos").select("path, estimate_id").eq("id", String(id ?? "")).single();
+  if (!data || !(await mayEdit(db, who, data.estimate_id))) return NextResponse.json({ error: "Photo not found." }, { status: 404 });
   await db.from("estimate_photos").delete().eq("id", String(id));
   await db.storage.from(ESTIMATE_BUCKET).remove([data.path]);
   return NextResponse.json({ ok: true });
