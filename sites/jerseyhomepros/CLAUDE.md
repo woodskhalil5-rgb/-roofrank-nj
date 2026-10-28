@@ -357,3 +357,38 @@ He has NOT yet decided free vs paid estimates, nor the fee %.
   pages or API, only an offline page), "Get the app" in the footer (real
   prompt on Android, Share → Add to Home Screen steps on iPhone). App Store /
   Play listing is a later step (Apple $99/yr, Google $25, in his name).
+
+### Road Pros + free site visits (2026-10-27)
+
+Khalil's decisions: estimates are FREE for homeowners (big-ticket trades
+only); field reps are "JHP Road Pros", paid commission after the job; reps
+should sell while the app handles the trade knowledge. Advice given: driver
+collects, price comes from the price book (reps can't change it); ground
+level only, roofs measured by satellite; every Road Pro background-checked
+via a screening company (FCRA disclosure + consent); 1099 vs employee and
+NJ minimum wage on commission → attorney; pay commission as a cut of JHP's
+earnings, ideally part on deposit; 3-day cancellation notice on any JHP
+contract signed at the home.
+
+- `estimator_settings` (single row): `visits_on` (default FALSE: Khalil turns
+  it on), `base_zip` 08034 + `radius_miles` 25, `visit_trades`, default
+  `rep_commission_pct`. `visit_offered(zip, trade)` = on AND trade listed AND
+  `visit_area(zip)` AND ≥1 active Road Pro with `bg_status='clear'`. The scan
+  panel offer, `/api/availability` `visit` flag and `/api/visit` booking all
+  go through it, so the site never takes a booking nobody can drive to.
+- `road_pros` (bg_status pending|clear|not_clear gates assignment; invite via
+  `/estimator/setup?token=`, same hashed one-time-token pattern as contractors;
+  admin emails can't become reps). `lib/estimator-auth.ts requireEstimator`
+  returns admin or rep. Reps: only `rep_id = them`, price-book lines at book
+  prices (server re-prices), no range override, no send/outcome/fees; they see
+  `rep_commission` (computed server-side).
+- Bookings: `estimates.source='booking'`, `status='requested'`, consent text
+  stored verbatim (`lib/consent.ts visitConsentText`, VISIT_CONSENT_VERSION).
+  Operator alerted by email; assign emails the rep.
+- `lib/visits.ts`: per-trade guided steps (ask/photo/measure/do) saved to
+  `estimates.checklist`, plus TALK (opener, why JHP, close, never-say, 3-day
+  rule). "I need help" and "Visit done" email `alertEmails()`.
+- Commission: `rep_commission_pct` copied at assignment; `repCommission()` =
+  % of `jhpEarnings()`; "due" once `fee_paid_at` is set; `rep_paid_at`.
+- Ad line "Every Road Pro is background-checked" is only true while every
+  active rep who does visits is `clear` — the assign gate enforces it.
