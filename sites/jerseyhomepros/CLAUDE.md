@@ -428,3 +428,14 @@ Khalil wants to spend his time recruiting Road Pros and calling contractors.
   / Decline (no email). Page promises no earnings figures.
 - Not automated (his): calls, agreements, buying background checks, town
   solicitor permits, invoicing/payment (no Stripe), SMS (no provider).
+
+### Price book seeded with national averages (2026-10-29)
+
+Khalil asked for national averages "for right now" until partner rates exist.
+15 lines across roofing, hvac, hardscaping, windows, landscaping, each with
+`source` = publisher + update date + "Not local: replace with partner
+rates" (RoofObservations, Fixr, ConsumerAffairs, Lawn Love, Inch
+Calculator). These are sourced, not invented; replace them with partner
+rates as contractors sign. Vercel is on the **Hobby plan**: runtime logs keep
+1 hour, crons fire within the hour (daily ran 12:24 UTC on Oct 29, proven by
+`roofers.call_suggested_at`).
