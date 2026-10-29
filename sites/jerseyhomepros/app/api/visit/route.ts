@@ -84,7 +84,7 @@ export async function POST(req: Request) {
     "",
     `Need to change something? Just reply to this email.`, "",
     `— ${SITE.brand}`,
-  ].join("\n"), replyTo);
+  ].join("\n"), replyTo, "homeowner");
   if (!conf.ok) console.error(`[visit] homeowner confirmation failed estimate=${row.id} error=${conf.error}`);
 
   const alert = await sendEmail(alertEmails(), `New free site visit: ${t.label} in ${zip}${assigned ? ` → ${assigned}` : " (needs a Road Pro)"}`, [

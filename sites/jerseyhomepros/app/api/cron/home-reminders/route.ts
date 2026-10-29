@@ -63,7 +63,7 @@ export async function GET(req: Request) {
       `Unsubscribe: ${SITE.url}/api/home/unsubscribe?t=${h.unsub_token}`,
       ...(postal ? [postal] : []),
     ];
-    const res = await sendEmail(h.email, `Coming up on your Home Board`, lines.join("\n"));
+    const res = await sendEmail(h.email, `Coming up on your Home Board`, lines.join("\n"), undefined, "homeowner");
     if (res.ok) {
       sent += 1;
       await db.from("home_todos").update({ reminded_at: new Date().toISOString() }).in("id", rows.map((r) => r.id));

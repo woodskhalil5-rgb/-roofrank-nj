@@ -108,9 +108,13 @@ service-role key. This is not an oversight.
 - **Never put several recipients in one Resend `to` array.** One unroutable
   address fails the request for everyone on it. `sendEmail` now issues one
   request per recipient for exactly this reason.
-- `leads@jerseyhomepros.com` is the verified **From** address and has **no
-  inbox**. Never put it in an alert recipient list. Alerts go to
-  `LEAD_ALERT_EMAILS`.
+- **Senders (Khalil, 2026-10-29: "no more leads@")**: homeowner emails come
+  from `Jersey Home Pros <hello@jerseyhomepros.com>`, everything else
+  (contractors, Road Pros, operator) from `Jersey Home Pros <team@…>`, picked
+  by `sendEmail`'s `audience` arg (default "team"). `LEAD_FROM_EMAIL` now only
+  supplies the verified domain. None of these addresses has an inbox: Reply-To
+  defaults to `alertEmails()[0]`. Never put them in an alert recipient list.
+  Alerts go to `LEAD_ALERT_EMAILS`.
 
 ## Verify, don't assume
 

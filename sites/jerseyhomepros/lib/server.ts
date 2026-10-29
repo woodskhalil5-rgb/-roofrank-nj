@@ -138,16 +138,20 @@ export async function sendEmail(
   to: string | string[],
   subject: string,
   text: string,
-  /** Where replies go. Defaults to the operator, because the From address
-   *  (leads@) has no inbox. */
-  replyTo?: string
+  /** Where replies go. Defaults to the operator, because neither sending
+   *  address has an inbox. */
+  replyTo?: string,
+  /** Who it's for: homeowners get hello@, everyone else (contractors, Road
+   *  Pros, the operator) gets team@. Khalil's rule, Oct 29: no more leads@. */
+  audience: "homeowner" | "team" = "team"
 ): Promise<SendResult> {
   const key = process.env.RESEND_API_KEY;
   const rawFrom = process.env.LEAD_FROM_EMAIL;
   if (!key || !rawFrom) return { ok: false, error: "email_not_configured" };
-  // A bare address shows in inboxes as its first part ("leads"). Give it the
-  // brand as the display name unless the env var already sets one.
-  const from = rawFrom.includes("<") ? rawFrom : `${SITE.brand} <${rawFrom.trim()}>`;
+  // LEAD_FROM_EMAIL only supplies the verified domain now; the mailbox name
+  // is chosen by audience, with the brand as the display name.
+  const domain = (rawFrom.match(/@([^\s>]+)/)?.[1] ?? "jerseyhomepros.com").trim();
+  const from = `${SITE.brand} <${audience === "homeowner" ? "hello" : "team"}@${domain}>`;
   // The From address has no inbox: any reply would vanish. Unless the caller
   // chose somewhere else, replies go to the operator.
   const reply = replyTo ?? alertEmails()[0];

@@ -107,7 +107,9 @@ export async function sendSignInLink(email: string, ip: string): Promise<SendRes
       `If you didn't ask for this, ignore this email and nothing happens.`,
       ``,
       `— ${SITE.brand}`,
-    ].join("\n")
+    ].join("\n"),
+    undefined,
+    "homeowner"
   );
 }
 

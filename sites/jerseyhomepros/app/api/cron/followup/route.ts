@@ -87,7 +87,9 @@ export async function GET(req: Request) {
     const out = await sendEmail(
       lead.email,
       `Did you find someone, ${lead.name.split(" ")[0] || "there"}?`,
-      body
+      body,
+      undefined,
+      "homeowner"
     );
 
     if (out.ok) {
