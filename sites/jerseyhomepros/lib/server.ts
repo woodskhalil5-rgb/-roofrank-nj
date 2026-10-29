@@ -138,13 +138,19 @@ export async function sendEmail(
   to: string | string[],
   subject: string,
   text: string,
-  /** Where replies go. The From address (leads@) has no inbox, so anything
-   *  that asks the recipient to reply must set this. */
+  /** Where replies go. Defaults to the operator, because the From address
+   *  (leads@) has no inbox. */
   replyTo?: string
 ): Promise<SendResult> {
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.LEAD_FROM_EMAIL;
-  if (!key || !from) return { ok: false, error: "email_not_configured" };
+  const rawFrom = process.env.LEAD_FROM_EMAIL;
+  if (!key || !rawFrom) return { ok: false, error: "email_not_configured" };
+  // A bare address shows in inboxes as its first part ("leads"). Give it the
+  // brand as the display name unless the env var already sets one.
+  const from = rawFrom.includes("<") ? rawFrom : `${SITE.brand} <${rawFrom.trim()}>`;
+  // The From address has no inbox: any reply would vanish. Unless the caller
+  // chose somewhere else, replies go to the operator.
+  const reply = replyTo ?? alertEmails()[0];
 
   const recipients = Array.from(
     new Set(
@@ -157,7 +163,7 @@ export async function sendEmail(
   if (recipients.length === 0) return { ok: false, error: "no_recipients" };
 
   const perRecipient = await Promise.all(
-    recipients.map((r) => sendOne(key, from, r, subject, text, replyTo))
+    recipients.map((r) => sendOne(key, from, r, subject, text, reply))
   );
 
   const failed = perRecipient.filter((r) => !r.ok);
