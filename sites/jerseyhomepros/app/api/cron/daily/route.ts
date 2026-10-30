@@ -29,7 +29,7 @@ export async function GET(req: Request) {
   try {
     const b = await runBilling(db);
     billing = b;
-    if ("accrued" in b) {
+    if (!b.off) {
       if (b.accrued.created || b.accrued.free) done.push(`Leads logged for billing: ${b.accrued.created} billable, ${b.accrued.free} free`);
       for (const s of b.accrued.skipped) needs.push(`Billing skipped — ${s}`);
       for (const i of b.billed.invoices) done.push(`Invoice sent: ${i}`);

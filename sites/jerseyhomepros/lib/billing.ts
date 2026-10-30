@@ -175,12 +175,15 @@ export async function billPendingLeads(db: DB, rooferId?: string) {
 }
 
 /** Daily cron entry: accrue every day; invoice on the 1st (New Jersey time). */
-export async function runBilling(db: DB) {
+export type BillingRun =
+  | { off: true }
+  | { off: false; accrued: Awaited<ReturnType<typeof accrueLeadCharges>>; billed: { invoices: string[]; errors: string[] } };
+export async function runBilling(db: DB): Promise<BillingRun> {
   if (!stripeOn()) return { off: true };
   const accrued = await accrueLeadCharges(db);
   const dayOfMonth = Number(new Date().toLocaleDateString("en-US", { day: "numeric", timeZone: "America/New_York" }));
   const billed = dayOfMonth === 1 ? await billPendingLeads(db) : { invoices: [], errors: [] };
-  return { accrued, billed };
+  return { off: false, accrued, billed };
 }
 
 // ---------------- partner 10% fee ----------------
