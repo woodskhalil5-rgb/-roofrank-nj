@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { adminDb, notifyOperatorServiceRequest } from "../../../lib/server";
 import { requireContractor, safeWebsite, slugify, photoUrl, MAX_GALLERY } from "../../../lib/pros";
 import { tradeOr } from "../../../lib/trades";
+import { stripeOn } from "../../../lib/stripe";
+import { BILL_COLS, cardSetupUrl, portalUrl, type BillPro } from "../../../lib/billing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -66,6 +68,14 @@ export async function GET(req: Request) {
       .limit(20),
     db.rpc("area_demand", { p_roofer_id: me.id, p_days: 30 }),
   ]);
+  const [{ data: bill }, { data: charges }, { data: price }, { data: st }] = await Promise.all([
+    db.from("roofers").select(BILL_COLS).eq("id", me.id).single(),
+    db.from("charges").select("id, created_at, kind, amount_cents, description, status, hosted_invoice_url, paid_at")
+      .eq("roofer_id", me.id).order("created_at", { ascending: false }).limit(100),
+    db.from("lead_prices").select("price_cents").eq("trade", me.trade).maybeSingle(),
+    db.from("estimator_settings").select("free_leads").eq("id", 1).maybeSingle(),
+  ]);
+  const b = bill as unknown as BillPro | null;
 
   type LeadRow = {
     id: string; created_at: string; name: string; phone: string; email: string; zip: string;
@@ -150,6 +160,14 @@ export async function GET(req: Request) {
     leads: leads.slice(0, 50),
     totalLeads: leads.length,
     requests: requests.data ?? [],
+    billing: {
+      on: stripeOn(),
+      plan: b?.billing_plan ?? "none",
+      card: b?.card_on_file_at ? { brand: b.card_brand, last4: b.card_last4 } : null,
+      lead_price_cents: price?.price_cents ?? null,
+      free_leads: st?.free_leads ?? 3,
+      charges: charges ?? [],
+    },
     marketingItems: MARKETING_ITEMS,
     leadItems: LEAD_ITEMS,
   });
@@ -206,6 +224,19 @@ export async function POST(req: Request) {
     const { error } = await db.from("roofers").update(update).eq("id", me.id);
     if (error) return NextResponse.json({ error: "Couldn't save. Try again." }, { status: 500 });
     return NextResponse.json({ ok: true });
+  }
+
+  if (action === "billing_setup" || action === "billing_portal") {
+    if (!stripeOn()) return NextResponse.json({ error: "Billing isn't switched on yet." }, { status: 503 });
+    const { data: p } = await db.from("roofers").select(BILL_COLS).eq("id", me.id).single();
+    if (!p) return NextResponse.json({ error: "Account not found." }, { status: 404 });
+    try {
+      const url = action === "billing_setup" ? await cardSetupUrl(db, p as unknown as BillPro) : await portalUrl(db, p as unknown as BillPro);
+      return NextResponse.json({ url });
+    } catch (e) {
+      console.error("[account] billing", action, e instanceof Error ? e.message : e);
+      return NextResponse.json({ error: "Couldn't open the billing page. Try again in a minute." }, { status: 502 });
+    }
   }
 
   if (action === "service_request") {

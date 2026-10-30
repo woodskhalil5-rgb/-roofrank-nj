@@ -488,3 +488,33 @@ website requests (his rule).
   `NEXT_PUBLIC_GADS_LABEL_LEAD|BOOKING|CONTRACTOR|ROADPRO`. Unset = that tag
   doesn't load. Ad tags never load under Global Privacy Control (the privacy
   notice promises it). GA4 is unaffected.
+
+### Stripe billing (2026-10-30, built from Stripe's implementation planner)
+
+Plan: Invoicing API from code; card on file via Checkout `mode: setup`;
+`auto_advance: true` + saved card (else `send_invoice`, 7 days, hosted page
+link emailed by us); webhook-driven updates into Supabase.
+
+- `lib/stripe.ts`: REST client (SDK couldn't be installed in the sandbox:
+  npm registry 403s), pinned `Stripe-Version 2026-10-28.endive`, idempotency
+  keys on every write, `verifyWebhook` (t/v1 HMAC, 5-min tolerance, tested).
+- `lib/billing.ts`: `billing_plan` none|ppl|partner on roofers. **Pay per
+  lead** charges only leads matched after `billing_started_at` (no
+  retroactive billing), at `lead_prices[trade]`, first
+  `estimator_settings.free_leads` (3) free. Admin can't switch a company to
+  ppl without a price for its trade. Daily cron accrues; invoices go out on
+  the 1st (NY time) or admin "Bill now". Bad leads: admin "Credit" (only
+  before invoicing; after that refund in Stripe). **Partner fee**: Estimator
+  "Bill fee" on a signed lane-A job → one invoice; `invoice.paid` webhook sets
+  `estimates.fee_paid_at` (which makes Road Pro commission due).
+- `/api/webhooks/stripe`: checkout.session.completed (setup → default PM),
+  customer.updated (portal card change), invoice.finalized/paid/
+  payment_failed/voided/marked_uncollectible, charge.refunded,
+  charge.dispute.created (emails Khalil). `stripe_events` dedupes.
+- Env (Vercel only, never committed): `STRIPE_SECRET_KEY` (restricted
+  rk_ key), `STRIPE_WEBHOOK_SECRET`. Unset key = billing UI hidden, cron
+  skips billing. Customer Portal must be saved once in the Stripe dashboard.
+- Tax: `automatic_tax` deliberately OFF. Ask an accountant whether NJ sales
+  tax applies to lead/referral fees before going live.
+- /join still says the old pricing; changing it waits on Khalil's per-lead
+  prices (the "describe what is true" rule).

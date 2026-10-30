@@ -5,6 +5,8 @@ import { TRADE_SLUGS, tradeOr } from "../../../lib/trades";
 import { newSetupToken } from "../../../lib/pros";
 import { requireEstimator, type EstimatorUser } from "../../../lib/estimator-auth";
 import { assignRep } from "../../../lib/assign";
+import { billPartnerFee } from "../../../lib/billing";
+import { stripeOn } from "../../../lib/stripe";
 import {
   cleanLines, lineTotals, money, repCommission, toNum, ESTIMATE_BUCKET, type Line,
 } from "../../../lib/estimator";
@@ -21,7 +23,7 @@ const isTrade = (t: string) => (TRADE_SLUGS as readonly string[]).includes(t);
 const pctOrNull = (v: unknown) => { const n = toNum(v); return n >= 0 && n <= 100 ? n : null; };
 
 const EST_COLS =
-  "id, created_at, updated_at, created_by, trade, status, lane, homeowner_name, homeowner_phone, homeowner_email, address, zip, problem, notes, items, range_low, range_high, share_consent_at, contact_method, roofer_id, sent_at, send_error, fee_pct, signed_price, sub_price, signed_at, fee_paid_at, source, visit_times, consent_text, rep_id, assigned_at, visited_at, help_requested_at, checklist, rep_commission_pct, rep_paid_at, attribution, estimate_photos(id, path, created_at)";
+  "id, created_at, updated_at, created_by, trade, status, lane, homeowner_name, homeowner_phone, homeowner_email, address, zip, problem, notes, items, range_low, range_high, share_consent_at, contact_method, roofer_id, sent_at, send_error, fee_pct, signed_price, sub_price, signed_at, fee_paid_at, source, visit_times, consent_text, rep_id, assigned_at, visited_at, help_requested_at, checklist, rep_commission_pct, rep_paid_at, attribution, charges(kind, status, hosted_invoice_url, amount_cents), estimate_photos(id, path, created_at)";
 const REP_COLS = "id, created_at, name, email, phone, home_zip, active, bg_status, bg_checked_at, bg_provider, commission_pct, auth_user_id, setup_token_expires";
 
 /**
@@ -198,6 +200,13 @@ export async function POST(req: Request) {
         rep_paid_at: b.rep_paid ? cur.rep_paid_at ?? now : null,
       }).eq("id", id);
       return error ? bad("Couldn't save that.", 500) : ok();
+    }
+    case "bill_fee": {
+      if (!stripeOn()) return bad("Stripe isn't connected yet.", 503);
+      try {
+        const inv = await billPartnerFee(db, String(b.id ?? ""));
+        return NextResponse.json({ ok: true, url: inv.hosted_invoice_url ?? null, status: inv.status });
+      } catch (e) { return bad(e instanceof Error ? e.message : "Couldn't create the invoice.", 400); }
     }
     case "assign": {
       const id = String(b.id ?? ""), repId = str(b.rep_id, 40);

@@ -5,6 +5,7 @@ import { tradeOr } from "../../lib/trades";
 import { sb } from "./sb";
 import PhotoManager from "./PhotoManager";
 import VerifyBox from "./VerifyBox";
+import BillingBox, { type Billing } from "./BillingBox";
 
 type Counts = { views: number; request_clicks: number; website_clicks: number; leads: number };
 type Me = {
@@ -25,7 +26,7 @@ type Req = { id: string; created_at: string; kind: string; items: string[]; deta
 type Data = {
   me: Me; last30: Counts; months: ({ month: string } & Counts)[]; leads: Lead[]; totalLeads: number;
   requests: Req[]; marketingItems: string[]; leadItems: string[]; areaDemand30: number;
-  serviceOptions: string[]; maxGallery: number;
+  serviceOptions: string[]; maxGallery: number; billing?: Billing;
 };
 
 function when(iso: string) {
@@ -384,6 +385,8 @@ export default function Account() {
               <VerifyBox token={token} hic={data.me.hic_number ?? ""} insuranceAt={data.me.insurance_uploaded_at ?? null}
                          verifiedAt={data.me.verified_at ?? null} onDone={() => load(token)} />
             )}
+
+            {token && data.billing && <BillingBox token={token} billing={data.billing} />}
 
             <section className="acctcard">
               <h2>Ask for more</h2>

@@ -934,6 +934,16 @@ function Outcome({ estimate, api, reload }: { estimate: Estimate; api: Api; relo
     } catch (e) { setMsg((e as Error).message); }
   }
 
+  async function billFee() {
+    setMsg("Creating Stripe invoice…");
+    try {
+      await post(api, { action: "outcome", id: estimate.id, status: "signed", signed_price: signed, sub_price: sub, fee_pct: pct, fee_paid: false,
+        ...(estimate.rep_id ? { rep_commission_pct: repPct, rep_paid: repPaid } : {}) });
+      await post(api, { action: "bill_fee", id: estimate.id });
+      setMsg("Invoice created. It's marked paid here automatically when Stripe confirms payment."); await reload();
+    } catch (e) { setMsg((e as Error).message); }
+  }
+
   return (
     <section className="estcard">
       <h2>Did it sign?</h2>
@@ -943,6 +953,15 @@ function Outcome({ estimate, api, reload }: { estimate: Estimate; api: Api; relo
         : <label>Referral fee %<input inputMode="decimal" value={pct} onChange={(e) => setPct(e.target.value)} /></label>}
       <div className="esttotal"><span>JHP earns</span><b>{money(earned)}</b></div>
       <label className="estcheck"><input type="checkbox" checked={paid} onChange={(e) => setPaid(e.target.checked)} /><span>JHP has been paid</span></label>
+      {estimate.lane === "A" && estimate.status === "signed" && !estimate.fee_paid_at && (() => {
+        const inv = (estimate.charges ?? []).find((c) => c.kind === "partner_fee" && c.status !== "void");
+        return inv
+          ? <p className="estnote">Fee invoice: {inv.status === "paid" ? "paid ✓" : inv.status}{inv.hosted_invoice_url ? <> · <a href={inv.hosted_invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>open invoice</a></> : null}. Marked paid automatically when Stripe confirms.</p>
+          : <div className="estrow">
+              <button className="button" onClick={billFee}>Bill fee {money(earned)} via Stripe</button>
+              <span className="estnote">Use once the contractor says the homeowner paid. Charges their saved card, or emails a pay link.</span>
+            </div>;
+      })()}
       {estimate.rep_id && (
         <>
           <label>Road Pro commission (% of JHP&rsquo;s earnings)<input inputMode="decimal" value={repPct} onChange={(e) => setRepPct(e.target.value)} /></label>

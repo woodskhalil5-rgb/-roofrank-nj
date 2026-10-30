@@ -7,6 +7,8 @@ import { attrLabel, type Attr } from '../../lib/attribution';
 
 type Provider = {
   attribution?: Attr | null;
+  billing_plan?: 'none' | 'ppl' | 'partner'; billing_started_at?: string | null;
+  card_on_file_at?: string | null; card_brand?: string | null; card_last4?: string | null;
   id: string; created_at: string; company: string; contact: string; email: string;
   phone: string; service_zips: string[]; radius_miles: number; services: string;
   status: string; notes: string; trade: string;
@@ -41,6 +43,14 @@ type ServiceRequest = {
   operator_notify_error?: string | null;
   roofers: { company: string; contact: string; email: string; phone: string; trade: string } | null;
 };
+type Charge = {
+  id: string; created_at: string; kind: string; amount_cents: number; description: string; status: string;
+  credit_reason: string | null; hosted_invoice_url: string | null; paid_at: string | null; roofer_id: string;
+  roofers: { company: string } | null;
+};
+type BillingData = { on: boolean; test: boolean; prices: { trade: string; price_cents: number }[]; free_leads: number; charges: Charge[] };
+const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
+
 type Lead = {
   attribution?: Attr | null;
   id: string; created_at: string; name: string; phone: string; email: string; zip: string;
@@ -87,7 +97,7 @@ export default function Admin() {
   const [password, setPassword] = useState('');
   const [mode, setMode] = useState<'password' | 'link'>('password');
   const [note, setNote] = useState('');
-  const [tab, setTab] = useState<'leads' | 'providers' | 'performance' | 'requests' | 'claims' | 'unclaimed'>('leads');
+  const [tab, setTab] = useState<'leads' | 'providers' | 'performance' | 'requests' | 'claims' | 'unclaimed' | 'billing'>('leads');
   const [tradeFilter, setTradeFilter] = useState<TradeSlug | 'all'>('all');
   // Rejected providers and spam leads stay out of the way until asked for.
   const [showArchived, setShowArchived] = useState(false);
@@ -99,6 +109,7 @@ export default function Admin() {
   const [perf, setPerf] = useState<Perf[]>([]);
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [claims, setClaims] = useState<Claim[]>([]);
+  const [billing, setBilling] = useState<BillingData | null>(null);
   const [loading, setLoading] = useState(false);
   const [denied, setDenied] = useState(false);
 
@@ -123,6 +134,7 @@ export default function Admin() {
       setPerf(j.performance ?? []);
       setRequests(j.requests ?? []);
       setClaims(j.claims ?? []);
+      setBilling(j.billing ?? null);
     } finally {
       setLoading(false);
     }
@@ -363,6 +375,7 @@ export default function Admin() {
           <button className={tab === 'requests' ? 'on' : ''} onClick={() => setTab('requests')}>
             Pro requests{requests.filter((r) => r.status === 'new').length > 0 ? ` (${requests.filter((r) => r.status === 'new').length})` : ''}
           </button>
+          <button className={tab === 'billing' ? 'on' : ''} onClick={() => setTab('billing')}>Billing</button>
           {unsent > 0 && (
             <button className="retrybtn" onClick={() => act({ action: 'retry_notifications' })}>
               Retry {unsent} unsent {unsent === 1 ? 'notice' : 'notices'}
@@ -460,6 +473,58 @@ export default function Admin() {
               ))}
             </div>
           )
+        )}
+
+        {tab === 'billing' && billing && (
+          <div className="adminbilling">
+            {!billing.on
+              ? <p className="adminnote">Stripe isn&rsquo;t connected yet (STRIPE_SECRET_KEY not set). You can set prices now; nothing is charged until it is.</p>
+              : <p className="adminnote">Stripe connected{billing.test ? ' in TEST mode: no real money moves' : ' (LIVE)'}.</p>}
+            <h3>Price per lead, by trade</h3>
+            <p className="adminmeta">Only companies you switch to &ldquo;Pay per lead&rdquo; are charged, and only for leads delivered after you switch them. Blank = no price.</p>
+            <div className="admingrid">
+              {TRADE_SLUGS.map((t) => {
+                const pr = billing.prices.find((x) => x.trade === t);
+                return (
+                  <form key={t} className="admincard" onSubmit={(e) => { e.preventDefault(); const v = String(new FormData(e.currentTarget).get('d') ?? '').trim(); act({ action: 'set_lead_price', trade: t, dollars: v === '' ? null : v }); }}>
+                    <b>{TRADES[t].label}</b>
+                    <label className="adminmeta">$ per lead <input name="d" inputMode="decimal" defaultValue={pr ? (pr.price_cents / 100).toFixed(2) : ''} key={pr?.price_cents ?? 'none'} /></label>
+                    <div className="adminactions"><button type="submit">Save</button></div>
+                  </form>
+                );
+              })}
+            </div>
+            <form className="adminactions" onSubmit={(e) => { e.preventDefault(); act({ action: 'set_free_leads', n: Number(new FormData(e.currentTarget).get('n')) }); }}>
+              <label className="adminmeta">Free leads per company <input name="n" inputMode="numeric" defaultValue={billing.free_leads} key={billing.free_leads} style={{ width: 60 }} /></label>
+              <button type="submit">Save</button>
+              {billing.on && <button type="button" onClick={() => act({ action: 'bill_now' })}>Bill all pending now</button>}
+            </form>
+            <p className="adminmeta">Statements go out automatically on the 1st. Partner referral fees are billed from the Estimator (&ldquo;Bill fee&rdquo;) once the contractor says the homeowner paid.</p>
+
+            <h3>Charges</h3>
+            {billing.charges.length === 0 ? <p className="adminnote">No charges yet.</p> : (
+              <table className="accttable">
+                <thead><tr><th>Date</th><th>Company</th><th>What</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                  {billing.charges.map((c) => (
+                    <tr key={c.id}>
+                      <td>{when(c.created_at)}</td>
+                      <td>{c.roofers?.company ?? ''}</td>
+                      <td>{c.description}{c.credit_reason ? ` (credited: ${c.credit_reason})` : ''}</td>
+                      <td>{usd(c.amount_cents)}</td>
+                      <td>{c.hosted_invoice_url ? <a href={c.hosted_invoice_url} target="_blank" rel="noopener" style={{ textDecoration: 'underline' }}>{c.status}</a> : c.status}</td>
+                      <td>{(c.status === 'pending' || c.status === 'free') && c.kind === 'lead' && (
+                        <form onSubmit={(e) => { e.preventDefault(); act({ action: 'credit_charge', id: c.id, reason: String(new FormData(e.currentTarget).get('r') ?? '') }); }}>
+                          <select name="r" defaultValue="Wrong number"><option>Wrong number</option><option>Outside service area</option><option>Duplicate</option><option>Not a real request</option></select>
+                          <button type="submit">Credit</button>
+                        </form>
+                      )}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         )}
 
         {tab === 'unclaimed' && (
@@ -588,6 +653,22 @@ export default function Admin() {
                       {p.verified_at && <button onClick={() => act({ action: 'set_verified', id: p.id, verified: false })}>Remove Verified</button>}
                     </div>
                   </div>
+
+                  {p.status === 'approved' && (
+                    <div className="adminverify">
+                      <p className="adminmeta">
+                        Billing: <b>{p.billing_plan === 'ppl' ? 'Pay per lead' : p.billing_plan === 'partner' ? 'Partner (10%)' : 'None'}</b>
+                        {p.billing_plan === 'ppl' && p.billing_started_at ? ` since ${when(p.billing_started_at)}` : ''}
+                        {' · '}Card: {p.card_on_file_at ? `${p.card_brand ?? 'card'} ••${p.card_last4 ?? ''}` : 'none'}
+                      </p>
+                      <div className="adminactions">
+                        {p.billing_plan !== 'ppl' && <button onClick={() => act({ action: 'set_billing_plan', id: p.id, plan: 'ppl' })}>Pay per lead</button>}
+                        {p.billing_plan !== 'partner' && <button onClick={() => act({ action: 'set_billing_plan', id: p.id, plan: 'partner' })}>Partner (10%)</button>}
+                        {p.billing_plan !== 'none' && <button onClick={() => act({ action: 'set_billing_plan', id: p.id, plan: 'none' })}>No billing</button>}
+                        {p.billing_plan === 'ppl' && billing?.on && <button onClick={() => act({ action: 'bill_now', id: p.id })}>Bill now</button>}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Whether this contractor was ever sent the contact rules.
                       They start phoning homeowners once approved, so "we never

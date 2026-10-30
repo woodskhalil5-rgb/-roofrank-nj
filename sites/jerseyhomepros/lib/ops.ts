@@ -83,7 +83,7 @@ export async function runChasers(db: DB) {
 }
 
 /** One email to Khalil: what needs him today, what ran on its own, who to call. */
-export async function sendBriefing(db: DB, auto: Awaited<ReturnType<typeof runChasers>>) {
+export async function sendBriefing(db: DB, auto: Awaited<ReturnType<typeof runChasers>>, extra: { done?: string[]; needs?: string[] } = {}) {
   const since = ago(1);
   const [ests, leads, apps, claims, pending, reps, callList] = await Promise.all([
     db.from("estimates").select(COLS).in("status", ["requested", "draft", "sent", "signed"]).limit(500),
@@ -123,6 +123,7 @@ export async function sendBriefing(db: DB, auto: Awaited<ReturnType<typeof runCh
     ...unpaid.filter((e) => e.lane === "B" || e.fee_notice_count >= MAX_FEE_NOTICES).map((e) => `Unpaid after ${MAX_FEE_NOTICES} notices${e.lane === "B" ? " (JHP job)" : ""} — call ${e.roofers?.company ?? ""}: ${label(e)} ${money(jhpEarnings(e))}`),
     ...repDue.map((e) => `Pay ${repName.get(e.rep_id!) ?? "Road Pro"} ${money(repCommission(e))}: ${label(e)}`),
     ...(unalerted.length ? [`${unalerted.length} request(s) with no confirmed alert — check /admin`] : []),
+    ...(extra.needs ?? []),
   ];
   const calls = [
     ...(apps.data ?? []).map((a) => `Road Pro applicant: ${a.name}${a.phone ? ` · ${a.phone}` : ""}${a.home_zip ? ` · ${a.home_zip}` : ""}`),
@@ -145,7 +146,7 @@ export async function sendBriefing(db: DB, auto: Awaited<ReturnType<typeof runCh
     "LAST 24 HOURS",
     `  • ${newBookings.length} free-visit booking(s), ${newLeads.length} contractor request(s)`,
     `  • Owed to JHP on signed jobs: ${money(owed)} (${unpaid.length} job${unpaid.length === 1 ? "" : "s"})`,
-    ...section("DONE FOR YOU", [...auto.chases.map((c) => `Check-in sent: ${c}`), ...auto.feeNotices.map((f) => `Fee notice sent: ${f}`)]),
+    ...section("DONE FOR YOU", [...auto.chases.map((c) => `Check-in sent: ${c}`), ...auto.feeNotices.map((f) => `Fee notice sent: ${f}`), ...(extra.done ?? [])]),
     ...section("CALL LIST", calls),
     ...(auto.errors.length ? ["", `(${auto.errors.length} automatic email(s) failed — they'll retry tomorrow)`] : []),
     "",

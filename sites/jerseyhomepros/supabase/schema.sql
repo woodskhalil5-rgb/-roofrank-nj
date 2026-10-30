@@ -1022,3 +1022,42 @@ alter table public.leads add column if not exists attribution jsonb;
 alter table public.estimates add column if not exists attribution jsonb;
 alter table public.roofers add column if not exists attribution jsonb;
 alter table public.road_pro_applications add column if not exists attribution jsonb;
+
+-- Stripe billing (2026-10-30). Prices unset = nothing is ever charged.
+alter table public.roofers
+  add column if not exists billing_plan text not null default 'none' check (billing_plan in ('none','ppl','partner')),
+  add column if not exists billing_started_at timestamptz,
+  add column if not exists stripe_customer_id text unique,
+  add column if not exists card_on_file_at timestamptz,
+  add column if not exists card_brand text,
+  add column if not exists card_last4 text;
+alter table public.estimator_settings add column if not exists free_leads integer not null default 3 check (free_leads >= 0);
+create table if not exists public.lead_prices (
+  trade text primary key,
+  price_cents integer not null check (price_cents >= 0 and price_cents <= 100000),
+  updated_at timestamptz not null default now()
+);
+alter table public.lead_prices enable row level security;
+create table if not exists public.charges (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  roofer_id uuid not null references public.roofers(id) on delete restrict,
+  kind text not null check (kind in ('lead','partner_fee')),
+  lead_id uuid references public.leads(id) on delete set null,
+  estimate_id uuid references public.estimates(id) on delete set null,
+  amount_cents integer not null check (amount_cents >= 0),
+  description text not null,
+  status text not null default 'pending' check (status in ('free','pending','invoiced','paid','failed','credited','void')),
+  credit_reason text,
+  stripe_invoice_id text,
+  hosted_invoice_url text,
+  paid_at timestamptz
+);
+create unique index if not exists charges_one_per_lead on public.charges(roofer_id, lead_id) where kind = 'lead';
+create unique index if not exists charges_one_fee_per_estimate on public.charges(estimate_id) where kind = 'partner_fee' and status <> 'void';
+create index if not exists charges_roofer on public.charges(roofer_id, created_at desc);
+create index if not exists charges_invoice on public.charges(stripe_invoice_id);
+alter table public.charges enable row level security;
+create table if not exists public.stripe_events (id text primary key, type text not null, received_at timestamptz not null default now());
+alter table public.stripe_events enable row level security;
