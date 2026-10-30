@@ -1016,3 +1016,9 @@ alter table public.roofers
   add column if not exists doc_token_hash text,
   add column if not exists doc_token_expires timestamptz,
   add column if not exists insurance_uploaded_at timestamptz;
+
+-- Ad source (2026-10-30): which ad brought each request, booking and application.
+alter table public.leads add column if not exists attribution jsonb;
+alter table public.estimates add column if not exists attribution jsonb;
+alter table public.roofers add column if not exists attribution jsonb;
+alter table public.road_pro_applications add column if not exists attribution jsonb;

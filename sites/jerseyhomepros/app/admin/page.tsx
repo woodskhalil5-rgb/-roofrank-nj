@@ -3,8 +3,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { SITE } from '../../lib/site';
 import { TRADES, TRADE_SLUGS, tradeOr, type TradeSlug } from '../../lib/trades';
+import { attrLabel, type Attr } from '../../lib/attribution';
 
 type Provider = {
+  attribution?: Attr | null;
   id: string; created_at: string; company: string; contact: string; email: string;
   phone: string; service_zips: string[]; radius_miles: number; services: string;
   status: string; notes: string; trade: string;
@@ -40,6 +42,7 @@ type ServiceRequest = {
   roofers: { company: string; contact: string; email: string; phone: string; trade: string } | null;
 };
 type Lead = {
+  attribution?: Attr | null;
   id: string; created_at: string; name: string; phone: string; email: string; zip: string;
   property_type: string; service: string; timing: string; details: string; status: string;
   trade: string;
@@ -382,6 +385,7 @@ export default function Admin() {
                       <span className={`pill pill-${l.status}`}>{l.status}</span>
                     </header>
                     <p className="adminmeta">{when(l.created_at)} &middot; ZIP {l.zip} &middot; {l.property_type}</p>
+                    {attrLabel(l.attribution) && <p className="adminmeta">From: {attrLabel(l.attribution)}</p>}
                     <p><b>{l.service}</b> &mdash; {l.timing}</p>
                     {l.details && <p className="admindetails">{l.details}</p>}
                     <p className="adminmeta">{l.phone} &middot; {l.email}</p>
@@ -556,6 +560,7 @@ export default function Admin() {
                     <span className={`pill pill-${p.status}`}>{p.status}</span>
                   </header>
                   <p className="adminmeta">{when(p.created_at)} &middot; {p.contact}</p>
+                  {attrLabel(p.attribution) && <p className="adminmeta">From: {attrLabel(p.attribution)}</p>}
                   <p>{p.services} &middot; within {p.radius_miles} mi</p>
                   <p className="adminmeta">ZIPs: {p.service_zips.join(', ')}</p>
                   <p className="adminmeta">{p.phone} &middot; {p.email}</p>

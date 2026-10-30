@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { TRADES, type TradeSlug } from "../lib/trades";
+import { getAttribution, track } from "../lib/track";
 import { visitConsentText, visitContractorCallsText } from "../lib/consent";
 
 /**
@@ -370,14 +371,13 @@ function VisitForm({ slug, zip, query, onBack }: { slug: TradeSlug; zip: string;
           trade: slug, zip, name: f.get("name"), phone: f.get("phone"), email: f.get("email"),
           address: f.get("address"), problem: f.get("problem"), times: f.get("times"),
           consent: f.get("consent") === "yes", contractor_calls: f.get("calls") === "yes",
-          company_site: f.get("company_site"),
+          company_site: f.get("company_site"), attribution: getAttribution(),
         }),
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || "Couldn't book that. Please try again.");
       setDone(true); setMsg(j.message || "Got it. We'll call or text you to confirm a time.");
-      const w = window as unknown as { gtag?: (...a: unknown[]) => void };
-      w.gtag?.("event", "book_visit", { trade: slug });
+      track("estimate_booked", { trade: slug });
     } catch (err) { setMsg(err instanceof Error ? err.message : "Couldn't book that."); }
     finally { setBusy(false); }
   }

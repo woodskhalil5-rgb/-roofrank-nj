@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cleanAttribution } from "../../../lib/attribution";
 import { adminDb, alertEmails, sendEmail } from "../../../lib/server";
 import { SITE } from "../../../lib/site";
 import { firstName } from "../../../lib/assign";
@@ -30,6 +31,7 @@ export async function POST(req: Request) {
   const { error } = await db.from("road_pro_applications").insert({
     name, email, phone, home_zip, has_car: b.has_car === true,
     availability: str(b.availability, 300), experience: str(b.experience, 1500), consent_text: RP_CONSENT,
+    attribution: cleanAttribution(b.attribution),
   });
   if (error) return bad("Couldn't send that. Please try again.", 500);
 

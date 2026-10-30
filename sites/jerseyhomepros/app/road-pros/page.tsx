@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Brand } from "../Brand";
+import { getAttribution, track } from "../../lib/track";
 import { RP_CONSENT } from "../../lib/consent";
 
 /**
@@ -24,12 +25,13 @@ export default function RoadPros() {
         body: JSON.stringify({
           name: f.get("name"), email: f.get("email"), phone: f.get("phone"), home_zip: f.get("home_zip"),
           has_car: f.get("has_car") === "yes", availability: f.get("availability"), experience: f.get("experience"),
-          consent: f.get("consent") === "yes", company_site: f.get("company_site"),
+          consent: f.get("consent") === "yes", company_site: f.get("company_site"), attribution: getAttribution(),
         }),
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || "Couldn't send that. Please try again.");
       setDone(true); setMsg("Application received. Check your email for next steps.");
+      track("road_pro_application");
     } catch (err) { setMsg(err instanceof Error ? err.message : "Couldn't send that."); }
     finally { setBusy(false); }
   }

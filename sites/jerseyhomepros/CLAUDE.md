@@ -468,3 +468,23 @@ website requests (his rule).
   / NOT YET. Not yet done: fee terms in website-lead emails to existing
   partners (needs their signed agreement first); outcome tracking for website
   leads.
+
+### Ad tracking + ad source (2026-10-30)
+
+- `lib/track.ts` (browser): `captureAttribution()` runs on every page via
+  `app/Tracking.tsx` and keeps the latest ad click's utm_*/gclid/fbclid/
+  gbraid/wbraid (or the outside referrer) in localStorage `jhp_attr` for 30
+  days. All four forms send `attribution: getAttribution()`; the server keeps
+  only known keys (`lib/attribution.ts cleanAttribution`) in an `attribution`
+  jsonb column on leads, estimates, roofers, road_pro_applications. Admin and
+  Estimator show "From: …" (`attrLabel`).
+- `track(conv)` = one conversion: GA4 event (generate_lead, book_visit,
+  contractor_application, road_pro_application) + Google Ads conversion +
+  Meta standard event (Lead, Schedule, SubmitApplication). Fired only after
+  the server returns 2xx (homeowner request: not on duplicates). Trade only,
+  never PII.
+- Env vars (public IDs, not secrets; redeploy after adding):
+  `NEXT_PUBLIC_META_PIXEL_ID`, `NEXT_PUBLIC_GOOGLE_ADS_ID` (AW-…),
+  `NEXT_PUBLIC_GADS_LABEL_LEAD|BOOKING|CONTRACTOR|ROADPRO`. Unset = that tag
+  doesn't load. Ad tags never load under Global Privacy Control (the privacy
+  notice promises it). GA4 is unaffected.

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cleanAttribution } from "../../../lib/attribution";
 import { adminDb, alertEmails, sendEmail } from "../../../lib/server";
 import { SITE } from "../../../lib/site";
 import { isTradeSlug, TRADES } from "../../../lib/trades";
@@ -53,6 +54,7 @@ export async function POST(req: Request) {
     homeowner_name: name, homeowner_phone: phone, homeowner_email: email, address, problem,
     visit_times: times, share_consent_at: now, consent_text,
     contact_method: calls ? "phone_email" : "email",
+    attribution: cleanAttribution(b.attribution),
   }).select("id").single();
   if (error || !row) {
     console.error(`[visit] insert failed: ${error?.message}`);

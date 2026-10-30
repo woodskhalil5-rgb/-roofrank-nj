@@ -27,7 +27,7 @@ export async function GET(req: Request) {
       .from("roofers")
       // Explicit columns: the setup-token hash never leaves the server.
       .select(
-        "id, created_at, company, contact, email, phone, service_zips, radius_miles, services, status, notes, trade, approved_at, welcomed_at, welcome_error, slug, listed, auth_user_id, bio, website, setup_token_expires, leads_enabled, source, city, license_label, license_number, license_status, license_checked_at, insurance_path, insurance_uploaded_at, verified_at, verified_method"
+        "id, created_at, company, contact, email, phone, service_zips, radius_miles, services, status, notes, trade, approved_at, welcomed_at, welcome_error, slug, listed, auth_user_id, bio, website, setup_token_expires, leads_enabled, source, city, license_label, license_number, license_status, license_checked_at, insurance_path, insurance_uploaded_at, verified_at, verified_method, attribution"
       )
       .order("created_at", { ascending: false }),
     db.from("leads").select("*").order("created_at", { ascending: false }).limit(300),

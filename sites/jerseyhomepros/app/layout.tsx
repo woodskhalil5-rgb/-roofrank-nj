@@ -3,6 +3,7 @@ import Script from "next/script";
 import { SITE } from "../lib/site";
 import "./globals.css";
 import { RegisterSW } from "./AppInstall";
+import { Tracking } from "./Tracking";
 
 export const metadata: Metadata = {
   title: SITE.meta.title,
@@ -75,6 +76,7 @@ gtag('config','${GA_ID}');`}
         )}
         {children}
         <RegisterSW />
+        <Tracking />
       </body>
     </html>
   );

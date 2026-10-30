@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cleanAttribution } from "../../../lib/attribution";
 import { adminDb, notifyOperatorApplication } from "../../../lib/server";
 import { TRADES, isTradeSlug } from "../../../lib/trades";
 import { newSetupToken } from "../../../lib/pros";
@@ -91,6 +92,7 @@ export async function POST(req: Request) {
     const { data: inserted, error } = await db
       .from("roofers")
       .insert({
+        attribution: cleanAttribution(body.attribution),
         company,
         contact,
         email,

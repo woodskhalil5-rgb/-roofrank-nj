@@ -7,6 +7,7 @@ import {
   type Estimate, type Line, type PriceItem,
 } from "../../lib/estimator";
 import { guideFor, TALK } from "../../lib/visits";
+import { attrLabel } from "../../lib/attribution";
 
 /**
  * JHP Estimator. Two kinds of user, one app:
@@ -33,7 +34,7 @@ type Settings = {
 };
 type Applicant = {
   id: string; created_at: string; name: string; email: string; phone: string; home_zip: string;
-  has_car: boolean; availability: string; experience: string;
+  has_car: boolean; availability: string; experience: string; attribution?: Record<string, string> | null;
 };
 type Data = {
   role: "admin" | "rep"; me?: Rep; priceBook: PriceItem[]; estimates: Estimate[];
@@ -272,6 +273,7 @@ function Jobs({ data, onOpen }: { data: Data; onOpen: (id: string | null) => voi
             <b>{e.homeowner_name || "No name yet"}</b>
             <span>{tradeOr(e.trade).label} · {e.zip || "no ZIP"} · {when(e.created_at)}</span>
             {e.visit_times && isOpen(e) && <span>Best times: {e.visit_times}</span>}
+            {attrLabel(e.attribution) && <span>From: {attrLabel(e.attribution)}</span>}
             <span>
               {e.range_low != null ? `${money(e.range_low)} – ${money(e.range_high)}` : "Not priced"}
               {admin && company(e.roofer_id) ? ` · ${company(e.roofer_id)}` : ""}
@@ -409,7 +411,7 @@ function RoadPros({ data, api, reload }: { data: Data; api: Api; reload: () => v
           {apps.map((a) => (
             <div key={a.id} className="estapp">
               <b>{a.name}</b>
-              <span>{a.phone} · {a.email} · {a.home_zip}{a.has_car ? " · has a car" : " · no car listed"} · applied {when(a.created_at)}</span>
+              <span>{a.phone} · {a.email} · {a.home_zip}{a.has_car ? " · has a car" : " · no car listed"} · applied {when(a.created_at)}{attrLabel(a.attribution) ? ` · from ${attrLabel(a.attribution)}` : ""}</span>
               {a.availability && <span className="estnote">Available: {a.availability}</span>}
               {a.experience && <span className="estnote">{a.experience}</span>}
               <div className="estrow">

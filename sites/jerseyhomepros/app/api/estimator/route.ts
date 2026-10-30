@@ -21,7 +21,7 @@ const isTrade = (t: string) => (TRADE_SLUGS as readonly string[]).includes(t);
 const pctOrNull = (v: unknown) => { const n = toNum(v); return n >= 0 && n <= 100 ? n : null; };
 
 const EST_COLS =
-  "id, created_at, updated_at, created_by, trade, status, lane, homeowner_name, homeowner_phone, homeowner_email, address, zip, problem, notes, items, range_low, range_high, share_consent_at, contact_method, roofer_id, sent_at, send_error, fee_pct, signed_price, sub_price, signed_at, fee_paid_at, source, visit_times, consent_text, rep_id, assigned_at, visited_at, help_requested_at, checklist, rep_commission_pct, rep_paid_at, estimate_photos(id, path, created_at)";
+  "id, created_at, updated_at, created_by, trade, status, lane, homeowner_name, homeowner_phone, homeowner_email, address, zip, problem, notes, items, range_low, range_high, share_consent_at, contact_method, roofer_id, sent_at, send_error, fee_pct, signed_price, sub_price, signed_at, fee_paid_at, source, visit_times, consent_text, rep_id, assigned_at, visited_at, help_requested_at, checklist, rep_commission_pct, rep_paid_at, attribution, estimate_photos(id, path, created_at)";
 const REP_COLS = "id, created_at, name, email, phone, home_zip, active, bg_status, bg_checked_at, bg_provider, commission_pct, auth_user_id, setup_token_expires";
 
 /**
@@ -86,7 +86,7 @@ export async function GET(req: Request) {
       .eq("status", "approved").order("company"),
     db.from("road_pros").select(REP_COLS).order("name"),
     db.from("estimator_settings").select("*").eq("id", 1).single(),
-    db.from("road_pro_applications").select("id, created_at, name, email, phone, home_zip, has_car, availability, experience, status")
+    db.from("road_pro_applications").select("id, created_at, name, email, phone, home_zip, has_car, availability, experience, status, attribution")
       .eq("status", "new").order("created_at", { ascending: false }).limit(100),
   ]);
   return NextResponse.json({

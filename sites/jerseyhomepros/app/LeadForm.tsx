@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { SITE } from "../lib/site";
 import type { Trade } from "../lib/trades";
+import { getAttribution, track } from "../lib/track";
 import { sharingConsentText, phoneConsentText, TERMS_ACK } from "../lib/consent";
 
 /**
@@ -46,14 +47,13 @@ export default function LeadForm({ trade }: { trade: Trade }) {
       const r = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, trade: trade.slug, ...(pro ? { pro: pro.slug } : {}) }),
+        body: JSON.stringify({ ...data, trade: trade.slug, ...(pro ? { pro: pro.slug } : {}), attribution: getAttribution() }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || "Please try again.");
       setDone(true);
-      // GA4 conversion. Trade only — never the homeowner's details.
-      const w = window as unknown as { gtag?: (...a: unknown[]) => void };
-      w.gtag?.("event", "generate_lead", { trade: trade.slug, from_profile: Boolean(pro) });
+      // Conversion (GA4 generate_lead + Google Ads + Meta Lead). Trade only — never the homeowner's details.
+      if (!j.duplicate) track("homeowner_request", { trade: trade.slug, from_profile: Boolean(pro) });
       // The server decides the wording, because only the server knows whether
       // the request actually reached a contractor. A fixed "we'll follow up"
       // string here would promise something the software may not do.

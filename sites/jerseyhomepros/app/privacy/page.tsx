@@ -12,7 +12,7 @@ export default function Privacy() {
       <Brand />
       <article className="simplecard legalpage">
         <h1>Privacy Notice</h1>
-        <p className="legaldate">Last updated: 24 October 2026</p>
+        <p className="legaldate">Last updated: 30 October 2026</p>
 
         <h2>Who we are</h2>
         <p>
@@ -84,6 +84,16 @@ export default function Privacy() {
           <b>If you apply to be a Road Pro:</b> your name, contact details, home ZIP and what you tell us,
           used only to consider your application. Any background check is run separately by a screening
           company, with its own disclosure, and only with your written permission.
+        </p>
+        <p>
+          <b>Site analytics and ad measurement:</b> we use Google Analytics to count visits and which pages
+          people use. When we run ads, we also use the Google Ads tag and the Meta (Facebook/Instagram) pixel,
+          which set cookies so Google and Meta can tell us whether an ad led to a request, a booking or an
+          application, and may use that to show our ads to people. We send them only that the event happened
+          and the type of service, never your name, phone, email, address or what you wrote. If you arrive from
+          an ad, we save the ad&rsquo;s campaign tags with your request so we know which ads work. If your browser
+          sends Global Privacy Control, the Google Ads tag and Meta pixel do not load. You can also block them
+          with your browser&rsquo;s cookie settings.
         </p>
         <p>
           <b>We do not ask for sensitive information.</b> Please do not send health details,

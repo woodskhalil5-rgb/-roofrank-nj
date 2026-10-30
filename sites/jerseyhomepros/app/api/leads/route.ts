@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cleanAttribution } from "../../../lib/attribution";
 import { addRequestItem, currentHomeowner } from "../../../lib/homeowner";
 import {
   adminDb,
@@ -215,6 +216,7 @@ export async function POST(req: Request) {
       .insert({
         ...lead,
         trade: trade.slug,
+        attribution: cleanAttribution(body.attribution),
         consent: true,
         phone_consent: phoneConsent,
         consent_text: consentText,

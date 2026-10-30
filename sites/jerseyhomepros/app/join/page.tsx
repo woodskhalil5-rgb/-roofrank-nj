@@ -3,6 +3,7 @@ import { useState } from "react";
 import { SITE } from "../../lib/site";
 import { TRADES, TRADE_SLUGS, type TradeSlug } from "../../lib/trades";
 import { Brand } from "../Brand";
+import { getAttribution, track } from "../../lib/track";
 
 export default function Join() {
   const [tradeSlug, setTradeSlug] = useState<TradeSlug>("roofing");
@@ -25,7 +26,7 @@ export default function Join() {
       const r = await fetch("/api/providers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, attribution: getAttribution() }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || "Please try again.");
@@ -42,6 +43,7 @@ export default function Join() {
         docNote = ur.ok ? " Your insurance certificate was received." : ` (Insurance upload didn’t go through: ${uj.error ?? "try again later from your dashboard"}.)`;
       }
       setDone(true);
+      track("contractor_application", { trade: String(data.trade ?? "") });
       setStatus(
         `Application received. We’ll review it and be in touch.` + docNote +
           (ignored.length ? ` Note: we couldn’t recognise ${ignored.join(", ")} as NJ ZIP codes.` : "")

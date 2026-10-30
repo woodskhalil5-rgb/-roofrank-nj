@@ -27,6 +27,7 @@ export type Estimate = {
   fee_pct: number | null; signed_price: number | null; sub_price: number | null;
   signed_at: string | null; fee_paid_at: string | null;
   source?: "estimator" | "booking"; visit_times?: string; consent_text?: string;
+  attribution?: Record<string, string> | null;
   rep_id?: string | null; assigned_at?: string | null; visited_at?: string | null;
   help_requested_at?: string | null; checklist?: Record<string, string | boolean>;
   rep_commission_pct?: number | null; rep_paid_at?: string | null;
