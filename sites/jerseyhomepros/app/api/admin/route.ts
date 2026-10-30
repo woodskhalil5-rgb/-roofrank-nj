@@ -9,6 +9,7 @@ import {
 } from "../../../lib/server";
 import { tradeOr } from "../../../lib/trades";
 import { issueAccountLink, slugify } from "../../../lib/pros";
+import { DOCS_BUCKET } from "../../../lib/prodocs";
 
 // A Response body can only be consumed once, so this must build a fresh
 // object per request rather than share one module-level instance.
@@ -26,7 +27,7 @@ export async function GET(req: Request) {
       .from("roofers")
       // Explicit columns: the setup-token hash never leaves the server.
       .select(
-        "id, created_at, company, contact, email, phone, service_zips, radius_miles, services, status, notes, trade, approved_at, welcomed_at, welcome_error, slug, listed, auth_user_id, bio, website, setup_token_expires, leads_enabled, source, city, license_label, license_number, license_status, license_checked_at"
+        "id, created_at, company, contact, email, phone, service_zips, radius_miles, services, status, notes, trade, approved_at, welcomed_at, welcome_error, slug, listed, auth_user_id, bio, website, setup_token_expires, leads_enabled, source, city, license_label, license_number, license_status, license_checked_at, insurance_path, insurance_uploaded_at, verified_at, verified_method"
       )
       .order("created_at", { ascending: false }),
     db.from("leads").select("*").order("created_at", { ascending: false }).limit(300),
@@ -48,9 +49,16 @@ export async function GET(req: Request) {
       .limit(200),
   ]);
 
+  // Insurance documents are private: short-lived signed links only.
+  const docPaths = (providers.data ?? []).map((p: { insurance_path?: string }) => p.insurance_path).filter(Boolean) as string[];
+  const docUrls = new Map<string, string>();
+  if (docPaths.length) {
+    const { data } = await db.storage.from(DOCS_BUCKET).createSignedUrls(docPaths, 3600);
+    for (const d of data ?? []) if (d.path && d.signedUrl) docUrls.set(d.path, d.signedUrl);
+  }
   return NextResponse.json({
     who,
-    providers: providers.data ?? [],
+    providers: (providers.data ?? []).map((p: { insurance_path?: string }) => ({ ...p, insurance_url: p.insurance_path ? docUrls.get(p.insurance_path) ?? null : null })),
     leads: leads.data ?? [],
     matches: matches.data ?? [],
     performance: performance.data ?? [],
@@ -261,6 +269,20 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ ok: true, sent, failed, alertsSent, alertsFailed });
+  }
+
+  // Verified badge. Only after Khalil has checked an HIC registration or an
+  // insurance certificate (or vouches in person); the method is recorded.
+  if (action === "set_verified") {
+    const id = String(body.id ?? "");
+    const on = body.verified === true;
+    const method = String(body.method ?? "").trim().slice(0, 200);
+    if (on && !method) return NextResponse.json({ error: "Say what you checked." }, { status: 400 });
+    const { error } = await db.from("roofers")
+      .update(on ? { verified_at: new Date().toISOString(), verified_method: method } : { verified_at: null, verified_method: "" })
+      .eq("id", id);
+    if (error) return NextResponse.json({ error: "Update failed." }, { status: 500 });
+    return NextResponse.json({ ok: true });
   }
 
   // Show or hide a provider's public directory profile. Only approved

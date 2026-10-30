@@ -17,7 +17,10 @@ export default function Join() {
     setBusy(true);
     setStatus("Sending your application…");
     const form = e.currentTarget;
-    const data = Object.fromEntries(new FormData(form).entries());
+    const fd = new FormData(form);
+    const insurance = fd.get("insurance");
+    fd.delete("insurance");
+    const data = Object.fromEntries(fd.entries());
     try {
       const r = await fetch("/api/providers", {
         method: "POST",
@@ -27,9 +30,20 @@ export default function Join() {
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || "Please try again.");
       const ignored: string[] = j.ignored_zips ?? [];
+      // Insurance certificate goes up separately, with the one-time token.
+      let docNote = "";
+      if (insurance instanceof File && insurance.size > 0 && j.doc_token) {
+        setStatus("Uploading your insurance certificate…");
+        const up = new FormData();
+        up.append("token", j.doc_token);
+        up.append("file", insurance);
+        const ur = await fetch("/api/providers/doc", { method: "POST", body: up });
+        const uj = await ur.json().catch(() => ({}));
+        docNote = ur.ok ? " Your insurance certificate was received." : ` (Insurance upload didn’t go through: ${uj.error ?? "try again later from your dashboard"}.)`;
+      }
       setDone(true);
       setStatus(
-        `Application received. We’ll review it and be in touch.` +
+        `Application received. We’ll review it and be in touch.` + docNote +
           (ignored.length ? ` Note: we couldn’t recognise ${ignored.join(", ")} as NJ ZIP codes.` : "")
       );
       form.reset();
@@ -48,6 +62,34 @@ export default function Join() {
         <h1>{SITE.join.h1}</h1>
         <p>{SITE.join.p} Approved companies receive homeowner requests in their trade and service area by email.</p>
         <p>Already in the network? <a href="/account" style={{ textDecoration: "underline" }}>Sign in to your dashboard</a>.</p>
+
+        <div className="joindeal">
+          <h2>How it works</h2>
+          <div className="joinlanes">
+            <section>
+              <h3>Website requests</h3>
+              <ul>
+                <li><b>Nothing up front.</b> No sign-up fee, no monthly fee, no charge per lead.</li>
+                <li><b>10% of the job</b> when you sign a homeowner from a {SITE.brand} request, due once the homeowner has paid you.</li>
+                <li>Each request goes to <b>at most 3 companies</b> in your trade that cover the homeowner&rsquo;s ZIP. Verified companies are offered first, then the closest.</li>
+                <li>Requests arrive by email the moment they&rsquo;re sent, and show in your dashboard.</li>
+              </ul>
+            </section>
+            <section>
+              <h3>JHP estimate jobs</h3>
+              <ul>
+                <li>Separate from website requests. A JHP Road Pro has already visited the home, measured the job and taken photos.</li>
+                <li><b>Sent to one company only</b>: yours.</li>
+                <li><b>10% of the signed job</b>, due once the homeowner has paid you. If the homeowner doesn&rsquo;t sign, you owe nothing.</li>
+              </ul>
+            </section>
+          </div>
+          <p className="joinfine">
+            Partners sign a short written agreement covering these terms before receiving work.
+            <b> Verified badge:</b> upload your NJ Home Improvement Contractor registration number or insurance certificate.
+            Once {SITE.brand} checks it, your profile shows &ldquo;Verified&rdquo; with the date. You can sign up without it.
+          </p>
+        </div>
 
         {!done && (
           <form onSubmit={submit}>
@@ -82,6 +124,12 @@ export default function Join() {
                 <option value="" disabled>Select primary service</option>
                 {trade.providerServices.map((s) => <option key={s}>{s}</option>)}
               </select>
+            </label>
+            <label>NJ Home Improvement Contractor (HIC) number <span className="optional">(optional, for the Verified badge)</span>
+              <input name="hic_number" placeholder="13VH01234567" maxLength={20} />
+            </label>
+            <label>Certificate of insurance <span className="optional">(optional, PDF or photo, for the Verified badge)</span>
+              <input name="insurance" type="file" accept="application/pdf,image/*" />
             </label>
             <button className="button gold submit" disabled={busy}>
               {busy ? "Sending…" : "Submit Application →"}

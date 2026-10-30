@@ -28,6 +28,8 @@ export type PublicPro = {
   license_number: string;
   license_status: string;
   license_checked_at: string | null;
+  /** Set only after JHP checked an HIC registration or insurance certificate. */
+  verified_at: string | null;
   leads_enabled: boolean;
   logo_path: string;
   gallery_paths: string[];
@@ -54,7 +56,7 @@ export function receivesRequests(p: { status: string; leads_enabled: boolean }):
 }
 
 export const PUBLIC_PRO_COLUMNS =
-  "id, slug, company, trade, services, bio, website, radius_miles, service_zips, status, city, license_label, license_number, license_status, license_checked_at, leads_enabled, logo_path, gallery_paths, year_founded, hours, towns, service_list, highlights";
+  "id, slug, company, trade, services, bio, website, radius_miles, service_zips, status, city, license_label, license_number, license_status, license_checked_at, verified_at, leads_enabled, logo_path, gallery_paths, year_founded, hours, towns, service_list, highlights";
 
 /** The state's own lookup, linked beside every registration badge so anyone
  *  can check the record themselves. */
@@ -153,6 +155,10 @@ export function safeWebsite(raw: string): string | null {
 }
 
 export type ContractorRow = {
+  license_number: string;
+  license_checked_at: string | null;
+  insurance_uploaded_at: string | null;
+  verified_at: string | null;
   id: string;
   company: string;
   contact: string;
@@ -197,7 +203,7 @@ export async function requireContractor(req: Request): Promise<ContractorRow | n
   if (!db) return null;
   const { data: row } = await db
     .from("roofers")
-    .select("id, company, contact, email, trade, status, slug, listed, bio, website, services, service_zips, radius_miles, leads_enabled, logo_path, gallery_paths, year_founded, hours, towns, service_list, highlights")
+    .select("id, company, contact, email, trade, status, slug, listed, bio, website, services, service_zips, radius_miles, leads_enabled, logo_path, gallery_paths, year_founded, hours, towns, service_list, highlights, license_number, license_checked_at, insurance_uploaded_at, verified_at")
     .eq("auth_user_id", data.user.id)
     .maybeSingle();
   return (row as ContractorRow | null) ?? null;

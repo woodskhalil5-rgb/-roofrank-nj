@@ -94,6 +94,11 @@ export default async function ProPage({ params }: { params: Promise<{ slug: stri
               {" · "}<a href={NJ_LICENSE_LOOKUP} target="_blank" rel="noopener">verify with the state</a>
             </div>
           )}
+          {pro.verified_at && (
+            <div className="probadge verified">
+              &#10003; Verified by {SITE.brand} &middot; {checkedOn(pro.verified_at)}
+            </div>
+          )}
           {member && <div className="trustline"><span>&#9670;</span> Approved into the {SITE.brand} network.</div>}
         </div>
         <div className="heroTag">

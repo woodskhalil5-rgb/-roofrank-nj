@@ -410,3 +410,5 @@
 .estchips .estcheck{margin:0!important}
 .rppage h2{font:400 22px Georgia,serif;margin:26px 0 8px}.rppage ul{padding-left:20px;line-height:1.8;font-size:14px;color:#60615a}.rppage .consent{flex-direction:row;font-weight:400}
 .estapp{display:flex;flex-direction:column;gap:3px;padding:10px 0;border-top:1px solid #eee2c6}
+.joindeal{margin:26px 0 6px;padding:22px;background:#f7f5ef;border:1px solid #e6e2d9}.joindeal h2{font:400 24px Georgia,serif;margin:0 0 14px}.joinlanes{display:grid;grid-template-columns:1fr 1fr;gap:16px}.joinlanes section{background:#fff;border:1px solid #e6e2d9;padding:16px}.joinlanes h3{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#97702a;margin:0 0 8px}.joinlanes ul{margin:0;padding-left:18px;font-size:14px;line-height:1.65;color:#4c4d47}.joinfine{font-size:13px!important;margin:14px 0 0}@media(max-width:640px){.joinlanes{grid-template-columns:1fr}}
+.verifiedline{color:#2f6a35!important;font-weight:700}.probadge.verified{margin-top:8px}

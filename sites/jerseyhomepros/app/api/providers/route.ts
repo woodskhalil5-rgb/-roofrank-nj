@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminDb, notifyOperatorApplication } from "../../../lib/server";
 import { TRADES, isTradeSlug } from "../../../lib/trades";
+import { newSetupToken } from "../../../lib/pros";
 
 /** Pulls 5-digit ZIPs out of free text, de-duplicated, order preserved. */
 function parseZips(input: string): string[] {
@@ -82,6 +83,10 @@ export async function POST(req: Request) {
     const phone = String(body.phone).trim();
     // `services` is declared above, where it is validated against the trade.
     const radiusMiles = Math.round(radius);
+    // Optional at sign-up; a pro is only "Verified" after JHP checks it.
+    const hic = String(body.hic_number ?? "").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 20);
+    // One-time token so they can attach an insurance certificate right after.
+    const doc = newSetupToken();
 
     const { data: inserted, error } = await db
       .from("roofers")
@@ -95,6 +100,10 @@ export async function POST(req: Request) {
         radius_miles: radiusMiles,
         services,
         status: "pending",
+        license_number: hic,
+        license_label: hic ? "NJ Home Improvement Contractor" : "",
+        doc_token_hash: doc.hash,
+        doc_token_expires: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
         notes: rejected.length ? `Unrecognised ZIPs submitted: ${rejected.join(", ")}` : "",
       })
       .select("id")
@@ -142,7 +151,7 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json({ ok: true, accepted_zips: validZips.length, ignored_zips: rejected });
+    return NextResponse.json({ ok: true, accepted_zips: validZips.length, ignored_zips: rejected, doc_token: doc.token });
   } catch {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }

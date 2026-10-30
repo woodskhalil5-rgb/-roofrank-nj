@@ -497,14 +497,13 @@ function SettingsView({ data, api, reload }: { data: Data; api: Api; reload: () 
       <label className="estcheck"><input type="checkbox" checked={f.visits_on} onChange={(e) => setF({ ...f, visits_on: e.target.checked })} />
         <span><b>Show &ldquo;Get a free estimate from a JHP Road Pro&rdquo;</b> on the Home Scan and search results.</span></label>
       <p className={cleared > 0 ? "estnote" : "esterr"}>
-        It only appears when this is on, the ZIP is inside the area, the service is ticked below, and at least one active Road Pro has a clear
-        background check. Right now: {cleared} cleared Road Pro{cleared === 1 ? "" : "s"}.
+        It only appears when this is on, the ZIP is in South Jersey, the service is ticked below, and a Road Pro with a clear
+        background check lives within range. Right now: {cleared} cleared Road Pro{cleared === 1 ? "" : "s"}.
       </p>
-      <div className="estgrid2">
-        <label>Area centre ZIP<input inputMode="numeric" maxLength={5} value={f.base_zip} onChange={(e) => setF({ ...f, base_zip: e.target.value.replace(/\D/g, "") })} /></label>
-        <label>Radius (miles)<input inputMode="numeric" value={f.radius_miles} onChange={(e) => setF({ ...f, radius_miles: e.target.value })} /></label>
-      </div>
-      <p className="estnote">08034 (Cherry Hill) with 25 miles covers most of Camden, Gloucester and Burlington counties.</p>
+      <p className="estnote">
+        <b>Area: all of South Jersey</b> (Atlantic, Burlington, Camden, Cape May, Cumberland, Gloucester, Ocean and Salem counties).
+        In each ZIP the offer only shows if a cleared Road Pro lives within the auto-assign distance below, so it grows as you add Road Pros across the region.
+      </p>
       <h2>Services with free visits</h2>
       <div className="estchips">
         {TRADE_SLUGS.map((t) => (
@@ -853,7 +852,8 @@ function SendBox({ d, estimate, data, api, reload, saveFirst }: {
 }) {
   const [lane, setLane] = useState<"A" | "B">(estimate.lane);
   const [pro, setPro] = useState(estimate.roofer_id ?? "");
-  const [pct, setPct] = useState(estimate.fee_pct != null ? String(estimate.fee_pct) : "");
+  // 10% is the standard partner rate (Khalil, Oct 30); editable per job.
+  const [pct, setPct] = useState(estimate.fee_pct != null ? String(estimate.fee_pct) : "10");
   const [dist, setDist] = useState<Record<string, { miles: number; covers: boolean }>>({});
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);

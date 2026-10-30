@@ -3,12 +3,25 @@ import { TRADES, TRADE_SLUGS } from "../lib/trades";
 import { Brand, SiteFooter } from "./Brand";
 import HomeMap from "./HomeMap";
 import HeroSearch from "./HeroSearch";
+import { adminDb } from "../lib/server";
+
+// Re-checked every 5 minutes, so the "verified" line can never outlive the truth for long.
+export const revalidate = 300;
+
+/** True only while every pro receiving requests is verified (see all_pros_verified()). */
+async function allVerified(): Promise<boolean> {
+  const db = adminDb();
+  if (!db) return false;
+  const { data } = await db.rpc("all_pros_verified");
+  return data === true;
+}
 
 /**
  * Homepage. Its job is to route a homeowner to the right trade quickly;
  * each trade page carries its own hero, services and request form.
  */
-export default function Home() {
+export default async function Home() {
+  const verified = await allVerified();
   const trades = TRADE_SLUGS.map((s) => TRADES[s]);
 
   return (
@@ -70,9 +83,12 @@ export default function Home() {
           <h2>One request.<br /><em>Local options.</em></h2>
           <p>
             You tell us what the house needs. We pass it to participating contractors who work in
-            your trade and serve your ZIP code. They contact you directly and compete for the job.
+            your trade and serve your ZIP code, at most three of them. They contact you directly.
             You are never obligated to hire anyone, and homeowners pay us nothing.
           </p>
+          {verified && (
+            <p className="verifiedline">&#10003; Every company receiving requests right now has been verified by {SITE.brand}.</p>
+          )}
         </div>
         <div className="servicegrid">
           <article>

@@ -181,6 +181,7 @@ export default async function ProsPage({
                       ? <span className="tagmember">Network member</span>
                       : <span className="tagunclaimed">{p.status === "approved" ? "Claimed · not taking requests" : "Not in the network yet"}</span>}
                     {p.license_checked_at && <span className="tagcheck">&#10003; State registration checked</span>}
+                    {p.verified_at && <span className="tagcheck">&#10003; Verified</span>}
                   </p>
                   <span className="tradego">View profile <span>&#8594;</span></span>
                 </a>

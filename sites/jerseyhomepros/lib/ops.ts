@@ -57,15 +57,21 @@ export async function runChasers(db: DB) {
   for (const e of (signed ?? []) as unknown as Row[]) {
     const fee = jhpEarnings(e);
     if (fee == null || fee <= 0 || !e.roofers?.email) continue;
-    const due = e.fee_notice_count === 0 || (e.last_fee_notice_at ?? e.signed_at ?? now) <= ago(7);
+    // The fee is due once the homeowner has paid the contractor (Khalil, Oct 30),
+    // so the first notice waits 14 days after signing, then weekly.
+    const due = e.fee_notice_count === 0 ? (e.signed_at ?? now) <= ago(14) : (e.last_fee_notice_at ?? now) <= ago(7);
     if (!due) continue;
     const t = tradeOr(e.trade);
     const r = await sendEmail(e.roofers.email, `${e.fee_notice_count ? "Reminder: " : ""}JHP referral fee — ${t.label} job, ${e.homeowner_name || e.zip}`, [
       `${e.roofers.contact || e.roofers.company},`, "",
-      `Congrats on signing the ${t.label.toLowerCase()} job for ${e.homeowner_name || "the homeowner"} in ${e.zip || "NJ"}.`, "",
+      `Checking in on the ${t.label.toLowerCase()} job you signed for ${e.homeowner_name || "the homeowner"} in ${e.zip || "NJ"}.`, "",
       `Per your partner agreement, the ${SITE.brand} referral fee is:`,
-      `  ${e.fee_pct}% of ${money(e.signed_price)} = ${money(fee)}`, "",
-      `Reply to this email to confirm, or if anything about the price is different.`, "",
+      `  ${e.fee_pct}% of ${money(e.signed_price)} = ${money(fee)}`,
+      `It's due once the homeowner has paid you for the job.`, "",
+      `Reply to this email with one of these:`,
+      `  PAID IN FULL (the homeowner has paid you; we'll send payment details)`,
+      `  NOT YET (job still in progress or payment pending)`,
+      `  or tell us if the final price changed.`, "",
       `Thanks — ${SITE.brand}`,
     ].join("\n"), replyTo);
     if (r.ok) {

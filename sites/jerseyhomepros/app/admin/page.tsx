@@ -24,6 +24,10 @@ type Provider = {
   license_number?: string;
   license_status?: string;
   license_checked_at?: string | null;
+  insurance_url?: string | null;
+  insurance_uploaded_at?: string | null;
+  verified_at?: string | null;
+  verified_method?: string;
 };
 type Claim = {
   id: string; created_at: string; roofer_id: string; contact: string; email: string; phone: string;
@@ -556,6 +560,29 @@ export default function Admin() {
                   <p className="adminmeta">ZIPs: {p.service_zips.join(', ')}</p>
                   <p className="adminmeta">{p.phone} &middot; {p.email}</p>
                   {p.notes && <p className="admindetails">{p.notes}</p>}
+
+                  {/* Verified badge: shown publicly only after a real check. */}
+                  <div className="adminverify">
+                    {p.verified_at
+                      ? <p className="consentok">✓ Verified {when(p.verified_at)} &middot; {p.verified_method}</p>
+                      : <p className="fbwait">Not verified</p>}
+                    <p className="adminmeta">
+                      HIC #: {p.license_number || 'not given'}
+                      {p.license_number && <> &middot; <a href="https://newjersey.mylicense.com/verification/Search.aspx?facility=Y" target="_blank" rel="noopener" style={{ textDecoration: 'underline' }}>check registry</a></>}
+                      {' · '}Insurance: {p.insurance_url
+                        ? <a href={p.insurance_url} target="_blank" rel="noopener" style={{ textDecoration: 'underline' }}>open certificate{p.insurance_uploaded_at ? ` (${when(p.insurance_uploaded_at)})` : ''}</a>
+                        : 'not uploaded'}
+                    </p>
+                    <div className="adminactions">
+                      {!p.verified_at && p.license_number && (
+                        <button onClick={() => act({ action: 'set_verified', id: p.id, verified: true, method: `HIC #${p.license_number} checked on the state registry` })}>Verify: HIC checked</button>
+                      )}
+                      {!p.verified_at && p.insurance_url && (
+                        <button onClick={() => act({ action: 'set_verified', id: p.id, verified: true, method: 'Insurance certificate checked' })}>Verify: insurance checked</button>
+                      )}
+                      {p.verified_at && <button onClick={() => act({ action: 'set_verified', id: p.id, verified: false })}>Remove Verified</button>}
+                    </div>
+                  </div>
 
                   {/* Whether this contractor was ever sent the contact rules.
                       They start phoning homeowners once approved, so "we never

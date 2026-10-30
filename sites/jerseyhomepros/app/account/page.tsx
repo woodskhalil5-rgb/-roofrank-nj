@@ -4,6 +4,7 @@ import { SITE } from "../../lib/site";
 import { tradeOr } from "../../lib/trades";
 import { sb } from "./sb";
 import PhotoManager from "./PhotoManager";
+import VerifyBox from "./VerifyBox";
 
 type Counts = { views: number; request_clicks: number; website_clicks: number; leads: number };
 type Me = {
@@ -13,6 +14,7 @@ type Me = {
   year_founded: number | null; hours: string; towns: string; service_list: string[]; highlights: string[];
   logo: { path: string; url: string | null } | null;
   gallery: { path: string; url: string | null }[];
+  hic_number?: string; insurance_uploaded_at?: string | null; verified_at?: string | null;
 };
 type Lead = {
   id: string; created_at: string; matched_at: string; name: string; phone: string; email: string;
@@ -377,6 +379,11 @@ export default function Account() {
                 To change your company name, services or ZIP codes, ask below and we&rsquo;ll update them.
               </p>
             </section>
+
+            {token && (
+              <VerifyBox token={token} hic={data.me.hic_number ?? ""} insuranceAt={data.me.insurance_uploaded_at ?? null}
+                         verifiedAt={data.me.verified_at ?? null} onDone={() => load(token)} />
+            )}
 
             <section className="acctcard">
               <h2>Ask for more</h2>

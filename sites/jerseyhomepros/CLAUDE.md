@@ -439,3 +439,32 @@ Calculator). These are sourced, not invented; replace them with partner
 rates as contractors sign. Vercel is on the **Hobby plan**: runtime logs keep
 1 hour, crons fire within the hour (daily ran 12:24 UTC on Oct 29, proven by
 `roofers.call_suggested_at`).
+
+### Oct 30: 3-company cap, Verified badge, South Jersey area, fee timing
+
+Khalil's decisions: contractors pay **10%** (website requests and JHP
+estimate jobs alike), **due once the homeowner has paid them**, under a
+signed partner agreement; Road Pros get **30% of JHP's earnings**
+(`estimator_settings.rep_commission_pct`). "Nothing to refund / you owe
+nothing if they don't sign" may be said for ESTIMATE jobs only, never for
+website requests (his rule).
+
+- `match_lead`: at most **3** companies per website request, verified first,
+  then closest. Estimate jobs stay one contractor. Homepage says "at most
+  three"; Join page explains both kinds of work separately.
+- Verified: `roofers.verified_at` + `verified_method` (what was checked).
+  Anyone can sign up; the badge only after Khalil checks an HIC number on the
+  registry or an uploaded insurance certificate (admin "Verify: …" buttons).
+  Uploads: private bucket `pro-docs`; at sign-up via one-time `doc_token`
+  (2h) → `/api/providers/doc`; later via dashboard "Get Verified" →
+  `/api/account/verify`. Adams and Jackie: verified manually Oct 30,
+  method "Vouched for by Khalil (manual)". `all_pros_verified()` drives the
+  homepage line (ISR 5 min), which disappears if any active pro is unverified.
+- Free-visit area = South Jersey ZIP prefixes 080–084, 087 + Burlington
+  085/086 towns (`visit_zip_prefixes`, `visit_extra_zips`); base_zip/radius no
+  longer used. `visit_offered` now also requires `nearest_rep(zip)` (a cleared
+  rep within `max_assign_miles`), so coverage grows with reps.
+- Fee notices: first 14 days after signing, then weekly, asking PAID IN FULL
+  / NOT YET. Not yet done: fee terms in website-lead emails to existing
+  partners (needs their signed agreement first); outcome tracking for website
+  leads.

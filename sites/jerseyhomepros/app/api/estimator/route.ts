@@ -406,7 +406,7 @@ async function send(db: DB, b: Body, now: string) {
     ...(links.length ? ["", `Photos (links work for 14 days):`, ...links.map((l, i) => `${i + 1}. ${l}`)] : []),
     "",
     ...(e.lane === "A"
-      ? [`TERMS: Per your partner agreement, the referral fee on this job is ${pct}% of the signed contract price. Please reply with the signed price once the homeowner signs.`]
+      ? [`TERMS: Per your partner agreement, the referral fee on this job is ${pct}% of the signed contract price, due once the homeowner has paid you. If the homeowner doesn't sign, you owe nothing. Please reply with the signed price once they sign.`]
       : ["TERMS: Subcontract terms are agreed in writing with JHP before work starts."]),
     "",
     `— ${SITE.brand}`,
