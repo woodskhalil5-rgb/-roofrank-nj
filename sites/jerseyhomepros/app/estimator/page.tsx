@@ -604,7 +604,7 @@ function Editor({ data, api, reload, estimate, onSaved, onClose }: {
   }
   const tick = (id: string, v: string | boolean) => setD((x) => ({ ...x, checklist: { ...x.checklist, [id]: v } }));
 
-  async function addPhotos(files: FileList | null) {
+  async function addPhotos(files: File[] | null) {
     if (!files?.length) return;
     const id = d.id ?? (await save(true));
     if (!id) return;
@@ -772,7 +772,7 @@ function Editor({ data, api, reload, estimate, onSaved, onClose }: {
         </div>
         <label className="button gold estupload">
           Take or add photos <span>+</span>
-          <input type="file" accept="image/*" multiple hidden onChange={(e) => { addPhotos(e.target.files); e.target.value = ""; }} disabled={busy} />
+          <input type="file" accept="image/*" multiple hidden onChange={(e) => { const picked = Array.from(e.target.files ?? []); e.target.value = ""; addPhotos(picked); }} disabled={busy} />
         </label>
       </section>
 
