@@ -525,3 +525,18 @@ link emailed by us); webhook-driven updates into Supabase.
   Test roofer + charge deleted. Sandbox webhook endpoint
   `we_1UWPETISquyuV0hEiSfG6R1h`. Going live = new live restricted key, new
   live webhook endpoint + secret, redeploy.
+
+### Oct 31: fee wording, privacy, service area
+
+- Homeowner consent (`CONSENT_VERSION 2026-10-31.v3`), privacy notice and
+  terms now say companies pay a **referral fee if the homeowner hires them**
+  (10% today), and each request goes to **at most 3** companies.
+  `CONSENT_FEE_MODEL = "referral"` in lib/consent.ts; `/api/admin`
+  `set_billing_plan` refuses pay-per-lead while it says "referral". Turning
+  on PPL = new consent wording + version bump + privacy edit first.
+- Privacy trade list reads `TRADE_SLUGS` (was hardcoded to 5 trades).
+- Homepage: "Now serving South Jersey". Leads with 0 matches outside
+  `visit_area()` get `leads.waitlist = true` and a waitlist confirmation.
+- Footer disclaimer: "A Verified badge means JHP checked that company before
+  it received requests…". NOT "we check NJ HIC registration": Adams and
+  Jackie were verified by Khalil vouching, and movers/cleaners have no HIC.

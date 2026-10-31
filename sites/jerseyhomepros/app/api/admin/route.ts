@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { stripeOn, stripeTestMode } from "../../../lib/stripe";
 import { accrueLeadCharges, billPendingLeads } from "../../../lib/billing";
 import { isTradeSlug } from "../../../lib/trades";
+import { CONSENT_FEE_MODEL } from "../../../lib/consent";
 import {
   adminDb,
   requireAdmin,
@@ -292,6 +293,9 @@ export async function POST(req: Request) {
     if (!["none", "ppl", "partner"].includes(plan)) return NextResponse.json({ error: "Pick a plan." }, { status: 400 });
     const { data: p } = await db.from("roofers").select("trade, billing_plan").eq("id", id).single();
     if (!p) return NextResponse.json({ error: "Not found." }, { status: 404 });
+    if (plan === "ppl" && CONSENT_FEE_MODEL !== "per_request") {
+      return NextResponse.json({ error: "Homeowners are currently told companies pay only when hired. Update the consent and privacy wording before turning on pay-per-lead." }, { status: 400 });
+    }
     if (plan === "ppl") {
       const { data: price } = await db.from("lead_prices").select("price_cents").eq("trade", p.trade).maybeSingle();
       if (!price) return NextResponse.json({ error: "Set a lead price for this trade first (Billing tab)." }, { status: 400 });

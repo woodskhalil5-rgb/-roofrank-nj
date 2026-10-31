@@ -12,14 +12,22 @@
 import { SITE } from "./site";
 import type { Trade } from "./trades";
 
-export const CONSENT_VERSION = "2026-10-10.v2";
+export const CONSENT_VERSION = "2026-10-31.v3";
+
+/**
+ * What the homeowner is told about how companies pay. "referral" = companies
+ * pay JHP only when the homeowner hires them (10% of the job, Khalil 2026-10-30).
+ * Pay-per-lead billing is refused in /api/admin while this says "referral",
+ * because that would contradict the wording homeowners agreed to.
+ */
+export const CONSENT_FEE_MODEL: "referral" | "per_request" = "referral";
 
 export function sharingConsentText(trade: Trade): string {
   return (
     `I agree that ${SITE.brand} may share the details I submit — my name, phone number, ` +
     `email address, ZIP code and project information — with participating ${trade.companies} ` +
-    `that serve my area, so they can respond to my request. I understand those companies pay ` +
-    `${SITE.brand} for these requests, that ${SITE.brand} is not a ${trade.company}, and that I ` +
+    `that serve my area (at most 3), so they can respond to my request. I understand a company ` +
+    `pays ${SITE.brand} a referral fee if I hire it, that ${SITE.brand} is not a ${trade.company}, and that I ` +
     `am under no obligation to hire anyone.`
   );
 }

@@ -91,8 +91,8 @@ export default async function TradePage({ params }: { params: Promise<{ trade: s
               <span>&#9672;</span>
               <p>
                 <b>Your request, handled with care.</b><br />
-                Your contact and project details may be shared with relevant participating{" "}
-                {trade.companies} so they can respond to your request.
+                Your request goes to <b>at most 3</b> participating {trade.companies} that serve your
+                ZIP code, and they contact you directly. You never pay {SITE.brand} anything.
               </p>
             </div>
           </div>

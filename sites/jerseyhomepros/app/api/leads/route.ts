@@ -340,6 +340,14 @@ export async function POST(req: Request) {
     // that company does not cover their ZIP, rather than left to assume it
     // received the request.
     let message = confirmation(matched, trade);
+    // Outside South Jersey with nobody to send it to: say so, and keep it as a waitlist request.
+    if (matched === 0) {
+      const { data: inArea } = await db.rpc("visit_area", { p_zip: zip });
+      if (inArea === false) {
+        await db.from("leads").update({ waitlist: true }).eq("id", leadId);
+        message = `Request received. ${SITE.brand} is serving South Jersey right now, and we don't yet have a participating ${trade.company} for ZIP ${zip}. We've saved your request on our waitlist for your area.`;
+      }
+    }
     if (requested) {
       const { count: reachedChosen } = await db
         .from("lead_matches")

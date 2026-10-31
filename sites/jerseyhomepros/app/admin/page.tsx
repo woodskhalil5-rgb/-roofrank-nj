@@ -53,6 +53,7 @@ const usd = (c: number) => `$${(c / 100).toFixed(2)}`;
 
 type Lead = {
   attribution?: Attr | null;
+  waitlist?: boolean;
   id: string; created_at: string; name: string; phone: string; email: string; zip: string;
   property_type: string; service: string; timing: string; details: string; status: string;
   trade: string;
@@ -399,6 +400,7 @@ export default function Admin() {
                     </header>
                     <p className="adminmeta">{when(l.created_at)} &middot; ZIP {l.zip} &middot; {l.property_type}</p>
                     {attrLabel(l.attribution) && <p className="adminmeta">From: {attrLabel(l.attribution)}</p>}
+                    {l.waitlist && <p className="fbwait">Waitlist: outside South Jersey, told we&rsquo;re not in their area yet</p>}
                     <p><b>{l.service}</b> &mdash; {l.timing}</p>
                     {l.details && <p className="admindetails">{l.details}</p>}
                     <p className="adminmeta">{l.phone} &middot; {l.email}</p>

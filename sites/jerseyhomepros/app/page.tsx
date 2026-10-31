@@ -45,7 +45,7 @@ export default async function Home() {
             <a className="button gold" href="#scan">Start your scan <span>&#8595;</span></a>
             <a className="textlink" href="#trades">Or pick a service <span>&#8595;</span></a>
           </div>
-          <p className="nocam">No app or camera needed — just tap the picture.</p>
+          <p className="nocam">Now serving South Jersey. No app or camera needed — just tap the picture.</p>
           <HeroSearch />
         </div>
         <div className="wrap">

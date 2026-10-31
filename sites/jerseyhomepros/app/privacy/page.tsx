@@ -1,4 +1,5 @@
 import { SITE } from "../../lib/site";
+import { TRADES, TRADE_SLUGS } from "../../lib/trades";
 import { Brand } from "../Brand";
 
 export const metadata = {
@@ -12,13 +13,13 @@ export default function Privacy() {
       <Brand />
       <article className="simplecard legalpage">
         <h1>Privacy Notice</h1>
-        <p className="legaldate">Last updated: 30 October 2026</p>
+        <p className="legaldate">Last updated: 31 October 2026</p>
 
         <h2>Who we are</h2>
         <p>
           {SITE.brand} is a service operated by <b>{SITE.operator}</b>, which connects New Jersey
-          homeowners with independent contractors in roofing, heating and cooling, pest
-          control, moving and cleaning. We are <b>not</b> a contractor. We do not perform, sell, supervise or guarantee
+          homeowners with independent contractors in{" "}
+          {TRADE_SLUGS.map((s, i) => `${i === TRADE_SLUGS.length - 1 ? "and " : ""}${TRADES[s].label.toLowerCase()}`).join(", ")}. We are <b>not</b> a contractor. We do not perform, sell, supervise or guarantee
           any work. This notice explains what we collect and, most importantly, who we give it to.
         </p>
 
@@ -27,17 +28,19 @@ export default function Privacy() {
           When you submit a request, we share the details you give us &mdash; your name, phone
           number, email address, ZIP code, property type, service requested, timing and project
           description &mdash; with participating contractors in the trade you selected who serve
-          your area. <b>Those companies pay us a fee for each request we share with them.</b> Under
-          some state privacy laws, including the New Jersey Data Privacy Act, that is treated as a
-          &ldquo;sale&rdquo; of personal data.
+          your area. <b>A company that receives your request pays us a referral fee (today, 10% of the
+          job) if you hire it.</b> Because companies pay us in connection with requests we share,
+          some state privacy laws, including the New Jersey Data Privacy Act, may treat that sharing
+          as a &ldquo;sale&rdquo; of personal data.
         </p>
         <p>
           We share your request only with companies in the trade you chose. A roofing request is
           never sent to a pest control company, and the reverse.
         </p>
         <p>
-          More than one company may receive your request, and they will contact you directly and
-          compete for your business. Once a company receives your details it handles them under its
+          Today each request goes to <b>at most 3 companies</b> in your trade that serve your ZIP
+          code. More than one may receive it, and they will contact you directly and compete for
+          your business. Once a company receives your details it handles them under its
           own privacy practices, which we do not control.
         </p>
         <p>
