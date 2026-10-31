@@ -103,6 +103,7 @@ export async function POST(req: Request) {
         services,
         status: "pending",
         license_number: hic,
+        wants_partner: body.wants_partner === "yes",
         license_label: hic ? "NJ Home Improvement Contractor" : "",
         doc_token_hash: doc.hash,
         doc_token_expires: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),

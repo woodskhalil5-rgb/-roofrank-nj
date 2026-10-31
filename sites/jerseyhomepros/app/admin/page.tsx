@@ -7,6 +7,7 @@ import { attrLabel, type Attr } from '../../lib/attribution';
 
 type Provider = {
   attribution?: Attr | null;
+  wants_partner?: boolean;
   billing_plan?: 'none' | 'ppl' | 'partner'; billing_started_at?: string | null;
   card_on_file_at?: string | null; card_brand?: string | null; card_last4?: string | null;
   id: string; created_at: string; company: string; contact: string; email: string;
@@ -628,6 +629,7 @@ export default function Admin() {
                   </header>
                   <p className="adminmeta">{when(p.created_at)} &middot; {p.contact}</p>
                   {attrLabel(p.attribution) && <p className="adminmeta">From: {attrLabel(p.attribution)}</p>}
+                  {p.wants_partner && p.billing_plan !== 'partner' && <p className="fbwait">Wants to be a PARTNER (10%) — call about the agreement</p>}
                   <p>{p.services} &middot; within {p.radius_miles} mi</p>
                   <p className="adminmeta">ZIPs: {p.service_zips.join(', ')}</p>
                   <p className="adminmeta">{p.phone} &middot; {p.email}</p>

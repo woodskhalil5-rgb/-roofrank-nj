@@ -20,7 +20,7 @@ export default function Terms() {
           contractors. <b>We do not perform, sell, supervise or guarantee any work. We do not
           provide estimates or quote prices, and we are not a party to any agreement between you
           and a contractor.</b> Those companies are independent businesses &mdash; not our
-          employees, agents or partners. They pay us a referral fee when a homeowner hires them through a request we shared. Homeowners pay
+          employees, agents or partners. They pay us for the requests we share or for jobs they win through us. Homeowners pay
           us nothing.
         </p>
 

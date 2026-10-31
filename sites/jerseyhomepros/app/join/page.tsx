@@ -67,27 +67,30 @@ export default function Join() {
 
         <div className="joindeal">
           <h2>How it works</h2>
+          <p className="joinfine">
+            Each homeowner request goes to <b>at most 3 companies</b> in your trade that cover the homeowner&rsquo;s ZIP.
+            Verified companies are offered first, then the closest. Requests arrive by email the moment they&rsquo;re sent and show in your dashboard.
+          </p>
           <div className="joinlanes">
             <section>
-              <h3>Website requests</h3>
+              <h3>Pay per lead</h3>
               <ul>
-                <li><b>Nothing up front.</b> No sign-up fee, no monthly fee, no charge per lead.</li>
-                <li><b>10% of the job</b> when you sign a homeowner from a {SITE.brand} request, due once the homeowner has paid you.</li>
-                <li>Each request goes to <b>at most 3 companies</b> in your trade that cover the homeowner&rsquo;s ZIP. Verified companies are offered first, then the closest.</li>
-                <li>Requests arrive by email the moment they&rsquo;re sent, and show in your dashboard.</li>
+                <li><b>No sign-up fee, no monthly fee.</b></li>
+                <li><b>Your first 3 requests are free.</b> After that, a set price per request for your trade, shown in your dashboard before you&rsquo;re ever charged.</li>
+                <li>One statement a month, charged to your saved card or paid by link.</li>
+                <li>Wrong number, outside your area or a duplicate? Tell us and it&rsquo;s credited.</li>
               </ul>
             </section>
-            <section>
-              <h3>JHP estimate jobs</h3>
+            <section id="partner">
+              <h3>Partner: 10%</h3>
               <ul>
-                <li>Separate from website requests. A JHP Road Pro has already visited the home, measured the job and taken photos.</li>
-                <li><b>Sent to one company only</b>: yours.</li>
-                <li><b>10% of the signed job</b>, due once the homeowner has paid you. If the homeowner doesn&rsquo;t sign, you owe nothing.</li>
+                <li><b>No per-lead charges.</b> You pay <b>10% of jobs you sign</b> from {SITE.brand}, due once the homeowner has paid you.</li>
+                <li>Partners also get <b>JHP estimate jobs</b>: a JHP Road Pro has already visited the home, measured the job and taken photos, and the job goes to <b>one company only</b>. If the homeowner doesn&rsquo;t sign, you owe nothing.</li>
+                <li>Partners sign a short written agreement before receiving work. Tick &ldquo;I want to be a partner&rdquo; below to apply.</li>
               </ul>
             </section>
           </div>
           <p className="joinfine">
-            Partners sign a short written agreement covering these terms before receiving work.
             <b> Verified badge:</b> upload your NJ Home Improvement Contractor registration number or insurance certificate.
             Once {SITE.brand} checks it, your profile shows &ldquo;Verified&rdquo; with the date. You can sign up without it.
           </p>
@@ -132,6 +135,9 @@ export default function Join() {
             </label>
             <label>Certificate of insurance <span className="optional">(optional, PDF or photo, for the Verified badge)</span>
               <input name="insurance" type="file" accept="application/pdf,image/*" />
+            </label>
+            <label className="check"><input type="checkbox" name="wants_partner" value="yes" />
+              <span>I want to be a partner (10% of signed jobs, no per-lead charges). {SITE.brand} will call you about the agreement.</span>
             </label>
             <button className="button gold submit" disabled={busy}>
               {busy ? "Sending…" : "Submit Application →"}

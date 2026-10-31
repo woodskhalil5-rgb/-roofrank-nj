@@ -414,3 +414,4 @@
 .verifiedline{color:#2f6a35!important;font-weight:700}.probadge.verified{margin-top:8px}
 .acctactions{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
 .adminbilling{overflow-x:auto}.adminbilling h3{font:400 20px/1.2 Georgia,serif;margin:20px 0 6px}.adminbilling select{font-size:11px;margin-right:4px}
+.simplecard form .check{flex-direction:row;align-items:flex-start;gap:9px;font-weight:400;font-size:12px;line-height:1.5}.simplecard form .check input{width:auto;margin-top:2px;accent-color:#a47a2d}

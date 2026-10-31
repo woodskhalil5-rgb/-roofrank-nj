@@ -62,7 +62,7 @@ export const SITE = {
   ],
 
   disclaimer:
-    "Jersey Home Pros helps homeowners connect with participating contractors. A Verified badge means Jersey Home Pros checked that company before it received requests, on the date shown. Confirm licensing, insurance and job details directly before hiring.",
+    "Jersey Home Pros helps homeowners connect with participating contractors. Jersey Home Pros checks a company\u2019s NJ Home Improvement Contractor registration or certificate of insurance before it shows the Verified badge. Confirm job details, pricing and timing directly before hiring.",
 
   operator: "Destiny Marketing Group LLC",
   operatorAddress: "511 N Boardwalk, Rehoboth Beach, DE 19971",

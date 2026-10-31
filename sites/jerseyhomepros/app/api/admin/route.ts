@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { stripeOn, stripeTestMode } from "../../../lib/stripe";
 import { accrueLeadCharges, billPendingLeads } from "../../../lib/billing";
 import { isTradeSlug } from "../../../lib/trades";
-import { CONSENT_FEE_MODEL } from "../../../lib/consent";
 import {
   adminDb,
   requireAdmin,
@@ -31,7 +30,7 @@ export async function GET(req: Request) {
       .from("roofers")
       // Explicit columns: the setup-token hash never leaves the server.
       .select(
-        "id, created_at, company, contact, email, phone, service_zips, radius_miles, services, status, notes, trade, approved_at, welcomed_at, welcome_error, slug, listed, auth_user_id, bio, website, setup_token_expires, leads_enabled, source, city, license_label, license_number, license_status, license_checked_at, insurance_path, insurance_uploaded_at, verified_at, verified_method, attribution, billing_plan, billing_started_at, card_on_file_at, card_brand, card_last4"
+        "id, created_at, company, contact, email, phone, service_zips, radius_miles, services, status, notes, trade, approved_at, welcomed_at, welcome_error, slug, listed, auth_user_id, bio, website, setup_token_expires, leads_enabled, source, city, license_label, license_number, license_status, license_checked_at, insurance_path, insurance_uploaded_at, verified_at, verified_method, attribution, wants_partner, billing_plan, billing_started_at, card_on_file_at, card_brand, card_last4"
       )
       .order("created_at", { ascending: false }),
     db.from("leads").select("*").order("created_at", { ascending: false }).limit(300),
@@ -293,9 +292,6 @@ export async function POST(req: Request) {
     if (!["none", "ppl", "partner"].includes(plan)) return NextResponse.json({ error: "Pick a plan." }, { status: 400 });
     const { data: p } = await db.from("roofers").select("trade, billing_plan").eq("id", id).single();
     if (!p) return NextResponse.json({ error: "Not found." }, { status: 404 });
-    if (plan === "ppl" && CONSENT_FEE_MODEL !== "per_request") {
-      return NextResponse.json({ error: "Homeowners are currently told companies pay only when hired. Update the consent and privacy wording before turning on pay-per-lead." }, { status: 400 });
-    }
     if (plan === "ppl") {
       const { data: price } = await db.from("lead_prices").select("price_cents").eq("trade", p.trade).maybeSingle();
       if (!price) return NextResponse.json({ error: "Set a lead price for this trade first (Billing tab)." }, { status: 400 });

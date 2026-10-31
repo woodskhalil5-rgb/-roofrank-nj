@@ -28,8 +28,9 @@ export default function Privacy() {
           When you submit a request, we share the details you give us &mdash; your name, phone
           number, email address, ZIP code, property type, service requested, timing and project
           description &mdash; with participating contractors in the trade you selected who serve
-          your area. <b>A company that receives your request pays us a referral fee (today, 10% of the
-          job) if you hire it.</b> Because companies pay us in connection with requests we share,
+          your area. <b>Participating companies pay us, either for the requests we share with them or a share of
+          the job if you hire them, depending on their plan. You pay us nothing.</b> Because companies
+          pay us in connection with requests we share,
           some state privacy laws, including the New Jersey Data Privacy Act, may treat that sharing
           as a &ldquo;sale&rdquo; of personal data.
         </p>

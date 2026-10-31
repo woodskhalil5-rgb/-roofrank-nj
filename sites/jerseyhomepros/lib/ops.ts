@@ -90,7 +90,7 @@ export async function sendBriefing(db: DB, auto: Awaited<ReturnType<typeof runCh
     db.from("leads").select("id, trade, zip, created_at, status, operator_notified_at, operator_notify_error").neq("status", "spam").gte("created_at", ago(30)),
     db.from("road_pro_applications").select("name, phone, home_zip, created_at").eq("status", "new").order("created_at"),
     db.from("claims").select("contact, phone, created_at, roofers(company, trade)").eq("status", "new"),
-    db.from("roofers").select("company, contact, phone, trade, created_at").eq("status", "pending"),
+    db.from("roofers").select("company, contact, phone, trade, created_at, wants_partner").eq("status", "pending"),
     db.from("road_pros").select("id, name").eq("active", true),
     db.from("roofers").select("id, company, trade, city, website, license_number, slug").eq("status", "unclaimed")
       .in("trade", ["roofing", "hvac", "hardscaping", "windows"])
@@ -131,7 +131,7 @@ export async function sendBriefing(db: DB, auto: Awaited<ReturnType<typeof runCh
       const r = c.roofers as unknown as { company: string; trade: string } | null;
       return `Verify claim: ${c.contact} for ${r?.company ?? "a listing"}${c.phone ? ` · ${c.phone}` : ""} (call the number on their own website/registration)`;
     }),
-    ...(pending.data ?? []).map((p) => `Contractor applied: ${p.company} (${tradeOr(p.trade).label})${p.phone ? ` · ${p.phone}` : ""}`),
+    ...(pending.data ?? []).map((p) => `Contractor applied${p.wants_partner ? " (WANTS PARTNER 10%)" : ""}: ${p.company} (${tradeOr(p.trade).label})${p.phone ? ` · ${p.phone}` : ""}`),
     ...(callList.data ?? []).map((r) => `Pitch: ${r.company} — ${tradeOr(r.trade).label}, ${r.city || "NJ"}${r.license_number ? ` · HIC ${r.license_number}` : ""}${r.website ? ` · ${r.website}` : ""}`),
   ];
   if (callList.data?.length) {

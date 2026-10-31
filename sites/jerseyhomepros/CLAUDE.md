@@ -526,17 +526,24 @@ link emailed by us); webhook-driven updates into Supabase.
   `we_1UWPETISquyuV0hEiSfG6R1h`. Going live = new live restricted key, new
   live webhook endpoint + secret, redeploy.
 
-### Oct 31: fee wording, privacy, service area
+### Oct 31: fee wording, plans, statewide (Khalil's final call)
 
-- Homeowner consent (`CONSENT_VERSION 2026-10-31.v3`), privacy notice and
-  terms now say companies pay a **referral fee if the homeowner hires them**
-  (10% today), and each request goes to **at most 3** companies.
-  `CONSENT_FEE_MODEL = "referral"` in lib/consent.ts; `/api/admin`
-  `set_billing_plan` refuses pay-per-lead while it says "referral". Turning
-  on PPL = new consent wording + version bump + privacy edit first.
+- **Pay-per-lead is decided** (Khalil: "I am .. I've been"). /join shows two
+  plans: Pay per lead (first 3 free, then a set price per request for the
+  trade, shown in the dashboard first; monthly statement; bad leads credited)
+  and Partner 10% (no per-lead charges; also gets JHP estimate jobs; signed
+  agreement). "I want to be a partner" checkbox → `roofers.wants_partner`,
+  flagged in admin and the briefing.
+- Homeowners are NOT told the fee model (Khalil). Consent v4 + privacy +
+  terms say only that participating companies pay JHP (for requests or a
+  share of the job, depending on plan) and homeowners pay nothing, at most 3
+  companies per request. The NJDPA "sale" sentence stays in the privacy notice.
+- **All of New Jersey** for website requests (Khalil). Matching was always
+  statewide by each company's radius; the South Jersey homepage line and
+  waitlist message were removed (`leads.waitlist` column left unused). Free
+  site visits stay limited to where a cleared Road Pro lives (`visit_offered`).
+- Footer: "JHP checks a company's NJ HIC registration or certificate of
+  insurance before it shows the Verified badge." Adams and Jackie both have
+  insurance certificates uploaded; their `verified_method` still says
+  "Vouched for by Khalil" until he opens those certificates in admin.
 - Privacy trade list reads `TRADE_SLUGS` (was hardcoded to 5 trades).
-- Homepage: "Now serving South Jersey". Leads with 0 matches outside
-  `visit_area()` get `leads.waitlist = true` and a waitlist confirmation.
-- Footer disclaimer: "A Verified badge means JHP checked that company before
-  it received requests…". NOT "we check NJ HIC registration": Adams and
-  Jackie were verified by Khalil vouching, and movers/cleaners have no HIC.
