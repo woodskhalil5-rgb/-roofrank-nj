@@ -518,3 +518,10 @@ link emailed by us); webhook-driven updates into Supabase.
   tax applies to lead/referral fees before going live.
 - /join still says the old pricing; changing it waits on Khalil's per-lead
   prices (the "describe what is true" rule).
+- **Verified end to end 2026-10-31 (sandbox):** Khalil's restricted key in
+  Vercel; admin "Bill now" created invoice + emailed pay link; webhooks
+  customer.updated / invoice.finalized / invoice.paid arrived signed; Khalil
+  paid with test card 4242 and the charge flipped to `paid` within ~1s.
+  Test roofer + charge deleted. Sandbox webhook endpoint
+  `we_1UWPETISquyuV0hEiSfG6R1h`. Going live = new live restricted key, new
+  live webhook endpoint + secret, redeploy.
