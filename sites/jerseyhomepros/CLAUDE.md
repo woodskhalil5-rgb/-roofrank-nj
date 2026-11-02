@@ -563,8 +563,10 @@ dmg-team-room.vercel.app, backend = edge functions `team-api`, `team-brain`,
   off in Admin → Billing → "AI team access"): `GET /api/team/companies`
   (scope companies: who is a member / applied / pre-listed, with claim
   profile link; no phones) and `GET /api/team/stats` (scope stats: counts
-  only). Header `x-jhp-team-key`. Plaintext keys live only in the team
-  project's `team_secrets` table (RLS on, no policies).
+  only). Header `x-jhp-team-key`. The team room uses its own two keys
+  ("Team room: …", set up on their side 2026-11-02). Claude's first two keys
+  and its `team_secrets` table in their project were deleted at Khalil's
+  request. Don't change the team room's code without him asking.
 - Adams + Jackie: verified_method "Insurance certificate on file"; both on
   pay-per-lead since 2026-11-02 (Khalil). Sandbox customer portal config
   bpc_1UXNOqISquyuV0hEmOJr1nkM created by Claude at his request.
