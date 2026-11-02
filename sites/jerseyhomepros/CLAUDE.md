@@ -547,3 +547,8 @@ link emailed by us); webhook-driven updates into Supabase.
   insurance certificates uploaded; their `verified_method` still says
   "Vouched for by Khalil" until he opens those certificates in admin.
 - Privacy trade list reads `TRADE_SLUGS` (was hardcoded to 5 trades).
+- **Lead prices set 2026-11-01** (Khalil's ranges, low end of "shared" as
+  launch prices): roofing $45, hvac $40, windows $35, hardscaping $35, pest
+  $20, landscaping $20, moving $15, cleaning $12. He also listed "exclusive
+  (1 pro only)" prices ($30–150): NOT built — every website request is shared
+  up to 3; exclusive would need match_lead + billing changes.
