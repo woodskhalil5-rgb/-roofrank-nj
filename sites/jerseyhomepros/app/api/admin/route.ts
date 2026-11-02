@@ -59,13 +59,15 @@ export async function GET(req: Request) {
     const { data } = await db.storage.from(DOCS_BUCKET).createSignedUrls(docPaths, 3600);
     for (const d of data ?? []) if (d.path && d.signedUrl) docUrls.set(d.path, d.signedUrl);
   }
-  const [prices, bset, charges] = await Promise.all([
+  const [prices, bset, charges, teamKeys] = await Promise.all([
     db.from("lead_prices").select("trade, price_cents"),
     db.from("estimator_settings").select("free_leads").eq("id", 1).maybeSingle(),
     db.from("charges").select("id, created_at, kind, amount_cents, description, status, credit_reason, hosted_invoice_url, paid_at, roofer_id, roofers(company)")
       .order("created_at", { ascending: false }).limit(300),
+    db.from("team_keys").select("id, name, scopes, active, last_used_at").order("created_at"),
   ]);
   return NextResponse.json({
+    teamKeys: teamKeys.data ?? [],
     billing: {
       on: stripeOn(), test: stripeTestMode(),
       prices: prices.data ?? [], free_leads: bset.data?.free_leads ?? 3, charges: charges.data ?? [],
@@ -286,6 +288,12 @@ export async function POST(req: Request) {
 
   // Verified badge. Only after Khalil has checked an HIC registration or an
   // insurance certificate (or vouches in person); the method is recorded.
+  if (action === "set_team_key") {
+    const { error } = await db.from("team_keys").update({ active: body.active === true }).eq("id", String(body.id ?? ""));
+    if (error) return NextResponse.json({ error: "Update failed." }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
   if (action === "set_billing_plan") {
     const id = String(body.id ?? "");
     const plan = String(body.plan ?? "");

@@ -112,6 +112,7 @@ export default function Admin() {
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [claims, setClaims] = useState<Claim[]>([]);
   const [billing, setBilling] = useState<BillingData | null>(null);
+  const [teamKeys, setTeamKeys] = useState<{ id: string; name: string; scopes: string[]; active: boolean; last_used_at: string | null }[]>([]);
   const [loading, setLoading] = useState(false);
   const [denied, setDenied] = useState(false);
 
@@ -137,6 +138,7 @@ export default function Admin() {
       setRequests(j.requests ?? []);
       setClaims(j.claims ?? []);
       setBilling(j.billing ?? null);
+      setTeamKeys(j.teamKeys ?? []);
     } finally {
       setLoading(false);
     }
@@ -503,6 +505,19 @@ export default function Admin() {
               {billing.on && <button type="button" onClick={() => act({ action: 'bill_now' })}>Bill all pending now</button>}
             </form>
             <p className="adminmeta">Statements go out automatically on the 1st. Partner referral fees are billed from the Estimator (&ldquo;Bill fee&rdquo;) once the contractor says the homeowner paid.</p>
+
+            <h3>AI team access</h3>
+            <p className="adminmeta">Keys the DMG team room uses to read JHP. Read-only: who&rsquo;s already on JHP and counts. Never homeowner details or billing.</p>
+            {teamKeys.length === 0 ? <p className="adminnote">No team keys.</p> : (
+              <div className="adminactions">
+                {teamKeys.map((k) => (
+                  <span key={k.id} className="adminmeta" style={{ marginRight: 12 }}>
+                    <b>{k.name}</b> ({k.scopes.join(', ')}) · {k.active ? 'on' : 'OFF'}{k.last_used_at ? ` · used ${when(k.last_used_at)}` : ' · never used'}{' '}
+                    <button onClick={() => act({ action: 'set_team_key', id: k.id, active: !k.active })}>{k.active ? 'Switch off' : 'Switch on'}</button>
+                  </span>
+                ))}
+              </div>
+            )}
 
             <h3>Charges</h3>
             {billing.charges.length === 0 ? <p className="adminnote">No charges yet.</p> : (

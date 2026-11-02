@@ -552,3 +552,19 @@ link emailed by us); webhook-driven updates into Supabase.
   $20, landscaping $20, moving $15, cleaning $12. He also listed "exclusive
   (1 pro only)" prices ($30–150): NOT built — every website request is shared
   up to 3; exclusive would need match_lead + billing changes.
+
+### DMG AI team room integration (2026-11-02)
+
+Khalil's "team" (DeMarcus, James, Grace, Kole) are AI agents: UI at
+dmg-team-room.vercel.app, backend = edge functions `team-api`, `team-brain`,
+`team-mail` in the SEPARATE Supabase project `xicywfiquzqvlulwirln`
+("destiny-realty-intel"), tables team_leads / team_approvals / team_messages.
+- JHP gives them read-only, scoped keys (`team_keys`, SHA-256 only; switch
+  off in Admin → Billing → "AI team access"): `GET /api/team/companies`
+  (scope companies: who is a member / applied / pre-listed, with claim
+  profile link; no phones) and `GET /api/team/stats` (scope stats: counts
+  only). Header `x-jhp-team-key`. Plaintext keys live only in the team
+  project's `team_secrets` table (RLS on, no policies).
+- Adams + Jackie: verified_method "Insurance certificate on file"; both on
+  pay-per-lead since 2026-11-02 (Khalil). Sandbox customer portal config
+  bpc_1UXNOqISquyuV0hEmOJr1nkM created by Claude at his request.

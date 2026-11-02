@@ -1061,3 +1061,17 @@ create index if not exists charges_invoice on public.charges(stripe_invoice_id);
 alter table public.charges enable row level security;
 create table if not exists public.stripe_events (id text primary key, type text not null, received_at timestamptz not null default now());
 alter table public.stripe_events enable row level security;
+
+-- 2026-11-01/02: lead prices set in data; wants_partner; team keys for the DMG AI team room.
+alter table public.roofers add column if not exists wants_partner boolean not null default false;
+alter table public.leads add column if not exists waitlist boolean not null default false;
+create table if not exists public.team_keys (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  name text not null unique,
+  key_hash text not null unique,
+  scopes text[] not null,
+  active boolean not null default true,
+  last_used_at timestamptz
+);
+alter table public.team_keys enable row level security;
