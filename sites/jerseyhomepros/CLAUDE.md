@@ -594,3 +594,7 @@ accept `team@jerseyhomepros.com`: done 2026-11-09 at Khalil's request
 ("He is running it, make all appropriate changes"), team-mail v17 posts it
 as a system message @demarcus. First real run: next daily cron (11:30 UTC).
 Approvals, claims, verifying, billing and agreements stay with Khalil.
+- Khalil 2026-11-09: "no change access, that's your job." DeMarcus/the team
+  get reports and read-only data only. Every change to the site, its
+  database or settings goes through Claude (with Khalil's say-so where it
+  needs authorization). Don't give the team write access to JHP.
