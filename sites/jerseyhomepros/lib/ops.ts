@@ -154,5 +154,13 @@ export async function sendBriefing(db: DB, auto: Awaited<ReturnType<typeof runCh
   ].join("\n");
 
   const subject = needs.length ? `JHP today: ${needs.length} thing${needs.length === 1 ? "" : "s"} need you` : "JHP today: all clear";
+  // DeMarcus (the AI team manager, Khalil 2026-11-09) gets his own copy, addressed to him.
+  // His inbox reader only acts on mail from team@ / the owner, so this lands on the team board.
+  const team = (process.env.TEAM_REPORT_EMAIL ?? "").trim();
+  if (team) {
+    const forTeam = text.replace(/^Good morning, Khalil\./, "Morning DeMarcus. Here's the JHP site report.");
+    const r = await sendEmail(team, `JHP site report: ${subject.replace(/^JHP today: /, "")}`, forTeam, alertEmails()[0]);
+    if (!r.ok) console.error(`[daily] team report failed: ${r.error}`);
+  }
   return sendEmail(alertEmails(), subject, text);
 }

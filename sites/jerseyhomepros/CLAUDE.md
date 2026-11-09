@@ -582,3 +582,13 @@ Score ≥3 = stored as `claims.status='spam'` with `spam_reasons`, silently
 answered OK (bots learn nothing), no operator alert, hidden from admin and
 the briefing. Tested: the real bot = 5; normal names with NJ or FL cells = 0–1.
 Only claims use it so far; homeowner and join forms are not screened.
+
+### Reporting to DeMarcus (2026-11-09)
+
+Khalil: the AI team will be running the site; report to DeMarcus as if he
+were real. `TEAM_REPORT_EMAIL` (Vercel, = DeMarcus's Gmail from the team's
+`team_settings.manager_email`) gets his own copy of the daily briefing,
+"Morning DeMarcus…", reply-to Khalil. The team's `team-mail` reader only
+posts mail from the owner or from leads to the board, so it also needs to
+accept `team@jerseyhomepros.com` (team-side change, Khalil's call).
+Approvals, claims, verifying, billing and agreements stay with Khalil.
