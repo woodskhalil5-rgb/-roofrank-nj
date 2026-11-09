@@ -1,10 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export default function ClaimForm({ slug, company }: { slug: string; company: string }) {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const opened = useRef(Date.now());
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -16,7 +17,7 @@ export default function ClaimForm({ slug, company }: { slug: string; company: st
       const r = await fetch("/api/pros/claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...f, slug, confirm: f.confirm === "yes" }),
+        body: JSON.stringify({ ...f, slug, confirm: f.confirm === "yes", t: Date.now() - opened.current }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || "Couldn't send your claim.");
@@ -35,6 +36,10 @@ export default function ClaimForm({ slug, company }: { slug: string; company: st
 
   return (
     <form onSubmit={submit}>
+      {/* Hidden from people; bots fill every field. */}
+      <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
+        <label>Company website<input name="company_site" tabIndex={-1} autoComplete="off" /></label>
+      </div>
       <label>Your name<input name="contact" required autoComplete="name" /></label>
       <label>Your role <span className="optional">(optional)</span><input name="role" placeholder="Owner, office manager…" /></label>
       <label>Work email<input name="email" type="email" required autoComplete="email" /></label>

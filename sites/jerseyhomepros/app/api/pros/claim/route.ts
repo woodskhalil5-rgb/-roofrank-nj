@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminDb, notifyOperatorClaim } from "../../../../lib/server";
 import { listedProBySlug } from "../../../../lib/pros";
 import { tradeOr } from "../../../../lib/trades";
+import { botScore } from "../../../../lib/botcheck";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -51,6 +52,19 @@ export async function POST(req: Request) {
     if ((count ?? 0) >= 5) {
       return NextResponse.json({ error: "Too many claim requests today. Try again tomorrow." }, { status: 429 });
     }
+  }
+
+  // Bot screening: spam is stored for the record but silently accepted, with no alert.
+  const bot = botScore({
+    honeypot: String(body.company_site ?? "").trim(),
+    elapsedMs: typeof body.t === "number" ? body.t : undefined,
+    names: [contact, role],
+    phone,
+  });
+  if (bot.spam) {
+    await db.from("claims").insert({ roofer_id: pro.id, contact, email, phone, role, ip, status: "spam", spam_reasons: bot.reasons });
+    console.warn(`[claim] screened as spam score=${bot.score} ${bot.reasons.join("; ")}`);
+    return NextResponse.json({ ok: true });
   }
 
   const { data: inserted, error } = await db

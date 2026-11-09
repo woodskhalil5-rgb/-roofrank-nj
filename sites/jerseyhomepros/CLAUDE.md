@@ -570,3 +570,15 @@ dmg-team-room.vercel.app, backend = edge functions `team-api`, `team-brain`,
 - Adams + Jackie: verified_method "Insurance certificate on file"; both on
   pay-per-lead since 2026-11-02 (Khalil). Sandbox customer portal config
   bpc_1UXNOqISquyuV0hEmOJr1nkM created by Claude at his request.
+
+### Bot screening on claims (2026-11-09)
+
+First claim (Nov 7, New Generation Hardscaping) was a bot: random-letter name
+and role, auto-looking Gmail, 4:47am (its 624 area code is real: Buffalo overlay). `lib/botcheck.ts botScore()`: hidden
+honeypot `company_site` (+10), sent <3s after the form opened (+2), each
+random-looking name/role (+2), phone that breaks NANP rules (+2), area code
+outside NJ/NY/PA/DE/MD/CT (+1, weak: real contractors carry other cells).
+Score ≥3 = stored as `claims.status='spam'` with `spam_reasons`, silently
+answered OK (bots learn nothing), no operator alert, hidden from admin and
+the briefing. Tested: the real bot = 5; normal names with NJ or FL cells = 0–1.
+Only claims use it so far; homeowner and join forms are not screened.

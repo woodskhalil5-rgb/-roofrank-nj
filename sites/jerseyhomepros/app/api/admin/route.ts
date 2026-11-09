@@ -48,6 +48,7 @@ export async function GET(req: Request) {
     db
       .from("claims")
       .select("id, created_at, roofer_id, contact, email, phone, role, status, operator_notify_error, roofers(company, trade, city, status, license_number, website)")
+      .neq("status", "spam")
       .order("created_at", { ascending: false })
       .limit(200),
   ]);

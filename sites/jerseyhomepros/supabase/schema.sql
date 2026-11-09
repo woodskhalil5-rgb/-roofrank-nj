@@ -1075,3 +1075,8 @@ create table if not exists public.team_keys (
   last_used_at timestamptz
 );
 alter table public.team_keys enable row level security;
+
+-- 2026-11-09: bot screening on claims (lib/botcheck.ts). Spam is stored, never alerted, hidden in admin.
+alter table public.claims drop constraint if exists claims_status_check;
+alter table public.claims add constraint claims_status_check check (status in ('new','approved','rejected','spam'));
+alter table public.claims add column if not exists spam_reasons text[];
