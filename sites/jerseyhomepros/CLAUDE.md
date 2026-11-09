@@ -590,5 +590,7 @@ were real. `TEAM_REPORT_EMAIL` (Vercel, = DeMarcus's Gmail from the team's
 `team_settings.manager_email`) gets his own copy of the daily briefing,
 "Morning DeMarcus…", reply-to Khalil. The team's `team-mail` reader only
 posts mail from the owner or from leads to the board, so it also needs to
-accept `team@jerseyhomepros.com` (team-side change, Khalil's call).
+accept `team@jerseyhomepros.com`: done 2026-11-09 at Khalil's request
+("He is running it, make all appropriate changes"), team-mail v17 posts it
+as a system message @demarcus. First real run: next daily cron (11:30 UTC).
 Approvals, claims, verifying, billing and agreements stay with Khalil.
