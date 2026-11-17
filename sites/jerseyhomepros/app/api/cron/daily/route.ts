@@ -38,7 +38,9 @@ export async function GET(req: Request) {
   } catch (e) { needs.push(`Billing run failed: ${e instanceof Error ? e.message : "error"}`); }
   const { data: failed } = await db.from("charges").select("amount_cents, roofers(company)").eq("status", "failed");
   for (const f of failed ?? []) needs.push(`Payment failed: ${(f.roofers as unknown as { company: string } | null)?.company ?? "contractor"} ${dollars(Number(f.amount_cents))} (Stripe is retrying)`);
-  const brief = await sendBriefing(db, auto, { done, needs });
+  // Khalil 2026-11-17: JHP is on a break, recaps off. Set DAILY_BRIEFING=on in Vercel (and redeploy) to resume.
+  const briefingOff = (process.env.DAILY_BRIEFING ?? "").toLowerCase() === "off";
+  const brief = briefingOff ? { ok: true as const, error: undefined } : await sendBriefing(db, auto, { done, needs });
   if (!brief.ok) console.error(`[daily] briefing failed: ${brief.error}`);
   return NextResponse.json({ reminders, chases: auto.chases.length, feeNotices: auto.feeNotices.length, errors: auto.errors, briefing: brief.ok, billing });
 }

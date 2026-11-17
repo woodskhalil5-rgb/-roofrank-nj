@@ -598,3 +598,11 @@ Approvals, claims, verifying, billing and agreements stay with Khalil.
   get reports and read-only data only. Every change to the site, its
   database or settings goes through Claude (with Khalil's say-so where it
   needs authorization). Don't give the team write access to JHP.
+
+### JHP on a break (2026-11-17)
+
+Khalil: "turn off the recaps, JHP is taking a break." `DAILY_BRIEFING=off`
+(Vercel) skips the daily briefing email to him AND DeMarcus's copy. The daily
+cron still runs (home reminders, chasers, billing accrual). Resume: set
+`DAILY_BRIEFING=on` and redeploy. He also addresses Claude as "Jev" now
+(his sir-address-style skill), formerly "Brain".
